@@ -10,13 +10,14 @@ A level-1 auxiliary file: chapters/chapter3.aux
 A level-1 auxiliary file: chapters/chapter4.aux
 A level-1 auxiliary file: chapters/chapter5.aux
 A level-1 auxiliary file: chapters/chapter6.aux
+A level-1 auxiliary file: chapters/chapter7.aux
 A level-1 auxiliary file: chapters/appendixA.aux
 A level-1 auxiliary file: chapters/copyright.aux
 I found no \citation commands---while reading file thesis.aux
 Database file #1: references.bib
 You've used 0 entries,
             2330 wiz_defined-function locations,
-            526 strings with 4128 characters,
+            527 strings with 4149 characters,
 and the built_in function-call counts, 17 in all, are:
 = -- 0
 > -- 0

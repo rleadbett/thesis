@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.8.12)  5 OCT 2023 11:10
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.8.12)  5 OCT 2023 15:16
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -446,11 +446,7 @@ Package hyperref Info: Option `colorlinks' set `true' on input line 74.
 File: l3backend-pdftex.def 2022-08-05 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count314
 \l__pdf_internal_box=\box107
-) (./thesis.aux (./chapters/acknowledgements.aux) (./chapters/abstract.aux) (./chapters/chapter1.aux) (./chapters/chapter2.aux) (./chapters/chapter3.aux) (./chapters/chapter4.aux) (./chapters/chapter5.aux) (./chapters/chapter6.aux
-
-LaTeX Warning: Label `chap:chapter5' multiply defined.
-
-) (./chapters/appendixA.aux) (./chapters/copyright.aux))
+) (./thesis.aux (./chapters/acknowledgements.aux) (./chapters/abstract.aux) (./chapters/chapter1.aux) (./chapters/chapter2.aux) (./chapters/chapter3.aux) (./chapters/chapter4.aux) (./chapters/chapter5.aux) (./chapters/chapter6.aux) (./chapters/chapter7.aux) (./chapters/appendixA.aux) (./chapters/copyright.aux))
 \openout1 = `thesis.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 77.
@@ -527,17 +523,25 @@ Package hyperref Info: Link coloring ON on input line 77.
 
 
 
-] (./thesis.toc)
+] (./thesis.toc
+LaTeX Font Info:    Trying to load font information for U+msa on input line 4.
+ (c:/texlive/2022/texmf-dist/tex/latex/amsfonts/umsa.fd
+File: umsa.fd 2013/01/14 v3.01 AMS symbols A
+)
+LaTeX Font Info:    Trying to load font information for U+msb on input line 4.
+ (c:/texlive/2022/texmf-dist/tex/latex/amsfonts/umsb.fd
+File: umsb.fd 2013/01/14 v3.01 AMS symbols B
+) [11])
 \tf@toc=\write4
 \openout4 = `thesis.toc'.
 
- [11] [12
-
-] (./thesis.lof)
+ [12] (./thesis.lof)
 \tf@lof=\write5
 \openout5 = `thesis.lof'.
 
- [13] [14
+ [13
+
+] [14
 
 ]
 \openout2 = `chapters/chapter1.aux'.
@@ -547,82 +551,96 @@ Chapter 1.
 ) [1
 
 
-]
+] [2
+
+
+
+] [3] [4]
 \openout2 = `chapters/chapter2.aux'.
 
- (./chapters/chapter2.tex [2
-
-
-
-
-]
+ (./chapters/chapter2.tex
 Chapter 2.
-) [3]
+[5
+
+
+]) [6]
 \openout2 = `chapters/chapter3.aux'.
 
- (./chapters/chapter3.tex [4
+ (./chapters/chapter3.tex
+Chapter 3.
+) [7
 
 
 
 
 ]
-Chapter 3.
-) [5]
 \openout2 = `chapters/chapter4.aux'.
 
- (./chapters/chapter4.tex [6
+ (./chapters/chapter4.tex [8
 
 
 
 
 ]
 Chapter 4.
-) [7]
+) [9] [10
+
+
+
+] [11] [12]
 \openout2 = `chapters/chapter5.aux'.
 
- (./chapters/chapter5.tex [8
-
-
+ (./chapters/chapter5.tex
+Chapter 5.
+) [13
 
 
 ]
-Chapter 5.
-) [9]
 \openout2 = `chapters/chapter6.aux'.
 
- (./chapters/chapter6.tex [10
+ (./chapters/chapter6.tex [14
 
 
 
 
 ]
 Chapter 6.
-) [11] [12
+) [15]
+\openout2 = `chapters/chapter7.aux'.
+
+ (./chapters/chapter7.tex [16
 
 
 
-] [13
+
+]
+Chapter 7.
+) [17] [18
 
 
-] [14]
+
+] [19
+
+
+] [20]
 \openout2 = `chapters/appendixA.aux'.
 
  (./chapters/appendixA.tex
 Appendix A.
-) [15
+) [21
 
 
 ]
 \openout2 = `chapters/copyright.aux'.
 
- (./chapters/copyright.tex [16
+ (./chapters/copyright.tex [22
 
 
 
 
 ]
 Appendix B.
-) [17] [18
+) [23] [24
 
 
 
@@ -630,28 +648,25 @@ Appendix B.
 
 Package natbib Warning: Empty `thebibliography' environment on input line 3.
 
-) [19
+) [25
 
-] (./thesis.aux (./chapters/acknowledgements.aux) (./chapters/abstract.aux) (./chapters/chapter1.aux) (./chapters/chapter2.aux) (./chapters/chapter3.aux) (./chapters/chapter4.aux) (./chapters/chapter5.aux) (./chapters/chapter6.aux) (./chapters/appendixA.aux) (./chapters/copyright.aux))
-
-LaTeX Warning: There were multiply-defined labels.
-
+] (./thesis.aux (./chapters/acknowledgements.aux) (./chapters/abstract.aux) (./chapters/chapter1.aux) (./chapters/chapter2.aux) (./chapters/chapter3.aux) (./chapters/chapter4.aux) (./chapters/chapter5.aux) (./chapters/chapter6.aux) (./chapters/chapter7.aux) (./chapters/appendixA.aux) (./chapters/copyright.aux))
 Package rerunfilecheck Info: File `thesis.out' has not changed.
-(rerunfilecheck)             Checksum: BC0455F50371ECC2356A1F1E0327F0B2;2146.
+(rerunfilecheck)             Checksum: 9777AFA5636CD163F09054300663A846;4903.
  ) 
 Here is how much of TeX's memory you used:
- 13858 strings out of 477678
- 218426 string characters out of 5833467
- 521968 words of memory out of 5000000
- 32336 multiletter control sequences out of 15000+600000
- 471745 words of font info for 36 fonts, out of 8000000 for 9000
+ 13986 strings out of 477678
+ 220694 string characters out of 5833467
+ 525575 words of memory out of 5000000
+ 32407 multiletter control sequences out of 15000+600000
+ 476996 words of font info for 56 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 87i,5n,91p,430b,555s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 87i,6n,91p,532b,555s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb>
-Output written on thesis.pdf (33 pages, 69525 bytes).
+Output written on thesis.pdf (39 pages, 80285 bytes).
 PDF statistics:
- 244 PDF objects out of 1000 (max. 8388607)
- 199 compressed objects within 2 object streams
- 50 named destinations out of 1000 (max. 500000)
- 97 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 378 PDF objects out of 1000 (max. 8388607)
+ 325 compressed objects within 4 object streams
+ 81 named destinations out of 1000 (max. 500000)
+ 233 words of extra memory for PDF output out of 10000 (max. 10000000)
 
