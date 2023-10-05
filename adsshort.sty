@@ -1,0 +1,64 @@
+%% 
+%% --------------------------------------------------------------------------------
+%%
+%% 
+%%   This work is licensed under the conditions of the Creative
+%%   Commons Attribution 4.0 International (CC BY 4.0) license:
+%%
+%%		<https://creativecommons.org/licenses/by/4.0/>
+%% 
+%%   This work may be remixed, tweaked, and build upon, even
+%%	 commercially, as long as the original Author is credited
+%%   for the creation of the original work. 
+%% 
+%%   This code is offered as-is without any warranty either expressed
+%%   or implied; User assumes all risk.
+%%
+%% --------------------------------------------------------------------------------
+%% 
+%%	Functionality
+%%  -------------
+%%  This package provides common bibliographical macros from the Astrophysics
+%%  Data System.
+%%
+%%	The options available to this package are:
+%%
+%%		-\DeclareOption{ADSmacro} 	-- Define common bibliographical macros from ADS - loaded by default
+%%
+%%	and allows the use of abbreviations for common bibliographical references
+%%
+%% --------------------------------------------------------------------------------
+%%	
+\NeedsTeXFormat{LaTeX2e}[2017/04/15]
+\ProvidesPackage{adsshort}[2018/11/08 Common bibliographical macros from the Astrophysics Data System]
+
+%% Common bibliographical macros from ADS %%
+\DeclareOption{ADSmacro}{
+	\newcommand{\mnras}{Monthly Notices of the Royal Astronomical Society}
+	\newcommand{\aap}{Astronomy and Astrophysics}
+	\newcommand{\aaps}{Astronomy and Astrophysics Supplement Series}
+	\newcommand{\iaucirc}{International Astronomical Union Circulars}
+	\newcommand{\apj}{The Astrophysical Journal}
+	\newcommand{\apjl}{The Astrophysical Journal Letters}
+	\newcommand{\apjs}{The Astrophysical Journal Supplement Series}
+	\newcommand{\apss}{Astrophysics and Space Science}
+	\newcommand{\aj}{The Astronomical Journal}
+	\newcommand{\aplett}{Astrophysical Letters}
+	\newcommand{\ssr}{Space Science Reviews}
+	\newcommand{\nat}{Nature}
+	\newcommand{\sci}{Science}
+	\newcommand{\physrep}{Physics Reports}
+	\newcommand{\planss}{Planetary Space Science}
+	\newcommand{\jrasc}{Journal of the Royal Astronomical Society of Canada}
+	\newcommand{\pasa}{Publications of the Astronomical Society of Australia}
+	\newcommand{\basi}{Bulletin of the Astronomical Society of India}
+	\newcommand{\bain}{Bulletin of the Astronomical Institute of the Netherlands}
+	\newcommand{\araa}{Annual Review of Astronomy and Astrophysics}
+	\newcommand{\sovast}{Soviet Astronomy}
+}
+
+\ExecuteOptions{ADSmacro}
+
+\ProcessOptions\relax
+
+\endinput
