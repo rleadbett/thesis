@@ -1,14 +1,19 @@
-\chapter{Using an informative joint prior to combat bias}\label{chap:chapter2}
+\chapter{Heavily censored lifetime data}\label{chap:chapter2}
 
-General introductory part.
+Computerised maintenance management systems (CMMS) such as SAP \citep{sap} are now embedded in companies maintenance procedures, meaning that these companies now posses large scale datasets of component installation and replacement times. A natural use of these personalised failure time data sets is for tailoring replacement strategies for the companies specific operating environments, rather than solely relying on the manufacturers recommendations. One problem however, is that these large observational datasets collected through CMMS are much messier that the experimental ones used by manufacturers in traditional reliability analysis. This messiness comes about because of reporting issues and the fact that most components are pre-emptively replaced before they fail because of the risk to production and employees safety. The result is that many of the valuable data sets stored in CMMS systems are heavily censored. In this chapter we\ldots
 
 \section{Background}
 
-Interlude.
+Lifetime analysis, also called survival analysis, is the analysis of failure time data of a particular type of unit to derive the risk of failure dependent on a specific exposure (usually some form of time) and sometimes other covariates \citep{moore_survival_2016}. Analysis typically involves first formulating a sampling distribution by choosing some parametric lifetime distribution for the units and incorporating any observational characteristics of the data--for example censoring--then next, estimating the parters of the distribution from failure time data using an appropriate inferential mechanism, and finally using the fitted model to derive useful reliability measures about the population. When done in a Bayesian context, this process also included specifying a prior. From the derived data-informed outputs, we can devise optimal maintenance strategies.
 
 \subsection{Lifetime distribution}
 
-What is lifetime analysis.
+The Lifetime distribution is the distribution from which the failure times arise, i.e. it describe the probability of failure at a given exposure. In reliability, the exposure is typically absolute time or the operating time of the unit. Say we choose a specific parametric lifetime distribution for the population of units, $p(t|\theta)$ expressed as the probability density function (CDF). Once we have estimated the parameters of the lifetime distribution we can draw useful interpretation of the
+
+\begin{itemize}
+    \item CDF (The probability that a unit will have failed by time $T$, i.e. $P(t <= T)$.)
+    \item Hazard (The instantaneous failure rate at a given exposure.)
+\end{itemize}
 
 \subsection{The Weibull distribution}
 
@@ -17,6 +22,8 @@ Details of the Weibull.
 \subsection{Censoring}
 
 What is Censoring?
+
+\subsection{An example from industry}
 
 \section{Bias in heavily censored lifetime data}
 
