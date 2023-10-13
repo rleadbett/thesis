@@ -1,3 +1,45 @@
 \begin{thebibliography}{}
 
+\bibitem [\protect \citeauthoryear {%
+{SAP SE}%
+}{%
+{SAP SE}%
+}{%
+{\protect \APACyear {2023}}%
+}]{%
+sap}
+\APACinsertmetastar {%
+sap}%
+\begin{APACrefauthors}%
+{SAP SE}.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2023}{}{}.
+\newblock
+\APACrefbtitle {SAP Software Suite.} {Sap software suite.}
+\newblock
+\APAChowpublished {https://www.sap.com}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Smith%
+}{%
+Smith%
+}{%
+{\protect \APACyear {{\protect \bibnodate {}}}}%
+}]{%
+moore}
+\APACinsertmetastar {%
+moore}%
+\begin{APACrefauthors}%
+Smith, J.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYear{{\protect \bibnodate {}}}.
+\newblock
+
+\PrintBackRefs{\CurrentBib}
+
 \end{thebibliography}
