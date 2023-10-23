@@ -1,6 +1,261 @@
 \begin{thebibliography}{}
 
 \bibitem [\protect \citeauthoryear {%
+Gelman%
+\ \protect \BOthers {.}}{%
+Gelman%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2020}}%
+}]{%
+gelman_workflow_2020}
+\APACinsertmetastar {%
+gelman_workflow_2020}%
+\begin{APACrefauthors}%
+Gelman, A.%
+, Vehtari, A.%
+, Simpson, D.%
+, Margossian, C\BPBI C.%
+, Carpenter, B.%
+, Yao, Y.%
+\BDBL {}Modrák, M.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2020}{{\APACmonth{11}}}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Bayesian {Workflow}} {Bayesian {Workflow}}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{arXiv:2011.01808 [stat]}{}{}{}.
+\newblock
+\begin{APACrefURL} [{2022-03-02}]\url{http://arxiv.org/abs/2011.01808}
+  \end{APACrefURL}
+\newblock
+\APACrefnote{arXiv: 2011.01808}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Geraerds%
+}{%
+Geraerds%
+}{%
+{\protect \APACyear {1985}}%
+}]{%
+geraerds1985}
+\APACinsertmetastar {%
+geraerds1985}%
+\begin{APACrefauthors}%
+Geraerds, W.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{1985}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {The cost of downtime for maintenance: preliminary
+  considerations} {The cost of downtime for maintenance: preliminary
+  considerations}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Maint. Manage. Int.}{5}{1}{13--21}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Hamada%
+, Wilson%
+, Reese%
+\BCBL {}\ \BBA {} Martz%
+}{%
+Hamada%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2008}}%
+}]{%
+hamada2008}
+\APACinsertmetastar {%
+hamada2008}%
+\begin{APACrefauthors}%
+Hamada, M\BPBI S.%
+, Wilson, A\BPBI G.%
+, Reese, C\BPBI S.%
+\BCBL {}\ \BBA {} Martz, H\BPBI F.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYear{2008}.
+\newblock
+\APACrefbtitle {Bayesian Reliability} {Bayesian reliability}.
+\newblock
+\APACaddressPublisher{}{Springer New York, NY}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Heng%
+, Zhang%
+, Tan%
+\BCBL {}\ \BBA {} Mathew%
+}{%
+Heng%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2009}}%
+}]{%
+heng2009}
+\APACinsertmetastar {%
+heng2009}%
+\begin{APACrefauthors}%
+Heng, A.%
+, Zhang, S.%
+, Tan, A\BPBI C\BPBI C.%
+\BCBL {}\ \BBA {} Mathew, J.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2009}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {{Rotating machinery prognostics: State of the art ,
+  challenges and opportunities}} {{Rotating machinery prognostics: State of the
+  art , challenges and opportunities}}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Mechanical Systems and Signal
+  Processing}{23}{}{724--739}.
+\newblock
+\begin{APACrefDOI} \doi{10.1016/j.ymssp.2008.06.009} \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Jardine%
+\ \BBA {} Tsang%
+}{%
+Jardine%
+\ \BBA {} Tsang%
+}{%
+{\protect \APACyear {2013}}%
+}]{%
+jardine2013}
+\APACinsertmetastar {%
+jardine2013}%
+\begin{APACrefauthors}%
+Jardine, A\BPBI K.%
+\BCBT {}\ \BBA {} Tsang, A\BPBI H.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYear{2013}.
+\newblock
+\APACrefbtitle {Maintenance, Replacement, and Reliability: Theory and
+  Applications (2nd Edition)} {Maintenance, replacement, and reliability:
+  Theory and applications (2nd edition)}.
+\newblock
+\APACaddressPublisher{}{CRC Press}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Lunn%
+, Jackson%
+, Best%
+, Thomas%
+\BCBL {}\ \BBA {} Spiegelhalter%
+}{%
+Lunn%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2013}}%
+}]{%
+lunn2012}
+\APACinsertmetastar {%
+lunn2012}%
+\begin{APACrefauthors}%
+Lunn, D.%
+, Jackson, C.%
+, Best, N.%
+, Thomas, A.%
+\BCBL {}\ \BBA {} Spiegelhalter, D.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYear{2013}.
+\newblock
+\APACrefbtitle {The BUGS Book: A Practical Introduction to Bayesian Analysis}
+  {The bugs book: A practical introduction to bayesian analysis}.
+\newblock
+\APACaddressPublisher{Boca Raton, FL}{CRC Press}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Meeker%
+, Escobar%
+\BCBL {}\ \BBA {} Pascual%
+}{%
+Meeker%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2022}}%
+}]{%
+meeker2022}
+\APACinsertmetastar {%
+meeker2022}%
+\begin{APACrefauthors}%
+Meeker, W\BPBI Q.%
+, Escobar, L\BPBI A.%
+\BCBL {}\ \BBA {} Pascual, F\BPBI G.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYear{2022}.
+\newblock
+\APACrefbtitle {Statistical methods for reliability data} {Statistical methods
+  for reliability data}.
+\newblock
+\APACaddressPublisher{}{John Wiley \& Sons}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Moore%
+}{%
+Moore%
+}{%
+{\protect \APACyear {2016}}%
+}]{%
+moore2016}
+\APACinsertmetastar {%
+moore2016}%
+\begin{APACrefauthors}%
+Moore, D\BPBI F.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYear{2016}.
+\newblock
+\APACrefbtitle {Applied Survival Analysis Using R} {Applied survival analysis
+  using r}\ (R.~Gentleman, K.~Hornik\BCBL {}\ \BBA {} G.~Parmigiani, \BEDS{}).
+\newblock
+\APACaddressPublisher{}{Springer Cham}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Plummer%
+}{%
+Plummer%
+}{%
+{\protect \APACyear {2003}}%
+}]{%
+plummer2003}
+\APACinsertmetastar {%
+plummer2003}%
+\begin{APACrefauthors}%
+Plummer, M.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2003}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {{JAGS}: A Program for analysis of {B}ayesian Graphical
+  Models Using {G}ibbs Sampling} {{JAGS}: A program for analysis of {B}ayesian
+  graphical models using {G}ibbs sampling}.{\BBCQ}
+\newblock
+\BIn{} K.~Hornik, F.~Leisch\BCBL {}\ \BBA {} A.~Zeileis\ (\BEDS),
+  \APACrefbtitle {Proceedings of the 3rd International Workshop on Distributed
+  Statistical Computing (DSC 2003)} {Proceedings of the 3rd international
+  workshop on distributed statistical computing (dsc 2003)}\ (\BPGS\ 1--10).
+\newblock
+\APACaddressPublisher{Vienna}{}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
 {SAP SE}%
 }{%
 {SAP SE}%
@@ -23,23 +278,27 @@ sap}%
 \PrintBackRefs{\CurrentBib}
 
 \bibitem [\protect \citeauthoryear {%
-Smith%
+{Stan Development Team}%
 }{%
-Smith%
+{Stan Development Team}%
 }{%
-{\protect \APACyear {{\protect \bibnodate {}}}}%
+{\protect \APACyear {2022}}%
 }]{%
-moore}
+Stan2022}
 \APACinsertmetastar {%
-moore}%
+Stan2022}%
 \begin{APACrefauthors}%
-Smith, J.%
+{Stan Development Team}.%
 \end{APACrefauthors}%
 \unskip\
 \newblock
-\APACrefYear{{\protect \bibnodate {}}}.
+\APACrefYearMonthDay{2022}{}{}.
 \newblock
-
+{\BBOQ}\APACrefatitle {{S}tan {M}odeling {L}anguage {U}sers {G}uide and
+  {R}eference {M}anual} {{S}tan {M}odeling {L}anguage {U}sers {G}uide and
+  {R}eference {M}anual}{\BBCQ}\ [\bibcomputersoftwaremanual].
+\newblock
+\APACaddressPublisher{https://mc-stan.org}{}.
 \PrintBackRefs{\CurrentBib}
 
 \end{thebibliography}

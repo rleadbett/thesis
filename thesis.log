@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.8.12)  13 OCT 2023 10:42
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.8.12)  23 OCT 2023 12:18
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -564,130 +564,147 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
  (./chapters/chapter1.tex
 Chapter 1.
-[1
+
+Underfull \vbox (badness 5203) has occurred while \output is active []
+
+ [1
 
 
-]) [2] [3
+]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [2]
+LaTeX Font Info:    Trying to load font information for OMS+cmr on input line 16.
+ (c:/texlive/2022/texmf-dist/tex/latex/base/omscmr.fd
+File: omscmr.fd 2019/12/16 v2.5j Standard LaTeX font definitions
+)
+LaTeX Font Info:    Font shape `OMS/cmr/m/it' in size <12> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 16.
+ [3] [4] [5]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [6]) [7] [8
 
 
 
-] [4] [5]
+] [9] [10] [11]
 \openout2 = `chapters/chapter2.aux'.
 
- (./chapters/chapter2.tex [6
+ (./chapters/chapter2.tex [12
 
 
 ]
 Chapter 2.
 
-Overfull \hbox (0.35873pt too wide) in paragraph at lines 3--4
-\OT1/cmr/m/n/12 Computerised main-te-nance man-age-ment sys-tems (CMMS) such as [][]SAP SE[][] ([][]2023[][])
- []
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[7] [8]) [9]
+ [13] [14] [15]) [16]
 \openout2 = `chapters/chapter3.aux'.
 
- (./chapters/chapter3.tex [10
+ (./chapters/chapter3.tex
+Chapter 3.
+) [17
 
 
 
 
 ]
-Chapter 3.
-) [11]
 \openout2 = `chapters/chapter4.aux'.
 
- (./chapters/chapter4.tex [12
+ (./chapters/chapter4.tex [18
 
 
 
 
 ]
 Chapter 4.
-) [13] [14
+) [19] [20
 
 
 
-] [15] [16] [17]
+] [21] [22] [23]
 \openout2 = `chapters/chapter5.aux'.
 
- (./chapters/chapter5.tex [18
+ (./chapters/chapter5.tex [24
 
 
 ]
 Chapter 5.
-) [19]
+) [25]
 \openout2 = `chapters/chapter6.aux'.
 
- (./chapters/chapter6.tex [20
+ (./chapters/chapter6.tex [26
 
 
 
 
 ]
 Chapter 6.
-) [21]
+) [27]
 \openout2 = `chapters/chapter7.aux'.
 
- (./chapters/chapter7.tex [22
+ (./chapters/chapter7.tex [28
 
 
 
 
 ]
 Chapter 7.
-) [23] [24
+) [29] [30
 
 
 
 ]
 Chapter 8.
-[25] [26
+[31] [32
 
-] [27
+] [33
 
 
-] [28]
+] [34]
 \openout2 = `chapters/appendixA.aux'.
 
  (./chapters/appendixA.tex
 Appendix A.
-) [29
+) [35
 
 
 ]
 \openout2 = `chapters/copyright.aux'.
 
- (./chapters/copyright.tex [30
+ (./chapters/copyright.tex [36
 
 
 
 
 ]
 Appendix B.
-) [31] [32
+) [37] [38
 
 
 
-] (./thesis.bbl) [33
+] (./thesis.bbl
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
-] (./thesis.aux (./chapters/acknowledgements.aux) (./chapters/abstract.aux) (./chapters/chapter1.aux) (./chapters/chapter2.aux) (./chapters/chapter3.aux) (./chapters/chapter4.aux) (./chapters/chapter5.aux) (./chapters/chapter6.aux) (./chapters/chapter7.aux) (./chapters/appendixA.aux) (./chapters/copyright.aux))
+ [39
+
+]) [40] (./thesis.aux (./chapters/acknowledgements.aux) (./chapters/abstract.aux) (./chapters/chapter1.aux) (./chapters/chapter2.aux) (./chapters/chapter3.aux) (./chapters/chapter4.aux) (./chapters/chapter5.aux) (./chapters/chapter6.aux) (./chapters/chapter7.aux) (./chapters/appendixA.aux) (./chapters/copyright.aux))
 Package rerunfilecheck Info: File `thesis.out' has not changed.
-(rerunfilecheck)             Checksum: 35BDD5FBD85FF0041F9E132CA882C737;6269.
+(rerunfilecheck)             Checksum: E479FC07AF2F724F5991C0CFA0EA0FE9;6117.
  ) 
 Here is how much of TeX's memory you used:
- 14444 strings out of 477678
- 226907 string characters out of 5833467
- 536600 words of memory out of 5000000
- 32826 multiletter control sequences out of 15000+600000
- 477333 words of font info for 57 fonts, out of 8000000 for 9000
+ 14528 strings out of 477678
+ 228250 string characters out of 5833467
+ 537310 words of memory out of 5000000
+ 32886 multiletter control sequences out of 15000+600000
+ 477502 words of font info for 58 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 87i,6n,91p,1049b,557s stack positions out of 10000i,1000n,20000p,200000b,200000s
-{c:/texlive/2022/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc}<c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb>
-Output written on thesis.pdf (49 pages, 116617 bytes).
+ 87i,6n,91p,2132b,597s stack positions out of 10000i,1000n,20000p,200000b,200000s
+{c:/texlive/2022/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc}<c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt12.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb>
+Output written on thesis.pdf (56 pages, 148301 bytes).
 PDF statistics:
- 512 PDF objects out of 1000 (max. 8388607)
- 442 compressed objects within 5 object streams
- 112 named destinations out of 1000 (max. 500000)
+ 598 PDF objects out of 1000 (max. 8388607)
+ 518 compressed objects within 6 object streams
+ 132 named destinations out of 1000 (max. 500000)
  305 words of extra memory for PDF output out of 10000 (max. 10000000)
 

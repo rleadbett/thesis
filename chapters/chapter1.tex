@@ -1,27 +1,50 @@
-\chapter{Introduction: Bayesian reliability modelling}\label{chap:chapter1}
+\chapter{Introduction}\label{chap:chapter1}
 
-Introduction to reliability modelling and the theme of the thesis; which is reliability modelling in the `real world`.
+The work presented in this thesis is part of an industry linked PhD under the Center for Transforming Maintenance Through Data Science (CTMTDS), a center comprised of a number of both academic and industry partners. One of the centre's goals is to develop methods that support reliability engineers in managing uncertainty during the maintenance decision making process--i.e. how and when they should maintain an asset based on their understanding of the asset and the data available to them. As part of the industry linked PhD, I spent a reasonable period of time working on industry placement projects (900 hours in total between two different industry partners) with the goal of outlining research topics that are not only novel in an academic sense but also facilitate a greater use of robust statistical modelling by reliability practitioners when making maintenance decisions in the mining and mineral processing industry.
 
-\section{Asset health management?}
+It was apparent from my placement time that there is a disconnect between the reliability modelling literature and the methods used by reliability practitioners in the mining and mineral processing industry, often referred to as a theory-practice gap. There are many well established models for reliability data, such as the Weibull distribution for lifetime data, or stochastic process models for degradation data. There is also a desire by mine, processing plant, and refinery operators to use these models, since once an asset is put into service completely new information becomes available which can be utilised so that operators can make better maintenance decisions based on the specific reliability characteristics of their assets, rather than estimates based on experimental data \citep{jardine2013}. But the reality of collecting reliability data in the field (where there are many sources of noise) and within large companies (where it is difficult to regulate data collection practice and where there is a constant trade off between cost, safety, and time verses the quality and amount of data collected). This results in unique observational processes that need their own sophisticated modelling approaches before reliability practitioners in the mining and mineral processing industry can take advantage of the well established reliability models in the literature. Two examples of issues confronting reliability engineers are 1) obtaining reasonable estimates of lifetime distributions when lifetime data are heavily censored due the pre-emptive replacement of assets because of the risk their failures pose to safety or production, and 2) forecasting complex degradation processes with noisy and sparsely observed condition monitoring data. In this thesis I show novel expansions of some of these reliability methods through the Bayesian model building approach \citep{gelman_workflow_2020} and demonstrate how they can be applied to observational industry data sets provided by the centres industry partners.
 
-Do I need to talk about replacement strategies?
+The Bayesian paradigm became a strong backbone of this thesis. This is because Bayesian methods provide a formal structure to build complicated models and incorporate multiple sources of information, such as domain expert knowledge \citep{meeker2022}. Furthermore, the resulting full posterior distribution that is obtained through Bayesian analysis allows us to easily produce estimates and uncertainty intervals for complicated functions of the model parameters \citep{meeker2022}, which is extremely useful for propagating uncertainty through a decision making process. While there is a well developed subfield of Bayesian analysis in the reliability literature \citep{hamada2008, meeker2022}, the Bayesian framework is underutilised in industry. This is most likely because, for most cases, inference must be obtained through Monte Carlo simulation, and in the past this has meant constructing Marcov Chain Monte Carlo (MCMC) algorithms by hand. However, the recent increase in the popularity of Bayesian methods has lead to the development of flexible and accessible probabilistic programming languages such as BUGS \citep{lunn2012}, JAGS \citep{plummer2003} and Stan \citep{Stan2022} which in many cases alleviates the analyst form the need to construct bespoke MCMC algorithms. The result is a newfound ability to fit and explore complex models relatively quickly.  
+
+To harness these new aspects of statistical modelling more effectively, the applied Bayesian statistical community has started to developed more rigorous workflow for building, fitting, checking, and comparing Bayesian models. Throughout this thesis, I clearly emphasise the components of this workflow and demonstrate them in a reliability setting. In doing so I hope that this thesis may also be used as a template for other maintenance decision making problems in the field.
+
+The rest of the chapter provides a general background for the rest of the thesis. First, in \textit{section}~\ref{sec:decisions}, I provide some context around maintenance decision making in the mining and mineral processing industry. Then, in \textit{section}~\ref{sec:reliability}, I give a high level overview of reliability modelling and how it informs maintenance decisions. \textit{Section}~\ref{sec:Bayesian-methods} outlines Bayesian methods and the key components of the Bayesian model building workflow which will be a strong thematic thread through out the remainder of the thesis. Finally, in \textit{section}~\ref{sec:thesis-structure}, I lay out the structure of the thesis.
+
+\section{Maintenance decision making}
+\label{sec:decisions}
+
+The maintenance of an asset can be considered as \textit{"all activities aimed at keeping an \{asset\} in, or restoring it to, the physical state considered necessary for the fulfilment of its production function"} \citep{geraerds1985}. In other words, the main objective of maintenance actions is to fix/replace an asset's components to ensure that the asset is able to perform its desired duty at an acceptable level of performance. In this context, the only consideration when deciding when to maintain the asset is weather or not the asset is performing its duty at an acceptable level. However, in reality, the maintenance of any single asset exists in the much larger context of a company \citep{jardine2013}. There are finite resources, budget, and time that can be allocated to the maintenance of any one specific asset, and there are some assets more critical to production than others. This "big picture" management of an assets maintenance is what we call asset health management. It is in this bigger context that reliability engineers must make their decisions about how and when to maintain an asset. The process of asset health management requires foresight, planning, and--most importantly--risk management.
+
+Maintenance strategies help to roughly allocate resources and plan maintenance schedules ahead of time. There are three general strategies; reactive, preventative, and predictive maintenance \citep{}. We provide a more detailed overview of these strategies a little later. An asset can have different strategies for its different components and typically the choice of strategy is dictated by how critical the component is, how expensive, and what type of data we are able to collect. But even with a maintenance strategy, once an asset is put into service, we gain new 
+
+
+Once an asset is put into operation, we begin to added information 
+
+\subsubsection*{Reactive vs Preventative vs Condition-based maintenance strategy}
+
+The simplest replacement strategy is a reactive maintenance strategy, whereby components are only replaced once they fail \citep{heng2009}. This strategy would only be used 
+
+Example of conveyor belt? 
+
+Reactive is not used unless component is non-critical. Preventative is used in the case where CM data is not available AND the number of similar assets is large, they are not highly critical and the replacement is reasonably low.
 
 \section{Reliability modelling}
+\label{sec:reliability}
+General introduction to reliability data is SMRD2 Meeker, Escobar, and Pascual
 
-General introduction to reliability data is SMRD2 Meeker, Escobar, and Pascual and a good bridge between lifetime data and degradation modelling is Bayesian Reliability Hamada, Wilson, Reese, and Martz.
+\paragraph*{Soft and hard failure}
 
 \paragraph*{Lifetime data}
 
-Definition of lifetime analysis.
-
 \paragraph*{Degradation data}
+A good bridge between lifetime data and degradation modelling is Bayesian Reliability Hamada, Wilson, Reese, and Martz.
 
-Definition of degradation modelling.
-
-\section{Bayesian methods and workflow}
-
+\section{Bayesian reliability modelling}
+\label{sec:Bayesian-methods}
+\paragraph*{Bayesian inference}
 An overview of Bayesian methods.
 
+\paragraph*{Bayesian workflow}
 Probably also some discourse on the Bayesian workflow.
 
 \subsection{Simulation for model checking}
@@ -29,5 +52,12 @@ Probably also some discourse on the Bayesian workflow.
 An ongoing thread through the thesis is the concept of using simulated date from a known underlying truth to assess model performance\ldots
 
 \section{Structure of this thesis}
+\label{sec:thesis-structure}
 
-How parts and chapters are laid out.
+This chapter has introduced the industry-derived motivation for the work in this thesis and provided a high-level introduction to the strong threads that flow through the body of work: reliability analysis and Bayesian model building. The remaining body of the thesis is broken into two parts, unified at the end by a general discussion/concluding chapter. The two parts of the thesis separate the work into that which addresses lifetime analysis and that which addresses degradation modelling. At the beginning of each part, I've included a preamble that provides a background on the industry placement project/s that motivated the work in the part and points out which chapters have been published or submitted for publication. I hope these short sections of metadiscourse provide a glimpse into the extra work that has gone into defining novel research problems whose solutions are truly useful to reliability practitioners in the industry.
+
+The first part of the thesis focuses on lifetime analysis. Particularly, on how we can obtain reliable inference from Weibull analysis when data are heavily censored by thoughtfully constructing an informative joint prior. The part is composed of three chapters: chapters two, three, and four. \textit{Chapter Two} starts with the introduction of Weibull lifetime analysis and censoring of lifetime data and then proceeds to demonstrate how, when lifetime data are heavily censored, fitting the model with maximum likelihood or Bayesian methods with commonly used priors results in biased parameter estimates. The chapter concludes by demonstrating a method for constructing an informative joint prior, which encodes information about how the parameters covary with one another and shows how encoding information into the model in this way reduces the effects of the bias caused by heavy censoring, allowing us to obtain usable estimates of the lifetime parameters. \textit{Chapter Three} then presents a simulation study demonstrating the systematic reduction in bias provided by the informative joint prior and explores the method's limitations. From the findings in the simulations study, we consolidate our recommendations to practitioners when analysing heavily censored lifetime data. In \textit{Chapter Four}, we apply the methods and recommendations from chapters two and three to an industry dataset. The case study analyses the censored lifetime data of idlers on an overland iron ore conveyor to inform bulk replacement strategy.
+
+Part two of the thesis is more loosely structured. The three chapters--five, six, and seven--show an iterative model-building process centred around a Gamma stochastic process for degradation. \textit{Chapter Five} demonstrates how the Gamma process can be extended through the Bayesian Hierarchical modelling (BHM) framework to account for noisy observations. \textit{Chapter Six} then shows the expansion of the noisy gamma process model through the same BHM structure and the use of functional data analysis to model the wearing surface of an overland conveyor's belt. \textit{Chapter Seven} then explores possible ways to incorporate a spatial random effect in the belt wear model.
+
+The concluding chapter, \textit{chapter Eight}, ties the two parts of work in the thesis back to the overarching topics of reliability and maintenance. At this higher level, the thesis concludes with a discussion of the strengths and limitations of the work, areas of future work, and the implications of this work for industry practitioners.
