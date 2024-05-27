@@ -1,9 +1,193 @@
-\chapter{Case study}\label{chap:chapter4}
+\chapter{Noisy gamma process for modelling degradation measurements with uncertainty}\label{chap:chapter4}
 
-A case study.
+If there are very few or no failures observed for a particular component or asset then the lifetime methods that we have looked at in Chapters~\ref{chap:chapter2} and~\ref{chap:chapter3} are not very useful in reliability decision making. If there is some measure of the degradation process that drives failure, then degradation modelling can be used to forecast the degradation of units and inform reliability decision making. Gamma stochastic processes are a widely used degradation model for degradation that evolves monotonically \citep{lawless_covariates_2004}. However, most degradation data collected in industrial settings is contaminated by noise, or error. This noise can be attributed to different sources, including measurement error, instrument noise, placement of sensors, and other environmental factors \citep{ye:2015}. Consequently, models for gamma processes must be extended to account for such noise.
 
-\section{Idler replacement data}
+In this chapter I
 
-\section{Results}
+\begin{enumerate}
+  \item Show how the BHM framework can be used to simply extend the GP to incorporated noisy observations.
+  \item Show a reparameterisetion of the GP that simplifies prior elicitation and also makes it more obvious where covariates or radome effects can be included in the model.
+  \item Demonstrate through simulated data some identifiability issues that arise when the GP is extended to noisy observations and show present some methods for how to resolve these issues. 
+\end{enumerate}
+
+\section{Gamma process} \label{sec:GP}
+
+The gamma process is a type of stochastic jump process. It was introduced to the reliability domain by \citet{abdel-hameed_gamma_1975}, and since then has been used in many applications including the modelling of the corrosion of steel coatings, wear of brake pads, erosion of breakwaters, thinning of pressure vessels, and degradation of LED lights \citep{van_noortwijk_survey_2009}. 
+
+Consider a sequence $\{z_i\}$ of noise-free measurements of the degradation of a unit observed at times $t_i$, $i = 0, 1, 2 \ldots, I$. Without loss of generality, I assume that $z_0 = 0$ at $t_0 = 0$. A gamma process \citep{lawless_covariates_2004} models the jumps in degradation between measurements, $\Delta z_i = z_i - z_{i-1}$, as independent samples from a gamma distribution. Thus, we can write that
+\begin{equation} \label{eq:GP_general}
+    \Delta z_i|\eta(\cdot), \xi \sim \mbox{Ga} \left\{ \eta(t_i) - \eta(t_{i-1}), \xi \right\},
+\end{equation}
+with rate $\xi$ and shape $\eta(t_i) - \eta(t_{i-1})$, where $\eta(\cdot)$ is a given monotone increasing shape function. The simplest gamma process for modelling degradation is a stationary gamma process, which has a linear shape function \citep{frenk:2007}, for example, $\eta(t_i) = \beta t_i$. Of course, nonlinear shape functions can be used; however, even when the degradation trace appears to be nonlinear, a time transformation can often be applied so that a stationary gamma process can be fitted. Therefore, in what follows we consider only the stationary gamma process. When using a linear shape function, we can write eq.~\ref{eq:GP_general} more simply as
+\begin{equation} \label{eq:GP_stationary}
+    \Delta z_i| \beta, \xi \sim \mbox{Ga} \left( \beta \Delta t_i, \xi \right),
+\end{equation}
+where $\Delta t_i = t_i - t_{i-1}$.
+
+The gamma process described in eqs.~\ref{eq:GP_general} and \ref{eq:GP_stationary} can be extended to describe situations commonly encountered in practice, namely, the need to account for measurement error and/or unit-to-unit variability when the degradation of several identical or similar units is being measured. I discuss measurement error next and defer discussing unit-to-unit variability until Chapter~\ref{chap:chapter5}.
+
+\section{A Noisy Gamma process}
+
+In this section I give a background to noisy gamma process and describe how it's implementation can be simplified using the BHM framework introduced in \ref{sec:Bayesian-methods}. In an early paper, \citet{kallen_optimal_2005} fit a single parameter gamma process to noisy data by using the additive model $y_i = x_i + \epsilon_i$, where $y_i$ represents the noisy observations, $x_i$ represents the underlying gamma process, and $\epsilon_i$ is independent and identically distributed Gaussian noise. The gamma process is parameterised in terms of the mean wear rate ($\beta / \xi $). They then use the differences of the measured (noisy) jumps, $\Delta y_i = y_i - y_{i-1}$, to formulate the likelihood; consequently, the likelihood is determined by a convolution because the random variable $\Delta Y_i = \Delta X_i + \Delta E_i$ is the sum of the two random variables $\Delta X_i = X_i - X_{i-1}$ and $\Delta E_i = E_i - E_{i-1}$. In addition, calculating the difference of the errors leads to a dependence structure between the $\Delta \epsilon_i$. To carry out inference, \citet{kallen_optimal_2005} use simulation to approximate the likelihood. \citet{lu_efficient_2013} extended their work by developing a faster method for approximating the likelihood using the Genz transform and a quasi-Monte Carlo method. Their method also allows both of the parameters of the gamma process, $\beta$ and $\xi$, in \ref{eq:GP_stationary} to be estimated.
+
+Building on the work of \citet{kallen_optimal_2005} and \citet{lu_efficient_2013}, \citet{pulcini_perturbed_2016} proposed a way to include degradation-dependent measurement error. Other researchers focused on improving computational efficiency by alternative methods such as deconvolution \citep{rodriguez-picon_reliability_2021} or by using  faster algorithms to approximate the likelihood, for example, approximate Bayesian computing \citep{hazra_approximate_2020, hazra_likelihood-free_2022}. Common to all of these works, however, is a convolution-based likelihood based on a \emph{marginal} model that requires the evaluation of, or approximations to, a complicated multidimensional integral. By contrast, hierarchical modelling based on \emph{conditional} models provides a more straightforward, tractable, and flexible alternative when it is combined with an efficient inferential method. We describe hierarchical modelling in a Bayesian framework in the next section, but first note in passing that \citet{giorgio_perturbed_2019} and \citet{esposito_new_2022} also formulate a conditional likelihood to model a complex noisy gamma process and use maximum likelihood estimation combined with an EM algorithm and particle filtering for estimation and inference.
+
+To demonstrate how a noisy GP can be postulated under the BHM framework described in Section~\ref{}, consider the noisy degradation trace in \textit{Figure}~\ref{}. Figure~\ref{} shows a degradation trace generated from an stationary gamma process (the solid line) and the noisy observations of this degradation trace (the red points). Let, $y_i$ refer to the measured, noisy, degradation data at time $t_i$, $i = 0, 1, 2, \ldots, I$ and, using the same notation as in Section~\ref{sec:GP}, $\{ z_i \}$ refer to the values of the underlying gamma degradation path at times $t_i$.
+
+To specify the Bayesian hierarchical model, in the data model, I assume that \emph{given the value of the underlying gamma process}, the noisy observations are normally distributed and independent of each other; in other words, the $y_i$ are \emph{conditionally} independent. That is
+\begin{align*}
+  y_i|z_i, \sigma & \sim \mbox{N}(z_i, \sigma)  && \mbox{data model}
+\end{align*}
+where $\sigma$ is the standard deviation of the Gaussian distribution. I then assume in the next level of the model that the underlying degradation, the $z_i$, follow a gamma degradation process. As a consequence of the independence of the increments and eq.~\ref{eq:GP_stationary}, $z_i = \sum_{j = 0}^i \Delta z_j$ has a gamma distribution given by $\mbox{Ga}(\beta t_i, \xi)$. Therefore, we wright the process model as
+\begin{align*}
+  z_i & = \sum_{j=0}^i \Delta z_j \\ 
+  \Delta z_i | \beta, \xi & \sim \mbox{Ga}(\beta \Delta t_i, \xi) && \mbox{process model}
+\end{align*}
+In the final level of the hierarchy I specify a distribution for the parameters $\beta, \xi$ and $\sigma$, but for the moment, I write the distribution in its most general form, as the joint distribution
+\begin{align*}
+    \beta, \xi, \sigma | \theta & \sim \pi(\theta) && \mbox{parameter model}
+\end{align*}
+where $\pi(\theta)$ represents the parameters of the joint distribution. In the next section I show how a reparametrisation of the process model results in more interpretable parameters than the shape and rate and how this simplifies this last step of specifying the parameter model. Then in Section~\ref{} I use simulation to choose suitable distributions for these parameters.
+
+\section{Reparametrisation}
+
+The gamma process described in eq.~\ref{eq:GP_stationary} has density function
+\begin{equation}
+  \label{eq:GamDist}
+  f(z_j; \beta t_i, \xi) = \frac{\xi^{\beta t_i}}{\Gamma(\beta)} e^{-\xi x} z^{\beta t_i - 1}, 
+\end{equation}
+and the mean and variance, which I denote by $\mu$ and $\sigma^2$, are given by
+\begin{equation}
+  \label{eq:GamProp}
+  \mu = \frac{\beta}{\xi}t_i \,\,\,\,\mbox{and}\,\,\,\,\sigma^2 = \frac{\beta}{\xi^2}t_i.
+\end{equation}
+Both the average degradation rate and the variability of the gamma process depend on the parameters $\beta$ and $\xi$. Hence, it is challenging to specify prior distributions of $\beta$ and $\xi$ so as to separate their effects on the stochastic process. From the perspective of the user, it is desirable to reparameterise the gamma process so that the new parameters have clear interpretations and effects. In addition, if they are \emph{orthogonal} \citep{cox_reid_1987}, there are several desirable statistical consequences for estimation, inference, and computation.
+
+One such parameterisation is in terms of the mean $\mu$ and coefficient of variation $\nu = \sigma/\mu = 1/\sqrt{\beta}$: the mean represents the average degradation rate per unit time, whereas the coefficient of variation describes the volatility of the degradation process; or how much heterogeneity there is in the wear rate over time. For the user, therefore, $\mu$ and $\nu$ have a more intuitive interpretation than the shape and the rate. Furthermore, using a result due to \citet{huzurbazar_1956}, it is straightforward to show that these parameters are also orthogonal. (We note in passing that orthogonal parameterisations are not unique; the mean $\mu$ and shape $\beta$ are also orthogonal \citep{huzurbazar_1956}.)
+
+Substituting $\mu$ and $\nu$ in the expression for the distribution of the increments in the process model in Section~\ref{sec:GP} yields
+\begin{equation} 
+  \label{eq:GP_stationary_reparam}
+  \Delta z_i|\mu, \nu \sim \mbox{Ga} \left( \frac{\Delta t_i}{\nu^2}, \frac{1}{\mu \nu^2} \right).
+\end{equation}
+I use this reparameterisation in the remainder of this thesis. \citet{kallen_optimal_2005} also use the shape and coefficient of variation, pointing out that it can be easier for a plant engineer to interpret them. They do not, however, exploit their orthogonality, preferring to fix the value of $\nu$ in their analysis instead of estimating it.
+
+\section{Constructing the prior}
+
+The prior distribution in the parameter model summarizes our beliefs about the parameters. There are two different ways in which this information is encoded: the choice of distribution, and the values of the hyperparameters. Before the advent of contemporary sampling algorithms, Bayesian analysis relied on conjugate prior distributions, or convenient prior distributions that facilitated the use of Gibbs samplers or conventional Metropolis-Hastings algorithms \citep{gilks1996markov}. However, with the development of more efficient sampling algorithms such as Hamiltonian Monte Carlo \citep{betancourt_conceptual_2017}, we are no longer limited by such requirements and can select priors that reflect our state of knowledge, facilitate efficient computation, and that can be justified and evaluated in a principled way. In this section I\ldots
+
+In the degradation modelling literature, a gamma distribution is often used as the prior distribution for the rate parameter $\xi$ of the gamma process \citep{lawless_covariates_2004} and also for the shape parameter \citep{rodriguez-picon_degradation_2018}. It is well known that a gamma prior on the rate parameter is conditionally conjugate\citep{Pradhan_estimation_2011}, and its use leads to analytically tractable results, as \cite{lawless_covariates_2004} show. Nevertheless, little work has been done to assess whether other prior distributions might be more appropriate. The gamma distribution has a heavy tail, and its use can lead to MCMC chains that converge very slowly or that are highly autocorrelated; moreover, it can lead to physically implausible realizations of the gamma process, as we demonstrate below. Using the new parameterisation of the GP in terms of $\mu$ and $\nu$, conditional conjugacy no longer exists and so there is even less motivation for a gamma prior.
+
+In \textit{Figure}~\ref{}, I illustrate prior predictive checking of a noise-free gamma process using three sets of priors for its parameters: first, `conventional' priors, $\mbox{Ga}(1, 0.001)$ and $\mbox{Ga}(0.001, 0.001)$, that are widely used in the literature for the both shape and rate parameters of the usual parameterization of a noise-free gamma process in eq.~(\ref{eq:GP_stationary}), and second, priors on $\mu$ and $\nu$ in the alternative parameterization of eq.~(\ref{eq:GP_stationary_reparam}) with carefully thought out weekly-informative priors. All three sets of priors yield an average degradation rate of 1 unit per unit time. 
+
+The distribution $\mbox{Ga}(\epsilon, \tilde{\epsilon})$, where $\epsilon, \tilde{\epsilon}\longrightarrow 0$, is often used as a noninformative prior distribution, especially in mixed linear models, where it is a conditionally conjugate prior for the precision \citep[p.~33]{hodges_2014}. In addition, as we pointed out above, the gamma distribution is conditionally conjugate for the rate parameter: if $\{ z_i \}$, $i = 1, 2, \ldots, n$, represents an independent sample from $\mbox{Ga}(\beta, \xi)$, then the conditional distribution of $\xi$ given $\beta$ and the data is $\mbox{Ga}(n\beta + \epsilon, \sum_{i=1}^n z_i + \tilde{\epsilon})$ when the prior distribution of $\xi$ is $\mbox{Ga}(\epsilon, \tilde{\epsilon})$. Hence, when $\epsilon$ and $\tilde{\epsilon}$ are both small, the prior adds very little information, but it is noninformative \textit{with respect to the rate parameter only}; furthermore, inferences about $\xi$ may be sensitive to the values of $\epsilon$ and $\tilde{\epsilon}$ in data sets where small values of $\xi$ may be possible \citep[p.~130]{gelman_bayesian_2020}. When $\mbox{Ga}(\epsilon, \tilde{\epsilon})$ is used for \textit{both} parameters, we can no longer assume that the joint prior will be noninformative and therefore must evaluate it to determine whether it is indeed diffuse. For further discussion on the consequences of using $\mbox{Ga}(\epsilon, \tilde{\epsilon})$ as a prior distribution and guidance on using more sensible alternatives, see \cite{hodges_2014} and \cite{gelman_bayesian_2020}.
+
+Figure~\ref{fig:ppc}(a) and (b) show 100 draws from the prior predictive distribution of a noise-free gamma process when both the shape and rate parameters are assigned the prior distribution $\mbox{Ga}(1, 0.001)$ (Fig.~\ref{fig:ppc}(a)) or $\mbox{Ga}(0.001, 0.001)$ (Fig.~\ref{fig:ppc}(b)). In Fig.~\ref{fig:ppc}(a), we can clearly see that the degradation traces resulting from a $\mbox{Ga}(1, 0.001)$ prior distribution are all nearly linear, without the jumps expected of gamma processes; furthermore, many of the rates of degradation are unrealistically high and unrealistically low. In Fig.~\ref{fig:ppc}(b), where a $\mbox{Ga}(0.001, 0.001)$ prior is used, most of the prior predictive distribution has mass around implausibly low values of the average rate, and there is one unrealistically steep degradation trace. As we pointed out earlier, the gamma distribution is highly skewed and has heavy tails; consequently, depending on the values of the shape and rate, the prior can place mass on high, low, or both high and low values, resulting in simulated data that simply could not be observed in practice. By contrast, prior simulations generated according to the weekly-informative priors constructed with respect to the alternative parameters $\mu$ and $\nu$ in Fig.~\ref{fig:ppc}(b) look much more plausible.
+
+To specify independent prior distributions of the parameters $\mu$ and $\nu$ in the GP model in  \eqref{eq:GP_stationary_reparam}, we adopt the approach introduced by \cite{Simpson_2017}: design priors that favour simpler models over more complex ones and that are consistent with domain knowledge. The mean $\mu$ controls the average degradation rate, similar to the action of the slope parameter in a linear degradation path model. We have no reason to believe that the variability about the mean degradation rate would be asymmetric, so a Gaussian distribution with a small standard deviation is both appropriate and convenient
+\begin{equation*}
+  \mu \sim \mbox{N}(1, 0.5).
+\end{equation*}
+The coefficient of variation $\nu$ is a measure of the volatility of the degradation process, and although we might expect some heterogeneity in the wear rate as degradation progresses, we do not expect the wear rate to be extremely volatile. Hence, we use a truncated Student $t$-distribution with 3 degrees of freedom as a prior for $\nu$;
+\begin{equation*}
+  \nu \sim t_3^{+}(0, 1),
+\end{equation*}
+where the superscript $(+)$ denotes a truncated distribution whose lower bound is zero; furthermore, I use the location-scale form of a $t$ distribution with $n$ degrees of freedom, written as $t_n(\hbox{location}, \hbox{scale})$. This prior places a large mass near zero but still allows the posterior distribution to move away from zero. In addition, it has lighter tails than a gamma distribution, and consequently does not give too much weight to extremely volatile degradation paths. Figure~\ref{fig:ppc}(c) shows 100 draws from this parameter model for the reparameterised gamma process. The degradation traces have the appearance of paths expected from a gamma process, that is, there are discrete jumps between time points, in contrast to Fig.~\ref{fig:ppc}(a), where all the traces are straight lines. Furthermore, more than half the degradation values at the end (eleventh time point) are between 6 and 16, as would be expected when the degradation varies around one. Finally, although there are some extreme realizations, there are only one or two that are completely implausible.
+
+To fully specify the model, I also need to specify a prior for the standard deviation of the measurement error, $\sigma$. Following the recommendations of \citet[Chapter~17]{gelman_bayesian_2020}, I use a vague $\hbox{Uniform}(0, A)$ prior for $\sigma$, where $A$ is chosen to be large relative to the expected scale of $\sigma$. We use such a vague prior for demonstration purposes. However, in practice, an analyst should have a reasonable grasp of the scale of the measurement error and should be able to specify a weakly informative prior, we do exactly this in Section~\ref{sec:comp-sols}. Because our initial prior on $\sigma$ is so vague, we do not include the measurement error in the prior predictive checking in Fig.~\ref{fig:ppc}.
+
+\ldots
+
+\section{Fitting the noisy GP}
+
+To improve our understanding of the noisy GP model I fit the Bayesian hierarchical model outlined in Section~\ref{subsec:BHM_nGP} with the priors defined in Section~\ref{subsec:prior} to the single simulated degradation trace in \textit{Figure}~\ref{} as well as to a subset of the simulated degradation measurements. For clarity, the full model is
+\begin{align*}
+  y_i|z_i, \sigma & \sim \mbox{N}(z_i, \sigma)  && \mbox{data model} \\
+  z_i & = \sum_{j=0}^i \Delta z_j && \mbox{process model} \\ 
+  \Delta z_i|\mu, \nu & \sim \mbox{Ga} \left( \frac{\Delta t_i}{\nu^2}, \frac{1}{\mu \nu^2} \right) \\
+  \mu & \sim \mbox{N}^{+}(10, 10) && \mbox{parameter model} \\
+  \nu & \sim t_2^{+}(0, 1) \\
+  \sigma & \sim \mbox{Unif}(0, 100).
+\end{align*}
+The single path example shows that the noisy GP is more difficult to fit than a noise-free GP model: when the sample size is small, the model struggles to separate the parameters describing the variance of the measurement error and the volatility of the underlying gamma process because there is not enough information in the data to do so. To demonstrate this problem with identifiability, I fit the BHM of two data sets: one `large' data set consisting all 20 simulated noisy degradation measurements in \textit{Figure}~\ref{}, and another `small' data set that is a subset of 10 points. I fit the BHM of the noisy GP outlined in Sections~\ref{subsec:BHM_nGP} and \ref{subsec:param} to these two data sets and evaluate how well the true parameter values and underlying degradation path is reclaimed in the two resulting posterior distributions. I also investigate the efficiency of the No-U-Turn sampler for the two cases.
+
+\subsection{Data simulation}
+
+To generate the degradation trace in \textit{Figure}~\ref{}, which I coin the `large' dataset, by sampling 20 time increments from a $\mbox{Unif}(0.8, 1.3)$ distribution. Then next, I sampled 20 jumps in degradation from $\mbox{Ga}(\Delta t_i/\nu^2, 1/\mu\nu^2)$, using $\mu = 10$ and $\nu = 1.119$. I then calculated the cumulative sum of the jumps to obtain the underlying, noise-free degradation trace $z_i$, where $z_0 = 0$ at $t_0 = 0$. Finlay I add Gaussian noise with standard deviation $\sigma = 4$ to the underlying degradation path to get the noisy observations. To create the second smaller data set, I randomly select ten of the twenty noisy observations; The degradation observations selected for the small data set are shown in red in Fig.~\ref{fig:sim-data}.
+
+Tables of big and small data sets.
+
+\subsection{Computation}
+
+To sample from the posteriors of the noisy GP model conditioned on the two different datasets I use the No-U-Turn sampler implemented in the probabilistic programming language \textit{Stan} \citep{Stan_2022}. I generated $88,000$ samples from each posterior distribution using four chains of $25,000$ iterations each, with a burn-in of $3,000$ iterations and no thinning. To ensure a detailed exploration of the posterior, I also change the sampling parameters \textit{adapt delta} and \textit{maximum tree depth} to $0.99$ and $13$ respectively. Raising \textit{adapt delta} results in a more aggressive (smaller) choice of the step size used for the leapfrog algorithm that approximates the hamiltonian trajectories and raising the \textit{maximum tree depth} allows each leapfrog algorithm to run for longer. Increasing these two sampling parameters results in a slower sampler but ensures a more detailed exploration of the posterior. All of the code to define the model in stan, simulate the data in R, and sample from the posterior using RStan is available in XXXX.
+
+During sampling--despite increasing \textit{adapt delta} and \textit{maximum tree depth}--80 divergent transitions occur when fitting the model to the small data set, whereas only four occur when sampling from the larger data set. Further more, there are signs that the sampler for the small data is having trouble efficiently exploring the posterior. \textit{Figure}~\ref{} shows the chain energies for the \ldots
+
+\subsection{Results and diagnostics} \label{sec:noisy-GP-results}
+
+My objective here is to investigate how the size of the dataset affects inference from the BHM for a noisy GP. To do so I assess how well the parameters and underlying degradation trace are reclaimed in the two posterior distributions. Visualising the two posteriors shows that when the model is fitted to all twenty degradation observation it is able to recover the parameter values and underlying degradation path; when only a subset of ten noisy observations is used, the model fails to do so because it is unable to disentangle the observation noise from the volatility of the gamma process. I come to this conclusion by exploring the degenerate behaviours in the posterior that are flagged by divergent trajectories that occur during sampling. 
+
+\paragraph*{marginal densities}
+\textit{Figure}~\ref{} shows the marginal distributions of the parameters $\mu$, $\nu$, and $\sigma$ conditioned on the small and big data sets as well as the true values of the parameters. For each marginal density the median and 66\% and 95\% credible intervals are shown. It is clear that when the model is fit to the small data set it fails to reclaim the true parameter values, but when fit to the bigger dataset, it successfully reclaims the true values. The marginal posterior densities of the the parameters conditioned on all twenty degradation observations are centred around the true values of the parameters whereas the marginal posteriors of $\sigma$ and $\nu$ conditioned on the subset of ten observations are centred around fifteen and zero respectively. Furthermore, the marginal posterior of $\sigma$ conditioned on the smaller subset of the data appear to have some multimodality. To understand the implication of these parameter estimates as well as the effect of how they covary with one another in the posterior I look at their joint effect on the outcome variables, which in this case is the predictive distribution of the filtered degradation path.
+
+\paragraph*{posterior predictive density}
+\textit{Figure}~\ref{} shows the posterior predictive distribution of the underlying degradation trace, the $z_i$, for the two posteriors with the true degradation trace and noisy observations overlaid. The thick grey line in each plot is the median of the posterior predictive distribution; additional quantiles are shown in different shades of blue. Clearly in \textit{Figure}~\ref{}~A the model has been able to reclaim the underlying degradation from the noisy degradation observations when fit to all twenty observations: the median path follows the actual path almost exactly, with uncertainty bands that are narrow enough to be useful. However, as was the case with parameter values, the median path derived from the posterior distribution conditioned on the subset of the data has not recovered the true path (\textit{Figure}~\ref{}~B). In \textit{Figure}~\ref{}~B, the median path is a nearly straight line through the data points. In addition, the uncertainty intervals are much wider.
+
+\paragraph*{pairs}
+Clearly there are some issues occurring in the posterior distribution of the model conditioned on the smaller subset of the data. This was pre-eluded to by the divergent trajectories that occurred during sampling(section~\ref{}). In the case of fitting the model to simulated data, where we can be sure that the model is properly specified and implemented, poorly behaved sampling is often a sign of a deeper issue with the model. As discussed in Section~\ref{sec:Bayesian-methods}, the divergent transitions can point to the problematic areas in the posterior. \textit{Figure}~\ref{} shows a pairs plot of the parameters $\mu$, $\nu$, and $\sigma$ and the first degradation jump, $\Delta z_1$. The divergent trajectories are shown in red. In the bivariate scatter plots there are strong funnel shapes between $\mu$ and $log(\nu)$ as well as between $log(\nu)$ and the first degradation jump. The divergent trajectories are concentrated at the entrance to these funnel, suggesting that these are the cause of the sampling issues. The funnel shapes occur because as $\nu$ shrinks towards zero $\mu$ and $\Delta z_1$ approach very particular values; $\mu = 10$ and $\Delta z_1 = 10 \times \Delta t_1$.
+
+\paragraph*{parallel coordinate plot}
+The divergent trajectories can help to further explore how the degenerate behaviour manifests in the multidimensional posterior. \textit{Figure}~\ref{} shows a parallel coordinate plot of the posterior draws for all of the parameters in the model. The divergent trajectories are highlighted red. The divergences draw a clear structure through parameter space. They all pass through the values $\mu = 10$, $\nu = 0$, and $\Delta z_i = 10 \times \Delta t_i$ and have an inflated value of $\sigma$ that is much larger than the true value $\sigma = 4$. This structure equates to a linear degradation trace with large uncertainty. To emphasise this point, in \textit{Figure}~\ref{} I plot the posterior predictive distribution of the underlying degradation path from the small data set and overlay the divergent trajectories. Showing that the areas of tight curvature in the posterior occur around the models where the degradation trace is effectively linear. 
+
+\paragraph*{comparison of the two posteriors}
+In comparison, this degenerate behaviour in the posterior is almost completely washed out by extra information in the large dataset. \textit{Figure}~\ref{} shows the joint distributions of the intermediate quantities $\Delta z_{15}$ from the model conditioned on the big dataset and $\Delta z_{9}$ for the small with $\log(\nu)$ and $\sigma$. In the two datasets, $\Delta z_{15}$ and $\Delta z_{9}$ are the same jump in degradation. In the joint posterior of $\Delta z_{9}$ and $\log(\nu)$ there is the deep funnel shape around $\Delta z_{9} = 9$ and $\log(\nu) = -\infty$ and there is a second mode in the joint distribution of $\Delta z_{9}$ and $\sigma$. However, in the joint distribution of $\Delta z_{15}$ and $\log(\nu)$ there is very little mass around $\Delta z_{15} = 9$ and no second mode in the joint distribution of $\Delta z_{15}$ and $\sigma$. Leading to the conclusion that the nonidentifiability only exists when there is few observations.
+
+\subsection{Solutions to computational issues} \label{sec:comp-sols}
+
+The identifiability issue for the small data set can also be solved by injecting more information into the analysis that helps to disentangle $\sigma$ and $\nu$. This can be in the form of supplementary data or prior information that inform one of the nonidentifiable parameters. It would typically be much easier to get extra information about the measurement error. This information could be in the form of domain expertise or supplementary experimental data. Here I show that adding this a small amount of supplementary information using either of these two approaches helps to identify $\sigma$ and therefore $\nu$ resulting in much smoother geometries in the posterior and therefore much more efficient sampling. The results on the inference is arguably better than if we fit the model to all twenty degradation observations.
+
+\paragraph*{Prior information}
+
+In Section~\ref{sec:noisy-GP-results}, I have used an effectively non-informative prior for the standard deviation of the measurement error. Typically a technician would have some understanding of the variability in the measurement process. To emulate this, I place a Gaussian prior on the standard deviation of the measurement error
+\begin{equation*}
+  \sigma \sim \mbox{N}(4, 1).
+\end{equation*}
+This prior is centred around the true value of $\sigma$ and places $95\%$ of the mass between $\sigma = 2$ and $\sigma = 6$. Sampling from the posterior of this model with this stronger prior conditioned on the small dataset is much quicker and no divergent transitions occur. \textit{Figure}~\ref{} shows the chain energies for the sampler\ldots
+
+The pairs plots of the MCMC samples in \textit{Figure}~\ref{} look much smoother and there is little evidence of the funnel shaped degeneracies between $\log{\nu}$ and $\mu$ and $\Delta z_1$. In \textit{Figure}~\ref{} I compare the marginal distribution for $\sigma$, $\mu$, and $\nu$ with the true values and the models fit in section~\ref{sec:noisy-GP-results}. The marginal distributions for the model with the stronger prior are much smoother and there is now no mass around zero in the posterior of $\nu$.
+
+\paragraph*{Supplementary data}
+
+As an alternative, I sample five supplementary observations of the measurement noise from the distribution
+\begin{equation*}
+  y_{\text{\tiny{sup}}} \sim \mbox{N}(0, 4).
+\end{equation*}
+Extra supplementary observations such as these could be obtained by taking multiple measurements at time $t = 0$, when the degradation is known to be zero; just before decommissioning the component, after which detailed non-noisy measurements can be obtained; or performing some kind of small experiment. The supplementary observations can be easily incorporated into the Hierarchical model through the data model
+\begin{align*}
+  y_i|z_i, \sigma & \sim \mbox{N}(z_i, \sigma)  && \mbox{data model} \\
+  y_{\text{\tiny{sup}}} & \sim \mbox{N}(0, \sigma).
+\end{align*}
+Similar to the more informative prior, the sampler is much more efficient, no divervgencies occur during sampling, and the bivariate posterior distributions in the pairs plots look much smoother that. The resulting marginal posterior distributions of $\sigma$, $\mu$, and $\nu$ for the supplementary data are also compared in \textit{Figure}~\ref{}. The marginal distributions of the parameters are very much the same as when a stronger prior is used and the model clearly successfully reclaims the true parameter values.
 
 \section{Discussion}
+
+The main objective of this chapter has been to show that using the Bayesian hierarchical formalism allows us to frame a model for a noisy gamma stochastic process in a tractable and transparent manner. Decomposing the noisy gamma process into a sequence of conditional models---the data, process, and parameter models---removes the need for complex deconvolutions that require the evaluation of, or approximations to, multidimensional integrals. Making this connection that allows the simple extension of the GP to noisy degradation observation and showing its implementation in the contemporary Bayesian computational environment Stan, is a step towards making stochastic degradation models applicable to use in industry and also accessible to practitioners. Bellow, I summarise the main element of this chapter and highlight the contributions.
+
+Reparameterising the gamma process in terms of the mean $\mu$ and coefficient of variation $\nu$ results in more interpretable parameters than the shape $\beta$ and rate $\xi$: $\mu$ is the mean wear rate, and $\nu$ is the inverse of the `signal-to-noise' ratio, and hence is a measure of the volatility of the gamma process.
+The interpretability of $\mu$ and $\nu$ simplifies specifying prior distributions because they are easier to elicit domain information about. Additionally, reparameterising the gamma process in this way also helps clarify how extensions of the model, which I show in the next chapter, such as unit-to-unit variability or covariates, can be incorporated into the model. Finally, the parameters $\mu$ and $\nu$ are orthogonal, which has desirable computational benefits.
+
+I've re-assessed good choice of priors under this new parameterisation and shown a pricipled way of assessing these priors.
+
+Clear pathological behaviour in the posterior of the small dataset.
+
+Some signs of this in the poor behaviors in the bigger dataset but much better behaved.
+
+Discussions of pre-asymptotic identifiability.
+
+When more extra information is added into the analysis that informs one of the poor behaving parameters the computational and inferential problems are solved.
+
+Lead into next chapter on using data from multiple units.
+
+
+
+The from the small dataset; this `oversmoothing' leads us to conclude that the two modes of the marginal distributions of $\sigma$ and $\nu$ are associated---when $\nu$ approaches zero and the path from the gamma process becomes nearly linear with only very small jumps, $\sigma$ is overestimated to compensate for the unaccounted-for volatility of the degradation path.
