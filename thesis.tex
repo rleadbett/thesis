@@ -49,7 +49,10 @@
 \documentclass[apa,colorlinks,emptypage]{curtinThesis}
 \usepackage[all]{unitabbrev} %optional package that includes standard unit abbreviations
 \usepackage{adsshort} %optional package that includes abbreviations endorsed by the ADS
-
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{amsmath,mathtools}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%  Define Globals Here  %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -100,22 +103,25 @@
 % include chapters - adjust the chapter files in chapters folder - remove or extend where necessary
 \include{chapters/chapter1}
 
-\part{Part one: lifetime analysis}
-\label{part:one}
+\part{Part one: lifetime analysis}\label{part:one}
 
 A preamble about which chapters have been published and which chapters came from industry placements.
+
+``Since the initial approach was published in Leadbetter et al. (2021), I have taken an alternative approach that does\ldots''
 
 \include{chapters/chapter2}
 \include{chapters/chapter3}
-\include{chapters/chapter4}
 
-\part{Part two: Degradation modelling}
-\label{part:two}
+\part{Part two: Degradation modelling}\label{part:two}
 
 A preamble about which chapters have been published and which chapters came from industry placements.
 
+Contribution statements for Noisy GP paper and Belt wear paper.
+
+\include{chapters/chapter4}
 \include{chapters/chapter5}
 \include{chapters/chapter6}
+
 \include{chapters/chapter7}
 
 \chapter{Discussion}
@@ -131,8 +137,7 @@ A preamble about which chapters have been published and which chapters came from
 
 \end{customappendix}
 
-
-\backmatter
+\backmatter{}
 
 \bibliography{references} % change 'references' to your .bib file
 \ackstatement % statement to acknowledge the effort put into acknowledging the authors

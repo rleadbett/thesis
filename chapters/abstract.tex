@@ -4,5 +4,28 @@
 %%
 
 \chapter*{Abstract} \addcontentsline{toc}{chapter}{Abstract}
-Write your abstract here
+
+From pit to port, the consistent and efficient operation of iron ore machinery is essential for maximizing profits. 
+To this end, reliability modelling is an invaluable tool for improving the design and execution of the maintenance strategies that ensure the reliable operation of mining machinery.
+There are well established reliability models in the literature, but there is a discrepancy between this literature and what is actually done by practitioners in the mining industry; a theory-practice gap.
+This gap exists because of the imperfect reality of collecting data in the field--data sets that are small, incomplete, noisy, or all three--and the lack of methods for expanding reliability modelling to account for these imperfections.
+My industry-linked PhD has aimed to reduce this gap by demonstrating how Bayesian statistical modelling framework can address some of the common problems faced when fitting models to such reliability data in mining applications.
+
+%In the vast operation of an iron ore mine, ensuring the consistent and efficient performance of machinery is paramount. To this end, reliability modelling is an invaluable tool for improving the design and execution of the maintenance strategies that ensure the reliable operation of mining machinery. However, despite the existence of well established reliability models in the literature, the imperfect reality of collecting data in the field--data sets that are small, incomplete, noisy, or all three--as well as a lack of methods for expanding reliability modelling to account for these imperfections means that there is a discrepancy between the literature and what is actually done by practitioners in the mining industry; a theory-practice gap. My industry-linked PhD has aimed to reduce this gap by demonstrating how the Bayesian statistical modelling framework can be used to solve some of the common problems of reliability data in mining applications.
+
+In the first part of the work, I adapt and evaluate a method for constructing an informative joint prior distribution for the parameters of weibull lifetime analysis to combat bias introduced through heavily censored lifetime data.
+I first illustrate the bias caused by heavy censoring and then show how encoding domain information into a joint prior for the two Weibull parameters constrains the bias. 
+Secondly, I evaluate the proposed method through a simulation study.
+Finally, I provide recommendations on applying the method in practice and demonstrate on an industry data set from an overland iron ore conveyor.
+
+In the second part of the work I focus on degradation modelling.
+Particularly, how the Bayesian hierarchical framework can extend the gamma stochastic degradation process to noisy observations and then to the degradation of surfaces.
+In doing so, I simplify some of the literature on noisy gamma processes by demonstrating how separating the observation-degradation process into two separate conditional models removes the need for complicated inferential algorithms. 
+Furthermore, I show the hierarchical models implementation using flexible tools that are accessible to a wider reliability audience.
+I also show how reparametrisation can make the gamma process more interpretable and therefore simplify prior specification and further expansions of the model.
+Taking this one step further, I expand the noisy gamma process to functional data analysis in order to model the degrading surface of conveyor belting.
+
+Throughout the work I emphasise how complicated reliability processes found in practice can be broken down into manageable sub-models and how these models can be fit, evaluated, expanded, and compared using Bayesian workflow considered to be good statistical practice.
+In doing so hope to contribute at a larger level by providing an applied case study of the the Bayesian workflow in a reliability setting that can be used by other applied reliability practitioners to develop solutions of their own for new problems.
+
 \vspace*{\fill}
