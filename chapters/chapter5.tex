@@ -1,9 +1,118 @@
-\chapter{Noisy gamma process for modelling degradation measurements with uncertainty}\label{chap:chapter5}
+\chapter{Noisy gamma process with unit-to-unit variability}\label{chap:chapter5}
 
-\section{Background}
+Unit-to-unit variability description.
 
-\subsection{BHM}
+Introduce crack growth data and adding noise.
 
-\subsection{Gamma process}
+Prior predictive checks for crack growth.
 
-\subsection{Gamma process with noise}
+\section{Models for multiple units}
+
+Commentary on random effects\ldots
+
+\paragraph{complete pooling model}
+
+\paragraph{varying mu model}
+
+\paragraph{varying nu model}
+
+\paragraph{varying mu and nu model}
+
+\section{Computation and posteriors}
+
+\subsection{Model comparison}
+\label{subsec:modcomp}
+
+Having fitted several models to the crack-growth data in Fig.~\ref{fig:RP_w_noise}, the next step is to check how well they describe the data generating process and to compare them. To do so, we evaluate their ability to predict new observations. In the absence of an independent, external test set, it is conventional to use \textit{information criteria} to compare models. These criteria, such as AIC, DIC, and others, are used to seek a compromise between goodness-of-fit and model complexity and to assess out-of-sample prediction accuracy. AIC and DIC are easy to calculate, but they are not fully Bayesian; hence, criteria such as WAIC (Watanabe-Akaike Information Criterion) and leave-one-out cross-validation (LOO-CV) are to be preferred \citep{Vehtari2017}.
+
+In comparing the models below, we use LOO-CV, where the measure of distributional predictive accuracy is the \emph{log score}. The log score is the log likelihood of a new observation $\Tilde{y}_i$ given the posterior distribution of the parameters. It is also the posterior predictive density, and it can be written as,
+
+\begin{equation} \label{eq:lpd}
+    \hbox{lpd} = \log \int p(\Tilde{y}_i|\theta)p(\theta|y)d\theta = \log p(\Tilde{y}_i | y),
+\end{equation}
+
+where $\theta$ is the set of parameters and $y$ is the observed data. The parameters can also include unobserved latent variables; in models for the noisy gamma process, the latent variables represent the underlying gamma process.   This measure in eq.~(\ref{eq:lpd}) is called the log posterior density (lpd). If we observe multiple new data points $\Tilde{y} = (\Tilde{y}_1, ..., \Tilde{y}_I)$, this can be dealt with in a point-wise fashion using the log point-wise posterior density (lppd),
+
+\begin{equation} \label{eq:lppd}
+    \hbox{lppd} = \sum^I_{i = 1} \log p(\Tilde{y}_i|y).
+\end{equation}
+
+In cases where each of the new observations are independent of one another given the parameters and latent variables, which is the case here, the point-wise predictive density is equal to the joint predictive density of the set of new observations; $\log p(\Tilde{y}|y) = {\sum}^I_{i = 1} \log p(\Tilde{y}_i|y)$. \eqref{ep:lpd} and \eqref{ep:lppd} are defined for a given set of new observations, but the new unobserved data points $\Tilde{y}_i$ arises from the true data generating process and so are a random variable with distribution
+
+\begin{equation} \label{ep:y_tild_dist}
+    \Tilde{Y}_i = f(\Tilde{y}_i).
+\end{equation}
+
+Hence, a better measure of predicted accuracy is the expectation of the lppd, the elppd, which is obtained by integrating over $\Tilde{Y}_i$
+
+\begin{equation} \label{ep:elppd}
+    \hbox{elppd} = \sum^I_{i = 1} \int \log p(\Tilde{y}_i|y)f(\Tilde{y}_i) d\Tilde{y}_i.
+\end{equation}
+
+In the context of Bayesian models fit with MCMC, the computed elppd can be calculated by averaging over the $s = 1, ..., S$ MCMC draws from the posterior,
+
+\begin{equation} \label{ep:computed_elppd}
+   \hbox{computed elppd} = \sum^I_{i = 1} \int \log \frac{1}{S} \sum^S_{s = 1} p(\Tilde{y}_i|\theta^s)f(\Tilde{y}_i) d\Tilde{y}_i.
+\end{equation}
+
+Although this would be the best measure of predictive accuracy for our Bayesian models, we obviously do not know the true data generating process and so cannot define $f(\Tilde{y}_i)$. We can, however, approximate the expectation above by using cross-validation whereby we iteratively withhold a portion of the observed data, sample from the posterior conditioned on the wrest of the data, and then calculate the log likelihood of the withheld portion of the data given the samples from the posterior. The simplest form of cross-validation is leave one out (loo), where we withhold each observation,
+
+\begin{equation} \label{ep:elppd_loo}
+   \hbox{elppd}_{loo} = \sum^I_{i = 1} \log \frac{1}{S} \sum^S_{s = 1} p(y_i|\left[\theta\right]_{-\left[i\right]}^s).
+\end{equation}
+
+$\left[\theta\right]_{-\left[i\right]}^s$ is the posterior draws for the set of parameters and latent variables conditioned on all the observed data except the withheld observation $y_i$.
+
+In hierarchical models, the definition of a new observation and the likelihood of those observations depends on what aspect of the model's predictive performance we are trying to assess. For example, in the crack growth problem, we could obtain new observations for the same units at the same observation times, $\Tilde{y}_{n,i} | z_{n, i}, \sigma$ (although this case is a bit unrealistic), new observations for an observed unit at some time in the future, $\Tilde{y}_{n, I + 1}|\Tilde{z}_{n, I + 1}, \sigma$, or we could observe an entirely new unit, $\Tilde{y}_{n + 1}|\Tilde{z}_{n + 1}, \sigma$, where $\Tilde{y}_{n + 1} = \left[\Tilde{y}_{n + 1, 1}, ..., \Tilde{y}_{n + 1, I}\right]$. Here we focus on the last two of these cases; $\Tilde{y}_{n,i + 1}|\Tilde{z}_{n, i + 1}, \sigma$, since we would like to compare the models on their ability to forecast the future degradation for each of the units being tested (step ahead prediction); and $\Tilde{y}_{n + 1}|\Tilde{z}_{n + 1}, \sigma$ to compare the models on their ability to predict completely new, unseen, units (leave one unit out). In both cases, the likelihood of the observations conditional on the draws from the posterior predictive distribution are the same, since we assume in our data model that any noisy observations are independent and normally distributed given the underlying filtered degradation and the standard deviation of the measurement error, that is,
+
+\begin{equation} \label{ep:elppd_likelihood}
+   p(\Tilde{y}_{n, i}|\Tilde{z}_{n, i}, \sigma) = \frac{1}{\sigma \sqrt{2\pi}}\exp{-\frac{1}{2}\left( \frac{\Tilde{y}_{n, i} - \Tilde{z}_{n, i}}{\sigma}\right)^2},
+\end{equation}
+
+however, the predictive distributions of the $\Tilde{z}_{n, i}$ may be different in the two cases depending on the model's hierarchical structure.
+
+\paragraph{Step ahead prediction}
+
+For the case of step ahead prediction, the $\hbox{elppd}_{\hbox{step ahead}}$ can be estimated using leave one out,
+
+\begin{equation} \label{ep:elppd_loo_sa}
+   \hbox{elppd}_{\hbox{step ahead}} = \sum^N_{n = 1} log \frac{1}{S} \sum^S_{s = 1} p(y_{n, I} | \left[\Tilde{z}_{n, I}, \sigma \right]_{-\left[ n, I \right]}^s),
+\end{equation}
+
+where $\left[\Tilde{z}_{n, I}, \sigma \right]_{-\left[ n, I \right]}^s$ are the draws from the posterior distribution of $\sigma$ and posterior predictive distribution of $\Tilde{z}_{n, I}$ conditioned on all data except the withheld observation $y_{n, I}$. The draw from the posterior predictive distribution of $\Tilde{z}_{n, I}$ is calculated by sampling a value of predicted jump in degradation $\Delta\Tilde{z}_{n, I}^s|\left[\mu_n, \nu_n \right]^s_{-\left[ n, I \right]}, (t_I - t_{I-1})$ according to the process model (Note that this will be different depending on which hierarchical structure we are using\ldots for the complete pooling model we would use $\mu$ and $\nu$ whereas for the partial pooling models we wold use $\mu_n$ or $\nu_n$ when applicable). Then, we add the sampled jump to the draw of the previous filtered degradation measurement for unit $n$ to get a draw from the posterior predictive distribution of $\Tilde{z}_{n, I}$;
+
+\begin{equation} \label{ep:elppd_loo_sa}
+   \Tilde{z}_{n, I}^s = z_{n, I - 1}^s + \Delta\Tilde{z}_{n, I}^s.
+\end{equation}
+
+The $\hbox{elppd}_{\hbox{step ahead}}$ for the several different models are displayed in Table-
+
+! Add Table of results.
+
+\paragraph{Leave on unit out} 
+
+The same can be done for an entirely new unit, except the likelihood for all the observations from a new unit is
+
+\begin{equation} \label{ep:likelihood_new_unit}
+   p(\Tilde{y}_{N + 1}|\Tilde{z}_{N + 1}, \sigma) = \prod^I_{i = 1} p(\Tilde{y}_{N + 1, i}|\Tilde{z}_{N + 1, i}, \sigma).
+\end{equation}
+
+Using cross validation, iteratively withholding each unit, we can estimate the $\hbox{elppd}_{\hbox{new unit}}$ via
+
+\begin{equation} \label{ep:elppd_loo_sa}
+   \hbox{elppd}_{\hbox{new unit}} = \sum^N_{n = 1}\sum^{I}_{i = 1} log \frac{1}{S} \sum^S_{s = 1} p(y_{n, i} | \left[\Tilde{z}_{n, i}, \sigma \right]_{-\left[ n \right]}^s).
+\end{equation}
+
+Note that for each iteration of the leave one unit out the posterior is conditioned on the dataset with \textbf{all} the observations from unit $n$ being withheld. In this case, draws from the posterior predictive distribution of $\Tilde{z}_{n, i}$ are obtained by sampling $I$ jumps in degradation from the data model conditional on the hyper parameters, $\Delta \Tilde{z}_{n}|\theta^s_{-[n]}$, and then taking the cumulative sum of the jumps to get the $\Tilde{z}_{n}$; $\Tilde{z}_{n} = cumsum(\Delta \Tilde{z}_{n})$. The draws of the hyper parameters for the new unit, $\theta^s_{-[n]}$, are either sampled from the hierarchical prior using the draws of the hyperparameters, i.e. $\Tilde{\mu}^s_{n}|[\mu_{\mu}, \sigma_{\mu}]^s_{-[n]}$ and $\Tilde{\nu}^s_{n}|[\nu_{\nu}, \sigma_{\nu}]^s_{-[n]}$, or taken to be the posterior draws of the parameters $\mu^s_{-[n]}$ and $\nu^s_{-[n]}$ depending on whether or not the parameter is partially pooled (the former case) or completely pooled (the latter case). Table- shows the estimated $\hbox{elppd}_{\hbox{new unit}}$ for the several different models using the leave one out procedure.
+
+! Add Table of results.
+
+Both of the comparisons above involve repeatedly re-fitting the model to different subsets of the data, which is computationally inefficient. A much more efficient method is to approximate the $\hbox{elppd}$ such as in \citet{Vehtari2017}, however, in hierarchical modeling cases, where the "left out" portions of the data are nested and as the size of the nested portions increases, the approximations are less likely to work well \citep{Vehtari2017}. Hence, why we choose to use the full cross validation scheme and incur the computational overhead.
+
+\^(WAIC) is not an approximation like PSIS-LOO is \ldots
+
+\section{Failure time distributions}
+
+\section{Discussion}
+
+- Discuss how the sampling gets stuck around the smaller model, just like in the single path with very few measurements.
