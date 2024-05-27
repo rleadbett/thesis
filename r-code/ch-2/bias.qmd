@@ -1,0 +1,1224 @@
+---
+title: "Demonstration of bias"
+author:
+  - name: Ryan Leadbetter
+    orcid: 0000-0002-1942-3121
+    email: ryan.leadbetter@curtin.edu.au
+    affiliation: 
+      - name: Centre for Transforming Maintenance Through Data Science  
+        url: https://www.maintenance.org.au/dashboard.action
+      - Curtin University
+date: "`r Sys.Date()`"
+format: 
+  html:
+    embed-resources: true
+    fig-width: 7
+    fig-height: 5
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    toc-expand: true
+    code-fold: true
+execute:
+  warning: false
+  message: false
+  cache: true
+---
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(ggdist)
+library(cowplot)
+library(posterior)
+library(tidybayes)
+library(rstan)
+library(bayesplot)
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+
+setwd("./r-code/ch-2/")
+```
+
+# Simulated data
+
+Start by writing a function to simulate censored lifetime data in a similar way to the idler observation process. In the chuch below I clearly lay out the values of the parameters and other quantities used to generate the data and the priors.
+
+```{r}
+# true value of beta
+beta_true <- 0.8
+# true value of eta
+eta_true <- 1
+
+# number of units
+N <- 20
+# start of observation time
+t_start <- 2
+# end of observation time
+t_end <- t_start + 1
+
+# first elicitation time
+t1_cdf <- 0.50
+# second elicitation time
+t2_cdf <- 0.98
+# uncertainty at t1
+t1_cdf_sd <- 0.04
+# uncertainty at t2
+t2_cdf_sd <- 0.01
+```
+
+The function `SimData()` generates a simulated idler dataset. Bellow I simulate a dataset and print the first 10 rows.
+
+```{r}
+SimData <- function(
+  beta,
+  eta,
+  n_units,
+  t_start,
+  t_end
+){
+  # Calculate how many lifetimes to sample
+  weibull_05_quant <- qweibull(0.05, shape = beta, scale = eta)
+  n_lifetimes_per_unit <- ceiling(t_end / weibull_05_quant) * 2
+
+  # Create simulation data frame
+  small_sim <- data.frame(
+      # Define units
+      unit = factor(
+        rep(1:n_units, each = n_lifetimes_per_unit),
+        1:n_units
+      ),
+      # Sample for Weibull distribution
+      lifetime = rweibull(
+        n_units * n_lifetimes_per_unit,
+        shape = beta,
+        scale = eta
+      )
+    ) %>% 
+    group_by(unit) %>%
+    # Calculate the failure times and install times
+    mutate(
+      failure_time = cumsum(lifetime),
+      install_time = lag(failure_time),
+      lifetime_id = 1:n()
+    ) %>%
+    ungroup() %>%
+    # Replace NAs created by lag() with t = 0
+    replace(is.na(.), 0) %>%
+    # Discard any lifetimes that didn't fail or within the observation period
+    filter(
+      between(install_time, t_start, t_end) |
+      between(failure_time, t_start, t_end) |
+      ((install_time < t_start) & (failure_time > t_end))
+    ) %>%
+    # Create right and interval censoring indicator variables
+    mutate(
+      int_censored = !between(install_time, t_start, t_end),
+      right_censored = !between(failure_time, t_start, t_end)
+    )
+
+  # Calculate the install times, failure times, and observed lifetimes of
+  # censored observations
+  small_sim$install_time[small_sim$int_censored] <- t_start
+  small_sim$failure_time[small_sim$right_censored] <- t_end
+  small_sim$observed_lifetime <- small_sim$failure_time - small_sim$install_time
+
+  return(small_sim)
+}
+
+set.seed(5426)
+sim_df <- SimData(
+  beta = beta_true,
+  eta = eta_true,
+  n_units = N,
+  t_start = t_start,
+  t_end = t_end
+) %>%
+filter(
+  !(right_censored & int_censored)
+)
+
+head(sim_df)
+```
+
+The generated data set has `{r} sim_df %>% nrow()` observations, `{r} sim_df %>% filter(!(int_censored | right_censored)) %>% nrow()` of which are fully observed. Bellow I plot the simulated dataset by ordering the data by fully observed vs censored and increasing observed liftimes. The fully observed lifetimes are shown in red and the censored lifetimes in blue. The shape of the point indicates weather the lifetime is fully observed, right censored or interval censored.
+
+```{r}
+sim_df %>%
+  mutate(
+    censored = right_censored | int_censored,
+    cens_type = interaction(right_censored, int_censored),
+    `censoring type` = factor(
+      cens_type,
+      levels = c("FALSE.FALSE", "TRUE.FALSE", "FALSE.TRUE", "TRUE.TRUE"),
+      labels = c("fully observed", "right censored", "interval censored", "right censored")
+    )
+  ) %>%
+  arrange(censored, observed_lifetime) %>%
+  mutate(cumulative_id = 1:n() / n()) %>%
+  ggplot(
+    aes(
+      x = observed_lifetime,
+      y = cumulative_id,
+      col = censored,
+      shape = `censoring type`
+    )
+  ) +
+  geom_point()
+```
+
+# MLE fit
+
+I first demostrate the bias caused by censoring using MLE. First I define the likelihood functions that I will optimise to get the parameter estimates. I define two likelihood functions, one which treates the censored lifetimes properly--as interval and right censored--and another that treats all the censored lifetimes as right censoring.
+
+```{r}
+# Function for the likelihood of the censored weibull data
+ll_weibull <- function(
+  params,
+  observed_lifetimes,
+  right_cens_lifetimes,
+  int_cens_lifetimes_lower,
+  int_cens_lifetimes_upper
+) {
+  beta = params[1]
+  eta = params[2]
+
+  ll <- sum(log(dweibull(observed_lifetimes, shape = beta, scale = eta))) +
+    sum(log(1 - pweibull(right_cens_lifetimes, shape = beta, scale = eta))) +
+    sum(
+      log(
+        pweibull(int_cens_lifetimes_upper, shape = beta, scale = eta) -
+          pweibull(int_cens_lifetimes_lower, shape = beta, scale = eta)
+      )
+    )
+  
+  return(-ll)
+}
+# Function for the likelihood of the censored weibull data when all considered
+# all censoring events are considered right censoring.
+ll_weibull_rcense <- function(
+  params,
+  observed_lifetimes,
+  right_cens_lifetimes
+) {
+  beta = params[1]
+  eta = params[2]
+
+  ll <- sum(log(dweibull(observed_lifetimes, shape = beta, scale = eta))) +
+    sum(log(1 - pweibull(right_cens_lifetimes, shape = beta, scale = eta)))
+  
+  return(-ll)
+}
+```
+
+Now I maximise the two likelihood functions using the `base R` function `optim()`.
+
+```{r}
+fully_obs_lifetimes <- sim_df %>%
+  filter(!(right_censored | int_censored)) %>%
+  pull(observed_lifetime)
+right_cens_lifetimes <- sim_df %>%
+  filter(right_censored) %>%
+  pull(observed_lifetime)
+int_cens_lifetimes <- sim_df %>%
+  filter(int_censored) %>%
+  pull(observed_lifetime)
+
+ll_fit <- optim(
+  c(0.5, 5),
+  fn = function(params){
+    ll_weibull(
+      params,
+      observed_lifetimes = fully_obs_lifetimes,
+      right_cens_lifetimes = right_cens_lifetimes,
+      int_cens_lifetimes_lower = int_cens_lifetimes,
+      int_cens_lifetimes_upper = int_cens_lifetimes + 1
+    )
+  }
+)
+
+ll_fit_rcense <- optim(
+  c(0.5, 5),
+  fn = function(params){
+    ll_weibull_rcense(
+      params,
+      observed_lifetimes = fully_obs_lifetimes,
+      right_cens_lifetimes = c(
+        right_cens_lifetimes,
+        int_cens_lifetimes
+      )
+    )
+  }
+)
+```
+
+The parameter estimates for the case where all censoring is treated as right censoring are $\beta = $`{r} ll_fit_rcense$par[1] %>% round(2)` and $\eta = $`{r} ll_fit_rcense$par[2] %>% round(2)`, and for the model where we treat the interval censoring properly, the parameter estimages are $\beta = $`{r} ll_fit$par[1] %>% round(2)` and $\eta = $`{r} ll_fit$par[2] %>% round(2)`. Both models have failed to reclaim the true parameter values. The model where all the censored lifetimes have been treated as right censoring has done very poorly. Bellow I plot the CDFs that result from the two sets of parameter estimates. The right censoring only case is shown in blue, the right and interval censoring model is shown in green, and the true CDF and uncensored dataset are shown in red and black respectively.
+
+```{r}
+sim_df %>%
+  arrange(lifetime) %>%
+  mutate(emp_cdf = 1:n() / n()) %>%
+  ggplot() +
+  geom_step(
+    aes(x = lifetime, y = emp_cdf)
+  ) +
+  geom_function(
+    fun = pweibull,
+    args = list(shape = beta_true, scale = eta_true),
+    colour = "red"
+  ) +
+  geom_function(
+    fun = pweibull,
+    args = list(shape = ll_fit$par[1], scale = ll_fit$par[2]),
+    colour = "green"
+  ) +
+  geom_function(
+    fun = pweibull,
+    args = list(shape = ll_fit_rcense$par[1], scale = ll_fit_rcense$par[2]),
+    colour = "blue"
+  )
+```
+
+The diference between the right censoring only and the right and interval censoring model is a result of the extra informaiont contained in the interval censored lifetimes (mainly that the lifetime is finite). The model that includes interval censoring is still a poor fit at early exposure times, but atleast it appraoches one within a reasonable timeframe.
+
+To show that this behavior is a reocuring trait of the censoring, bellow I repeat the same process 500 times and plot the parameter estimates for the two models relative to the true parameter values used to simulate the data.
+
+```{r}
+mle_bias_repeated <- lapply(
+  1:100,
+  function(i) {
+    # Sim data
+    df <- SimData(
+      beta = beta_true,
+      eta = eta_true,
+      n_units = N,
+      t_start = t_start,
+      t_end = t_end
+    )
+    # Prep for mle function
+    fully_obs_lifetimes <- df %>%
+      filter(!(right_censored | int_censored)) %>%
+      pull(observed_lifetime)
+    right_cens_lifetimes <- df %>%
+      filter(right_censored) %>%
+      pull(observed_lifetime)
+    int_cens_lifetimes <- df %>%
+      filter(int_censored) %>%
+      pull(observed_lifetime)
+    # Get MLE
+    ll <- optim(
+      c(0.5, 5),
+      fn = function(params){
+        ll_weibull(
+          params,
+          observed_lifetimes = fully_obs_lifetimes,
+          right_cens_lifetimes = right_cens_lifetimes,
+          int_cens_lifetimes_lower = int_cens_lifetimes,
+          int_cens_lifetimes_upper = int_cens_lifetimes + 1
+        )
+      }
+    )
+    ll_right <- optim(
+      c(0.5, 5),
+      fn = function(params){
+        ll_weibull_rcense(
+          params,
+          observed_lifetimes = fully_obs_lifetimes,
+          right_cens_lifetimes = c(
+            right_cens_lifetimes, int_cens_lifetimes
+          )
+        )
+      }
+    )
+    fit_df <- data.frame(
+      i = i,
+      beta = c(ll$par[1], ll_right$par[1]),
+      eta = c(ll$par[2], ll_right$par[2]),
+      pred = c("int", "right")
+    )
+    return(fit_df)
+  }
+) %>%
+  bind_rows()
+
+mle_bias_repeated %>%
+  filter(beta < 5, eta < 15) %>%
+  ggplot(aes(x = beta, y = eta, colour = pred)) +
+  geom_point() +
+  geom_point(x = beta_true, y = eta_true, col = "black")
+```
+
+The black point is the true parameter values, the blue the case when all censoring is treated as right censoring and the red the case where we model both right and interval censoring. When we model the censored data as right censored, the shape, $\beta$, typicaly underestimated ad the scale, $\eta$ is systematicaly overestimated. While when we model both right and interval censoring, the shape parameter is overestimated but the scale is relatively acurate.
+
+I've shown the somewhat nonsensical case of treating all censored lifetimes as right censored to demostrate the worst case scenario. An experinced analyst would probably not use this model in the first place, but it is imporant to understand that the results are much worse if we dont treat the interval censored data properly. I made this very mistake when I first approache the idler problem.
+
+Now I move on to investigate if I can use the method of kaminsky to inject information into the upper parts of the CDF to sumpliment the analysis and hopefully get more accurate inference. But first I fit a non-informative Bayeisan model to show that the same issue occures in the Bayesian paradigm.
+
+# Bayesian approach
+
+Not surprisingly, a Bayesian approach with non-informative priors sufferes from the same bias.
+
+```{r}
+stan_model_ind_alt <- stan_model(
+  file = file.path("..", "..", "stan_models", "non_inf_weibull_alt.stan")
+)
+
+stan_data <- list(
+  N_obs = length(fully_obs_lifetimes),
+  N_Rcens = length(right_cens_lifetimes),
+  N_Icens = length(int_cens_lifetimes),
+  lifetime_obs = fully_obs_lifetimes,
+  lifetime_Rcens = right_cens_lifetimes,
+  lifetime_Icens_Upper = int_cens_lifetimes + t_start,
+  lifetime_Icens_Lower = int_cens_lifetimes
+)
+
+stan_fit_non_informative <- sampling(
+  stan_model_ind_alt,
+  c(
+    stan_data,
+    eta_mean = eta_true,
+    eta_sd = 1,
+    beta_mean = beta_true,
+    beta_sd = 1
+  ), 
+  cores = 4,
+  iter = 1000,
+  warmup = 500,
+  control = list(
+    adapt_delta = 0.98,
+    max_treedepth = 13
+  )
+)
+
+p_old <- mcmc_scatter(
+  stan_fit_non_informative,
+  pars = c("beta", "eta")
+) +
+  geom_point(x = beta_true, y = eta_true, colour = "red") +
+  xlim(0, 3) +
+  ylim(0, 3)
+```
+
+
+```{r}
+stan_model_test <- stan_model(
+  file = file.path("..", "..", "stan_models", "test2.stan")
+)
+
+stan_fit_test <- sampling(
+  stan_model_test,
+  c(
+    stan_data,
+    eta_mean = eta_true,
+    eta_sd = 1,
+    beta_mean = beta_true,
+    beta_sd = 1
+  ), 
+  cores = 4,
+  iter = 1000,
+  warmup = 500,
+  control = list(
+    adapt_delta = 0.98,
+    max_treedepth = 13
+  )
+)
+
+p_new <- mcmc_scatter(
+  stan_fit_test,
+  pars = c("beta", "eta")
+) +
+  geom_point(x = beta_true, y = eta_true, colour = "green") +
+  xlim(0, 3) +
+  ylim(0, 3)
+
+cowplot::plot_grid(p_old, p_new, nrow = 1)
+```
+
+# Adding prior information
+
+Kaminsky proposes a method for constructing an informative joint prior for the Weibull parameters by selecting two exposure times, $t_1$ and $t_2$, at which to elicit information about the CDF and then expressing the experts belief about the CDF at these times by a mean and standard deviation. Kaminskey calculates two coresponding beta distributions for the and then samples from these distributions--ensuring that the value of the CDF at $t_1$ is less than the value at $t_2$--and calculates the Weibull CDF that passes through both points. In the modeling here, I use truncated normal distributions rather than beta distributions because they perform better computationaly but the same theory applise. The figure bellow shows two normal distributions in red, describing my belief about the CDF at $t_1 =$`{r} qweibull(t1_cdf, beta_true, eta_true)` and $t_2 =$`{r} qweibull(t2_cdf, beta_true, eta_true)`. I sample a point from each distributions, shown as blue points, and calculate the coresponding values of $\beta$ and $\eta$ for the CDF that passes through both points--the blue line.
+
+```{r}
+dnormInt <- function(x, int, scale, mean, sd) {
+  y <- (dnorm(x, mean, sd) * scale) + int
+  return(y)
+}
+rtnormal <- function(N, mean, sd, lower = NULL, upper = NULL) {
+  # Define the upper and lower bound of the uniform distribution
+  if (is.null(lower)) {
+    p_lower <- 0
+  } else {
+    p_lower <- pnorm(lower, mean, sd)
+  }
+  if (is.null(upper)) {
+    p_upper <- 1
+  } else {
+    p_upper <- pnorm(upper, mean, sd)
+  }
+  # Generate samples
+  uniform_samples <- runif(N, p_lower, p_upper)
+  # PIT
+  normal_samples <- qnorm(uniform_samples, mean, sd)
+
+  return(normal_samples)
+}
+fn <- function(tCDF) log(-log(1 - tCDF))
+
+t1 <- qweibull(t1_cdf, beta_true, eta_true)
+t2 <- qweibull(t2_cdf, beta_true, eta_true)
+t1_mean <- t1_cdf
+t1_sd <- t1_cdf_sd
+t2_mean <- t2_cdf
+t2_sd <- t2_cdf_sd
+
+ggplot() +
+  geom_function(
+    fun = dnormInt,
+    args = list(
+      int = t1, scale = 0.025, mean = t1_mean, sd = t1_sd
+    ),
+    colour = "red",
+    n = 1000,
+    xlim = qnorm(c(0.0001, 0.9999), t1_mean, t1_sd)
+  ) +
+  geom_function(
+    fun = dnormInt,
+    args = list(
+      int = t2, scale = 0.025, mean = t2_mean, sd = t2_sd
+    ),
+    colour = "red",
+    n = 1000,
+    xlim = qnorm(c(0.0001, 0.9999), t2_mean, t2_sd)
+  ) +
+  geom_point(
+    data = data.frame(
+      x = c(t1_mean, t2_mean),
+      y = c(t1, t2),
+      label = c("cdf_t1", "cdf_t2")
+    ),
+    aes(x = x, y = y),
+    colour = "blue"
+  ) +
+  geom_text(
+    data = data.frame(
+      x = c(t1_mean, t2_mean),
+      y = c(t1, t2),
+      label = c("F(t_1)", "F(t_2)")
+    ),
+    aes(x = x, y = y, label = label),
+    colour = "blue",
+    hjust = 0, nudge_y = 0.05
+  ) +
+  geom_function(
+    fun = qweibull,
+    args = list(
+      shape = beta_true, scale = eta_true
+    ),
+    colour = "blue",
+    n = 1000
+  ) +
+  xlim(0, 1) +
+  ylim(0, 4) +
+  xlab("F(t)") +
+  ylab("t") +
+  coord_flip() +
+  theme_minimal()
+
+```
+
+In the code bellow, use the same process to generate $10000$ draws from the joint prior and plot them. I also plot the marginal densities of the draws for each parameter along the margins in black and the equivelent independent normal distribution in red.
+
+```{r}
+prior_samples <- lapply(
+  1:10000,
+  function(i) {
+    # Draw from distributions at t1 and t2
+    t1_draw <- rtnormal(
+      1, mean = t1_mean, sd = t1_sd, lower = 0, upper = 1
+    )
+    t2_draw <- rtnormal(
+      1, mean = t2_mean, sd = t2_sd, lower = t1_draw, upper = 1
+    )
+    # Calculate Weibull parameters
+    beta_draw <- (fn(t2_draw) - fn(t1_draw)) / log(t2 / t1)
+    eta_draw <- exp(log(t1) - (fn(t1_draw) / beta_draw))
+
+    return(
+      data.frame(
+        beta = beta_draw,
+        eta = eta_draw
+      )
+    )
+  }
+) %>%
+bind_rows() %>%
+filter(beta < 10, eta < 10)
+
+p_joint <- prior_samples %>%
+  ggplot(aes(x = beta, y = eta)) +
+  geom_point(alpha = 0.2) +
+  theme_minimal() +
+  geom_point(x = beta_true, y = eta_true, col = "red") +
+  theme(
+    plot.margin = unit(c(0, 0, 0.1, 0.1), "cm")
+  )
+
+p_beta_marginal <- prior_samples %>%
+  ggplot(aes(x = beta)) +
+  stat_function(
+    fun = dnorm,
+    args = list(
+      mean = beta_true,
+      sd = sd(prior_samples$beta)
+    ),
+    color = "red"
+  ) +
+  geom_density() +
+  theme_void() +
+  theme(
+    plot.margin = unit(c(0.1, 0, 0, 0), "cm")
+  )
+
+p_eta_marginal <- prior_samples %>%
+  ggplot(aes(x = eta)) +
+  stat_function(
+    fun = dnorm,
+    args = list(
+      mean = eta_true,
+      sd = sd(prior_samples$eta)
+    ),
+    color = "red"
+  ) +  
+  geom_density() +
+  coord_flip() +
+  theme_void() +
+  theme(
+    plot.margin = unit(c(0, 0.1, 0, 0), "cm")
+  )
+
+cowplot::plot_grid(
+  p_beta_marginal, NULL, p_joint, p_eta_marginal,
+  align = c("h", "", "hv", "v"),
+  rel_widths = c(1, 0.1),
+  rel_heights = c(0.1, 1)
+)
+```
+
+In the above plot we can see that the result for these particular hyperparameters is an amost bivariate normal distribution with strong covariance. This is not always the case and depends on the choise of $t_1$, $t_2$, and the elicited values of the CDF at these times. Bellow I plot the distribution of CDFs that result from this joint prior and also from the equivelant indepenent normal. The effect of the covariance is very clear, particularly in the upper tail of the distribution.
+
+```{r}
+grid <- seq(0, 5, 0.01)
+
+p_joint_prior_cdf <- prior_samples %>%
+  split(., seq(nrow(.))) %>%
+  lapply(
+    function(draw) {
+      df_CDF <- data.frame(
+        q = grid,
+        p = pweibull(grid, draw$beta, draw$eta)
+      )
+      return(df_CDF)
+    }
+  ) %>%
+  bind_rows() %>%
+  ggplot() +
+  stat_lineribbon(
+    aes(x = q, y = p),
+    .width = c(0.5, 0.8, 0.98)
+  ) +
+  scale_fill_brewer() +
+  geom_function(
+    fun = pweibull,
+    args = list(shape = beta_true, scale = eta_true),
+    colour = "red"
+  ) +
+  theme_minimal() +
+  xlab("t") +
+  ylab("F(t)")
+
+p_ind_prior_cdf <- data.frame(
+  beta = rnorm(10000, beta_true, sd(prior_samples$beta)),
+  eta = rnorm(10000, eta_true, sd(prior_samples$eta))
+) %>%
+  split(., seq(nrow(.))) %>%
+  lapply(
+    function(draw) {
+      df_CDF <- data.frame(
+        q = grid,
+        p = pweibull(grid, draw$beta, draw$eta)
+      )
+      return(df_CDF)
+    }
+  ) %>%
+  bind_rows() %>%
+  ggplot() +
+  stat_lineribbon(
+    aes(x = q, y = p),
+    .width = c(0.5, 0.8, 0.98)
+  ) +
+  scale_fill_brewer() +
+  geom_function(
+    fun = pweibull,
+    args = list(shape = beta_true, scale = eta_true),
+    colour = "red"
+  ) +
+  theme_minimal() +
+  xlab("t") +
+  ylab("F(t)")
+
+cowplot::plot_grid(
+  p_ind_prior_cdf, p_joint_prior_cdf,
+  labels = c("indepenant priors", "joint prior"),
+  nrow = 1, align = "v"
+)
+```
+
+The joint prior very clearly constrains the uncertainty in the upper tail of the CDF but is more uncertain in the lower tail; where we want to learn from the data.
+
+```{r}
+grid <- seq(0, 1, 0.01)
+
+p_joint_prior_cdf <- prior_samples %>%
+  split(., seq(nrow(.))) %>%
+  lapply(
+    function(draw) {
+      df_CDF <- data.frame(
+        q = grid,
+        p = pweibull(grid, draw$beta, draw$eta)
+      )
+      return(df_CDF)
+    }
+  ) %>%
+  bind_rows() %>%
+  ggplot() +
+  stat_lineribbon(
+    aes(x = q, y = p),
+    .width = c(0.5, 0.8, 0.98)
+  ) +
+  scale_fill_brewer() +
+  geom_function(
+    fun = pweibull,
+    args = list(shape = beta_true, scale = eta_true),
+    colour = "red"
+  ) +
+  theme_minimal() +
+  xlab("t") +
+  ylab("F(t)")
+
+p_ind_prior_cdf <- data.frame(
+  beta = rnorm(10000, beta_true, sd(prior_samples$beta)),
+  eta = rnorm(10000, eta_true, sd(prior_samples$eta))
+) %>%
+  split(., seq(nrow(.))) %>%
+  lapply(
+    function(draw) {
+      df_CDF <- data.frame(
+        q = grid,
+        p = pweibull(grid, draw$beta, draw$eta)
+      )
+      return(df_CDF)
+    }
+  ) %>%
+  bind_rows() %>%
+  ggplot() +
+  stat_lineribbon(
+    aes(x = q, y = p),
+    .width = c(0.5, 0.8, 0.98)
+  ) +
+  scale_fill_brewer() +
+  geom_function(
+    fun = pweibull,
+    args = list(shape = beta_true, scale = eta_true),
+    colour = "red"
+  ) +
+  theme_minimal() +
+  xlab("t") +
+  ylab("F(t)")
+
+cowplot::plot_grid(
+  p_ind_prior_cdf +
+    ylim(0, 0.75),
+  p_joint_prior_cdf +
+    ylim(0, 0.75),
+  labels = c("indepenant priors", "joint prior"),
+  nrow = 1
+)
+```
+
+If we add prior information, this can help, but it doen't remove the bias.
+
+```{r}
+stan_fit_informative <- sampling(
+  stan_model_test, #stan_model_ind_alt,
+  c(
+    stan_data,
+    eta_mean = eta_true,
+    eta_sd = sd(prior_samples$eta),
+    beta_mean = beta_true,
+    beta_sd = sd(prior_samples$beta)
+  ), 
+  cores = 4,
+  iter = 1000,
+  warmup = 500,
+  control = list(
+    adapt_delta = 0.98,
+    max_treedepth = 13
+  )
+)
+
+p_old_inf <- mcmc_scatter(
+  stan_fit_informative,
+  pars = c("beta", "eta")
+) +
+  xlim(0, 3) +
+  ylim(0, 3) +
+  geom_point(x = beta_true, y = eta_true, colour = "red")
+```
+
+The kaminsky method
+
+```{r}
+stan_model_joint_alt <- stan_model(
+  file = file.path("..", "..", "stan_models", "joint_weibull_alt2.stan")
+)
+
+stan_fit_joint_informative <- sampling(
+  stan_model_joint_alt,
+  c(
+    stan_data,
+    t_1 = qweibull(t1_cdf, beta_true, eta_true),
+    t_2 = qweibull(t2_cdf, beta_true, eta_true),
+    t1_mean = t1_cdf,
+    t1_var = t1_cdf_sd,
+    t2_mean = t2_cdf,
+    t2_var = t2_cdf_sd
+  ), 
+  cores = 4,
+  iter = 1000,
+  warmup = 500,
+  control = list(
+    adapt_delta = 0.98,
+    max_treedepth = 13
+  )
+)
+
+p_new_inf <- mcmc_scatter(
+  stan_fit_joint_informative,
+  pars = c("beta", "eta")
+) +
+  xlim(0, 3) +
+  ylim(0, 3) +
+  geom_point(x = beta_true, y = eta_true, colour = "red")
+
+cowplot::plot_grid(p_old_inf, p_new_inf, nrow = 1)
+cowplot::plot_grid(p_new, p_new_inf, nrow = 1)
+```
+
+```{r}
+stan_fit_joint_informative %>%
+  as_draws_rvars() %>%
+  gather_rvars(beta, eta) %>%
+  mutate(prior = "joint") %>%
+  rbind(
+    stan_fit_informative %>%
+      as_draws_rvars() %>%
+      gather_rvars(beta, eta) %>%
+      mutate(prior = "ind")
+  ) %>%
+  ggplot() +
+  ggdist::stat_slab(
+    aes(xdist = .value, fill = prior),
+    alpha = 0.4
+  ) +
+  theme_minimal() +
+  xlab("") +
+  ylab("density") +
+  facet_wrap(vars(.variable))
+```
+
+```{r}
+grid <- seq(0, 5, 0.01)
+
+p_cdf_ind <- stan_fit_informative %>%
+  as_draws_df() %>%
+  select(beta, eta) %>%
+  split(., seq(nrow(.))) %>%
+  lapply(
+    function(draw) {
+      df_CDF <- data.frame(
+        q = grid,
+        p = pweibull(grid, draw$beta, draw$eta)
+      )
+      return(df_CDF)
+    }
+  ) %>%
+  bind_rows() %>%
+  ggplot() +
+  stat_lineribbon(
+    aes(x = q, y = p),
+    .width = c(0.5, 0.8, 0.98)
+  ) +
+  scale_fill_brewer() +
+  geom_function(
+    fun = pweibull,
+    args = list(shape = beta_true, scale = eta_true),
+    colour = "red"
+  ) +
+  theme_minimal()
+
+p_cdf_joint <- stan_fit_joint_informative %>%
+  as_draws_df() %>%
+  select(beta, eta) %>%
+  split(., seq(nrow(.))) %>%
+  lapply(
+    function(draw) {
+      df_CDF <- data.frame(
+        q = grid,
+        p = pweibull(grid, draw$beta, draw$eta)
+      )
+      return(df_CDF)
+    }
+  ) %>%
+  bind_rows() %>% 
+  ggplot() +
+  stat_lineribbon(
+    aes(x = q, y = p),
+    .width = c(0.5, 0.8, 0.98)
+  ) +
+  scale_fill_brewer() +
+  geom_function(
+    fun = pweibull,
+    args = list(shape = beta_true, scale = eta_true),
+    colour = "red"
+  ) +
+  theme_minimal()
+
+cowplot::plot_grid(p_cdf_ind, p_cdf_joint, nrow = 1)
+```
+
+Zoomed in
+
+```{r}
+grid <- seq(0, 0.5, 0.01)
+
+p_cdf_ind <- stan_fit_informative %>%
+  as_draws_df() %>%
+  select(beta, eta) %>%
+  split(., seq(nrow(.))) %>%
+  lapply(
+    function(draw) {
+      df_CDF <- data.frame(
+        q = grid,
+        p = pweibull(grid, draw$beta, draw$eta)
+      )
+      return(df_CDF)
+    }
+  ) %>%
+  bind_rows() %>%
+  ggplot() +
+  stat_lineribbon(
+    aes(x = q, y = p),
+    .width = c(0.5, 0.8, 0.98)
+  ) +
+  scale_fill_brewer() +
+  geom_function(
+    fun = pweibull,
+    args = list(shape = beta_true, scale = eta_true),
+    colour = "red"
+  ) +
+  theme_minimal()
+
+p_cdf_joint <- stan_fit_joint_informative %>%
+  as_draws_df() %>%
+  select(beta, eta) %>%
+  split(., seq(nrow(.))) %>%
+  lapply(
+    function(draw) {
+      df_CDF <- data.frame(
+        q = grid,
+        p = pweibull(grid, draw$beta, draw$eta)
+      )
+      return(df_CDF)
+    }
+  ) %>%
+  bind_rows() %>%
+  ggplot() +
+  stat_lineribbon(
+    aes(x = q, y = p),
+    .width = c(0.5, 0.8, 0.98)
+  ) +
+  scale_fill_brewer() +
+  geom_function(
+    fun = pweibull,
+    args = list(shape = beta_true, scale = eta_true),
+    colour = "red"
+  ) +
+  theme_minimal()
+
+cowplot::plot_grid(
+  p_cdf_ind +
+    ylim(0, 0.5),
+  p_cdf_joint +
+    ylim(0, 0.5),
+  nrow = 1
+)
+```
+
+```{r}
+grid <- seq(1.5, 5, 0.01)
+
+p_cdf_ind <- stan_fit_informative %>%
+  as_draws_df() %>%
+  select(beta, eta) %>%
+  split(., seq(nrow(.))) %>%
+  lapply(
+    function(draw) {
+      df_CDF <- data.frame(
+        q = grid,
+        p = pweibull(grid, draw$beta, draw$eta)
+      )
+      return(df_CDF)
+    }
+  ) %>%
+  bind_rows() %>%
+  ggplot() +
+  stat_lineribbon(
+    aes(x = q, y = p),
+    .width = c(0.5, 0.8, 0.98)
+  ) +
+  scale_fill_brewer() +
+  geom_function(
+    fun = pweibull,
+    args = list(shape = beta_true, scale = eta_true),
+    colour = "red"
+  ) +
+  theme_minimal()
+
+p_cdf_joint <- stan_fit_joint_informative %>%
+  as_draws_df() %>%
+  select(beta, eta) %>%
+  split(., seq(nrow(.))) %>%
+  lapply(
+    function(draw) {
+      df_CDF <- data.frame(
+        q = grid,
+        p = pweibull(grid, draw$beta, draw$eta)
+      )
+      return(df_CDF)
+    }
+  ) %>%
+  bind_rows() %>%
+  ggplot() +
+  stat_lineribbon(
+    aes(x = q, y = p),
+    .width = c(0.5, 0.8, 0.98)
+  ) +
+  scale_fill_brewer() +
+  geom_function(
+    fun = pweibull,
+    args = list(shape = beta_true, scale = eta_true),
+    colour = "red"
+  ) +
+  theme_minimal()
+
+cowplot::plot_grid(p_cdf_ind, p_cdf_joint, nrow = 1, align = "v")
+```
+
+
+
+```{r}
+stan_model_joint_alt <- stan_model(
+  file = file.path("..", "..", "stan_models", "joint_weibull_alt.stan")
+)
+
+stan_fit_joint_informative <- sampling(
+  stan_model_joint_alt,
+  c(
+    stan_data,
+    t_1 = qweibull(t1_cdf, beta_true, eta_true),
+    t_2 = qweibull(t2_cdf, beta_true, eta_true),
+    t1_mean = t1_cdf,
+    t1_var = t1_cdf_sd,
+    t2_mean = t2_cdf,
+    t2_var = t2_cdf_sd
+  ), 
+  cores = 4,
+  iter = 2000,
+  warmup = 500,
+  control = list(
+    adapt_delta = 0.98,
+    max_treedepth = 13
+  )
+)
+```
+
+
+
+```{r}
+data.frame(
+  dataset = rep(1:100, each = 100),
+  samples = rweibull(100*100, 1.1, 1)
+) %>%
+arrange(dataset, samples) %>%
+mutate(cdf = rep((1:100) / 100, 100)) %>%
+ggplot(aes(x = samples, y = cdf, group = dataset)) +
+geom_step(alpha = 0.4) +
+geom_function(
+  fun = pweibull,
+  args = list(shape = 1.1, scale = 1),
+  colour = "red"
+)
+
+```
+
+
+```{r}
+lapply(
+  1:400,
+  function(i) {
+    # original data
+    junk <- data.frame(
+      life = rweibull(100, 1.1, 1),
+      cense = FALSE
+    ) %>%
+    mutate(
+      obs_life = life
+    )
+    # # first round of censoring
+    # if (sum(junk$obs_life > 0.2) > 40) {
+    #   t1_cens <- sample(which(junk$obs_life > 0.2), 40)
+    # } else {
+    #   t1_cens <- which(junk$obs_life > 0.2)
+    # }
+    # junk$obs_life[t1_cens] <- 0.2
+    # junk$cense[t1_cens] <- TRUE
+    # # second
+    # if (sum(junk$obs_life > 0.8) > 30) {
+    #   t2_cens <- sample(which(junk$obs_life > 0.8), 30)
+    # } else {
+    #   which(junk$obs_life > 0.8)
+    # }
+    # junk$obs_life[t2_cens] <- 0.8
+    # junk$cense[t2_cens] <- TRUE
+    # third(final)
+    t3_cens <- which(junk$obs_life > 0.2)
+    junk$obs_life[t3_cens] <- 0.2
+    junk$cense[t3_cens] <- TRUE
+
+    junk2 <- optim(
+      c(0.5, 5),
+      fn = function(params){
+        ll_weibull_rcense(
+          params,
+          observed_lifetimes = junk %>%
+          filter(!cense) %>%
+          pull(obs_life),
+          right_cens_lifetimes = junk %>%
+          filter(cense) %>%
+          pull(obs_life)
+        )
+      }
+    )
+
+    df <- data.frame(
+      beta = junk2$par[1],
+      eta = junk2$par[2],
+      cens_prop = sum(junk$cense) / 100,
+      avg = junk %>%
+        filter(!cense) %>%
+        pull(obs_life) %>%
+        mean()
+    )
+    return(df)
+  }
+) %>%
+bind_rows() %>%
+ggplot(aes(x = beta, y = eta, size = cens_prop, col = avg)) +
+geom_point()
+
+```
+
+
+
+
+```{r}
+ll_exp_rcense <- function(
+  params,
+  observed_lifetimes,
+  right_cens_lifetimes
+) {
+  beta = params[1]
+  eta = params[2]
+
+  ll <- sum(log(dweibull(observed_lifetimes, shape = beta, scale = eta))) +
+    sum(log(1 - pweibull(right_cens_lifetimes, shape = beta, scale = eta)))
+  
+  return(-ll)
+}
+
+sims <- rweibull(1000, 2, 1)
+rcens_time <- 0.2
+
+sims_rcens <- sims > rcens_time
+
+sims_obs <- sims
+sims_obs[sims_rcens] <- rcens_time
+
+table(sims_rcens)
+
+p1 <- optim(
+  c(1.2, 0.5),
+  fn = function(params){
+    ll_exp_rcense(
+      params,
+      observed_lifetimes = sims_obs[!sims_rcens],
+      right_cens_lifetimes = sims_obs[sims_rcens]
+    )
+  }
+)
+
+sims_rcens_new <- sample(sims_rcens, length(sims_rcens))
+
+p2 <- optim(
+  c(1.2, 0.5),
+  fn = function(params){
+    ll_exp_rcense(
+      params,
+      observed_lifetimes = sims_obs[!sims_rcens_new],
+      right_cens_lifetimes = sims_obs[sims_rcens_new]
+    )
+  }
+)
+
+p1$par
+p2$par
+```
+
+
+```{r}
+sm <- stan_model(
+  file = file.path("..", "..", "stan_models", "non_inf_weibull_alt_right.stan")
+)
+
+sf <- sampling(
+  sm,
+  data = list(
+    N_obs = length(sims_obs[!sims_rcens]),
+    N_Rcens = length(sims_obs[sims_rcens]),
+    lifetime_obs = sims_obs[!sims_rcens],
+    lifetime_Rcens = sims_obs[sims_rcens],
+    beta_mean  = 2,
+    beta_sd = 5,
+    eta_mean = 1,
+    eta_sd = 5
+  ),
+  cores = 4,
+  iter = 1000,
+  warmup = 500
+)
+
+sf %>%
+  as_draws_rvars() %>%
+  gather_rvars(beta, eta)
+```

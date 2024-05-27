@@ -1,48 +1,241 @@
 \chapter{Heavily censored lifetime data}\label{chap:chapter2}
 
-Computerised maintenance management systems (CMMS) such as SAP \citep{sap} are now embedded in companies maintenance procedures, meaning that these companies now posses large scale datasets of component installation and replacement times. A natural use of these personalised failure time data sets is for tailoring replacement strategies for the companies specific operating environments \citep[p. 13]{meeker2022}, rather than solely relying on the manufacturers recommendations. One problem however, is that these large observational datasets collected through CMMS are much messier that the experimental ones used by manufacturers in traditional reliability/warranty analysis. This messiness comes about because of reporting issues and the fact that most components are pre-emptively replaced before they fail because of the risk to production and employees safety. The result is that many of the valuable data sets stored in CMMS systems are heavily censored.
+Computerised maintenance management systems (CMMS) such as SAP \citep{sap} are now embedded in companies maintenance procedures, meaning that these companies now posses large scale datasets of component installation and replacement times. A natural use of these personalised failure time data sets is for tailoring replacement strategies for the companies specific operating environments \citep[p. 13]{meeker2022}, rather than solely relying on the manufacturers recommendations. One problem however, is that these large observational datasets collected through CMMS are much messier that the experimental ones used by manufacturers in traditional reliability/warranty analysis. This messiness comes about because of reporting issues, incomplete historic records, and the fact that most components are pre-emptively replaced before they fail because of the risk to production and employee safety. The result is that many of the valuable data sets stored in CMMS systems are incomplete in the form of censoring and left-truncation. Censoring is when the true lifetime of a failed component is not know but either an upper bound, lower bound, or both are known. Whereas left-truncation arises when only units that have lasted more than some truncation time are observed.
 
-This heavy censoring results in biassed reliability estimates. Therefore, we propose a method of mitigating this bias so that we can still use the data to inform decisions.
+The censored and left-truncated nature of such data make what would otherwise be a very strait forward analysis far more complicated. Worse yet, the incompleteness of the data is not always obvious and mistreatment during analysis can lead to biased or miss informed results. In this part of the thesis I focus on the lifetime analysis of the idler-frame dataset shown in \ref{sec:industry-data}. In this case, right censoring arises due to the set of idlers in a frame either being preventatively replace or still being in operation when the data were analysed. A portion of the lifetimes are also left-truncated, since any idlers that were installed and failed before $t_\text{start}$, when failures started being recorded in the CMMS, are not captured in the dataset. Treatment of right censored and left-truncated data was addressed by \citet{hong2009}. A further complicating factor of the idler frame dataset is that the installation time of idler-frames that were already in operation when data started being captured in the CMMS are unknown, meaning that the left-truncated lifetimes are also censored and have unknown truncation times. This issue is sometime referred to as unknown initial conditions \citep{} or unknown exposure history \citep{}. In this chapter, I propose a method for handling such cases in a Bayesian framework by imputing censored lifetimes and along with them, the truncation times.
 
-In this chapter we\ldots
+Incompleteness of a dataset due to censoring and truncation increase uncertainty in lifetime analysis, particularly with respect to the upper tail of the lifetime distribution, since the data only contains partial information about the longer lifetimes. To improve analysis, domain knowledge can be used to fill the gap left by censoring, however only if the prior is constructed properly to do so. \citet{kaminskiy2005} propose a method for constructing a joint prior for the two parameters of the Weibull distribution by eliciting domain expert knowledge on the CDF\ldots
+
+In this chapter of the thesis, I show how right censored and left-truncated lifetimes with unknown exposure history can be handled using fully a Bayesian treatment, and how the methods of \citet{kaminskiy2005} for developing a joint prior for the two parameters of the Weibull distribution can be incorporated into the model to supplement the analysis with additional sources of information and hence "fill in the gaps" left by the incomplete lifetime data. In this chapter I demonstrate the proposed methods using fictitious lifetime data simulated from known parameter values in a way that emulates the idler frame lifetime data to show that the method is capable of reclaiming the true parameter values. In the next chapter, I apply the method to the real idler frame dataset, and show how the fully Bayesian treatment has advantages for... (Follow Meekers paper on the transformers.)
+
+In the remainder of this chapter is structured\ldots
+
+\begin{itemize}
+    \item Background on Weibull lifetime, censoring, left-truncation, left-truncation with unknown exposure history, constructing a joint prior.
+    \item Demonstrate through simulation that the method accounts for the incompleteness of the data without introducing much bias.
+    \item Extend the prior proposed in \citet{kaminskiy2005} and demonstrate it's usefulness in this context.
+\end{itemize}
+
 
 \section{Background}
 
-Lifetime analysis, also called survival analysis, is the analysis of failure time data from a population of particular components/assets to derive the risk of failure of a component dependent on it's level of exposure (usually some form of time) and sometimes other covariates \citep{moore2016}. From here on we will use the general term unit/s to refer to individual/groups of the same asset or component. Lifetime analysis of a population of units typically takes place by first specifying a sampling distribution for the lifetimes by choosing some parametric lifetime distribution for the units and incorporating any observational characteristics of the data--for example censoring--then, estimating the parters of the distribution from failure time data using an appropriate inferential mechanism, and finally using the fitted model to derive useful reliability measures about the population which can be used to inform asset management plans. When done in a Bayesian context, the first step of this process also included specifying a prior distribution. From the resulting inference, we can devise optimal replacement strategies that minimise the risk of unplanned failures, and hence the risk of lost production.
+Lifetime analysis, also called survival analysis, is the analysis of failure time data from a population of particular components/assets to derive the risk of failure of a component dependent on it's level of exposure (usually some form of time) and sometimes other covariates \citep{moore2016}. From here on I will use the general term unit/s to refer to individual/groups of the same asset or component. Lifetime analysis of a population of units typically takes place by first specifying a sampling distribution for the lifetimes by choosing some parametric lifetime distribution for the units and incorporating any observational characteristics of the data--for example censoring--then, estimating the parters of the distribution from failure time data using an appropriate inferential mechanism, and finally using the fitted model to derive useful reliability measures about the population which can be used to inform asset management plans. When done in a Bayesian context, the first step of this process also includes specifying a prior distribution. From the resulting inference, we can devise optimal replacement strategies that minimise the risk of unplanned failures, and hence the risk of lost production, and also the cost of the maintenance strategy.
 
 \subsection{Lifetime distribution}
 
-We model the lifetimes of the units as a random variable defined in terms of $t$, the exposure time, on $[0, \infty)$. $t$ is some continuous or discrete exposure time from a clearly defined origin, the installation of the component, to a well defined event, the failure of the component. 
-
-These distributions are defined on a support. In reliability, the exposure is typically absolute time or the operating time of the unit. Say we choose a specific parametric lifetime distribution for the population of units, $p(t|\theta)$ expressed as the probability density function (CDF). Once we have estimated the parameters of the lifetime distribution we can draw useful interpretation of the
+The lifetimes of the units are modelled as a random variable defined in terms of $t$, the exposure time, on $[0, \infty)$. $t$ is some continuous or discrete exposure time from a clearly defined origin, the installation of the component, to a well defined event, the failure of the component. In reliability analysis, the exposure is typically absolute time, the operating time of the unit, or cycles of operation. In this analysis I use absolute time since operating time was not available. Next, a specific parametric lifetime distribution is chosen for the random variable $t$, $p(t|\theta)$, expressed as the probability density function (PDF) and the parameters of the lifetime distribution are estimated from the data. Once the estimates are obtained, different specifications of the lifetime distribution can be used to draw useful insights in order to inform decisions:
 
 \begin{itemize}
-    \item CDF (The probability that a unit will have failed by time $T$, i.e. $P(t <= T)$.)
-    \item Survival function (The compliment of the CDF.)
-    \item Hazard (The instantaneous failure rate at a given exposure.)
+    \item \textbf{Cumulative distribution function} (CDF), $F(t)$, it the probability that a unit will have failed by time $T$, i.e. $P(t <= T)$. It is also sometimes called the cumulative risk function.
+    \item \textbf{Survival function}, $S(t)$, is the complement of the CDF and defines the probability of a unit surviving up to an exposure time $t$.
+    \item \textbf{Hazard function}, $h(t)$, which is the instantaneous failure rate, i.e. the probability that given a unit has survived up to time $T$ it will fail in the next small interval.
 \end{itemize}
+
+For example, the CDF quantifies the risk of unplanned failures given a chosen preventative maintenance interval, and the Hazard function identifies if a units risk of failure increases as it ages and therefore if a preventative maintenance strategy is even suitable at all.
 
 \subsection{The Weibull distribution}
 
-Details of the Weibull.
+In the analysis that follows, I use the Weibull distribution to model the idler frame lifetimes, that is
+
+\begin{equation}
+    y|\beta, \eta \sim \hbox{Weibull}(\beta, \eta),
+\end{equation}
+
+where $\beta$ is the shape parameter and $\eta$ is the scale. The Weibull distribution is a commonly used lifetime distribution because of its ability to capture an increasing, constant, or decreasing risk of failure. In addition, the weibull distribution is the limiting distribution for the minimum value in a sample when the sample space is lower bounded; such as lifetimes, which must be greater than zero. This characteristic of the weibull distribution gives it a convenient interpretation in component reliability; the lifetime of a unit is the time of the first occurring catastrophic failure mode of the unit. In my analysis that follows, I use the coupled parameterization of the two-parameter Weibull distribution, which has PDF
+
+\begin{equation}
+    f(t) = \frac{\beta}{\eta}\left(\frac{t}{\eta}\right)^{\beta - 1} \exp^{-\left(\frac{t}{\eta}\right)^{\beta}},
+\end{equation}
+
+CDF
+
+\begin{equation}
+    F(t) = 1 - \exp^{-\left(\frac{t}{\eta}\right)^{\beta}},
+\end{equation}
+
+and hazard function
+
+\begin{equation}
+    h(t) = \frac{\beta}{\eta}\left(\frac{t}{\eta}\right)^{\beta - 1}.
+\end{equation}
+
+%When specifying independent priors in \textit{section}~\ref{} we use the alternative, uncoupled, parameterization where $\lambda = 1 / \eta^{\beta}$. The uncoupled parameterisation has PDF
+%
+%\begin{equation}
+%    f(t) = \beta \lambda t^{\beta - 1} \exp^{-\lambda t^{\beta}},
+%\end{equation}
+%
+%and CDF
+%
+%\begin{equation}
+%    f(t) = 1 - \exp^{-\lambda t^{\beta}}.
+%\end{equation}
+%
+The shape parameter $\beta$ dictates whether the hazard increases, $\beta > 1$, decreases, $\beta < 1$, or stays constant, $\beta = 1$. The effect of the shape parameter on the hazard function is demonstrated in \textit{Figure}~\ref{fig:hazard_function_demo}. Practically speaking, if the hazard function increases with exposure, then this corresponds to a wear out failure mechanism, where as if it decreases then this corresponds to infant mortality. This is important from a maintenance perspective because if the component does not wear out, then preventative replacement policy is not suitable \citep{jardine2013}. In other words, we want to be sure that $\beta > 1$ before implementing a preventative policy.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{./figures/hazard_func_demo.pdf}
+    \caption{Hazard function for $\beta = 0.9$, $\beta = 1$, and $\beta = 1.1$.}
+    \label{fig:hazard_function_demo}
+\end{figure}
 
 \subsection{Censoring}
 
-What is Censoring?
+It is very common for lifetime data to be censored. Censoring occurs when we only partly observe the lifetime of a unit, or in other words we only observe upper and lower bounds for the lifetime. There are three types of censoring: left, interval, and right censoring, but all are treated in much the same why. \textit{Figure}~\ref{fig:cense_examp} demonstrates these three types of censoring. In the figure, three units are installed at time $t_0$ and then two follow up inspections are performed at times $t_1$ and $t_2$. The true, partially observed, failure times of each unit are shown as crosses in the figure. Left censoring occurs when we only observe an upper bound of the lifetime, an example is if we know the install time of a unit and observe it as failed at $t_1$ and so we only know that the true value of the lifetime must be less than $t_1$. Interval censoring occurs if we only know an upper and lower bound for the lifetime, i.e. if a unit fails between inspection times then we know that the lifetime must be greater than $t_1$ but less than $t_2$. Right censoring occurs when we only know a lower bound for the lifetime. For example, if a unit is still in operation when we perform our analysis, e.g. it has lasted longer than $t_2$, then we only know that the true value of the lifetime must be greater than $t_2$. Right and left censoring are special cases of interval censoring where the upper or lower bound of the lifetime are infinity or zero respectively. Left censoring is fairly uncommon and so In the discussions that follow, I focus on right and interval censoring but all of the methods can be easily extended to accommodate left censored data as well.
 
-\subsection{An example from industry}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{./figures/censoring_example.pdf}
+    \caption{}
+    \label{fig:cense_examp}
+\end{figure}
 
-\section{Bias in heavily censored lifetime data}
+One way of handling censored data is to treat the censored lifetimes as missing data, which in a Bayesian framework is to treat them as a random variable in the model \citep[p.211]{reich2019}, and constrain their values to fall within the upper and lower censoring bounds \citep{stan_user_guide2024}. This is easily done in probabilistic programming languages like Stan. Treating the missing data as random variables in the model requires us to specify a distribution for the censored lifetimes, which we assume is the same distribution as the rest of the population,
 
-Introduce the problem that, when data are heavily censored, the estimates of lifetime parameters become bias. We will show via simulated data so that the underlying truth is known.
+\begin{equation}
+    \label{eq:impute-cens}
+    y^C_i|\beta, \eta \sim \hbox{Weibull}^{t^{\hbox{\tiny{Upper}}}_i}_{t^{\hbox{\tiny{Lower}}}_i}(\beta, \eta).
+\end{equation}
+
+\noindent Here $y^C_i$ is an unobserved censored lifetimes, and the superscript $t^{\hbox{\tiny{Upper}}}$ and subscript $t^{\hbox{\tiny{Lower}}}$ indicate that the distribution is constrained by the upper and lower censoring times. Once the missing lifetimes have been imputed, the likelihood of the observed and imputed lifetimes can be calculated in the same way as a typical lifetime dataset with no censoring. This approach of imputing the censored lifetimes is not unique to Bayesian methods. The same can be done using an Expectation Maximisation algorithm and maximum likelihood \citep{mitra2013}. However, using the Bayesian approach, along with MCMC methods, it is very simple to derive uncertainty intervals for the parameters, imputed values, and useful quantities.
+
+An alternative approach is to simply integrate out the censored observations. The probability that a censored observation falls between the upper and lower censoring times is
+
+\begin{equation}
+    \label{eq:integrate-out-cens}
+    Pr\left[t^{\hbox{\tiny{Lower}}} < y^C_i \leq t^{\hbox{\tiny{Upper}}}\right] = \int_{t^{\hbox{\tiny{Lower}}}}^{t^{\hbox{\tiny{Upper}}}} f\left(y^C_i\right) d y^C_i = F\left(t^{\hbox{\tiny{Upper}}}\right) - F\left(t^{\hbox{\tiny{Upper}}}\right).
+\end{equation}
+
+\noindent By integrating out the censored observations, the likelihood can be written as
+
+\begin{equation}
+    \label{eq:censored_likelihood}
+    L\left(\theta|y^O, t^{\hbox{\tiny{Upper}}}, t^{\hbox{\tiny{Lower}}}\right) = \prod^{N^O}_{i = 1}f(y^O_i) \prod^{N^C}_{j = 1}\left[F(t^{\hbox{\tiny{Upper}}}_j) - F(t^{\hbox{\tiny{Lower}}}_j)\right],
+\end{equation}
+
+\noindent where $\theta$ are the parameters of the lifetime distribution, $N^O$ and $N^C$ are the number of fully observed and censored observations respectively, and $y^O_i$ are the fully observed lifetime. This second approach is much more commonly used, particularly in the reliability literature (). However, as I show later, for the particular problem when data are also left-truncated with unknown installation times, it is convenient to frame the model in the form of the first imputation approach.
+
+\subsection{Left-truncation}
+
+Truncation arises when a sample comes from an incomplete population, or in other words, there is some criteria that part of the population must appease in order to be observable \citep{guo1993}. Left-truncation, for example, arises when some units must survive up to a certain time in order to be included in the dataset. It is also possible for data to be right- or doubly-truncated, but left-truncation is the most common in lifetime data. The definition of left-truncation and left-censoring may seem very similar, however, they are distinctly different \citep{mitra2013}. Censoring is a characteristic of the sample, i.e. we know the number of left-censored observations but not the exact values of their lifetimes, whereas truncation is a characteristic of the population because we do not know how many units were not included in the dataset because they did not survive past the truncation time(the time from the installation of the unit to the start of observation) and hence our sample is not representative of the true population. An example of a left-truncated dataset is shown in \textit{Figure}~\ref{fig:left_trunc_example}. 
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{./figures/left_truncation_example.pdf}
+    \caption{}
+    \label{fig:left_trunc_example}
+\end{figure}
+
+In \textit{Figure}~\ref{fig:left_trunc_example}, units that were installed prior to $t_{\hbox{start}}$ come from a left-truncated distribution since any other unit that was installed at the same time but did not last until $t_{\hbox{start}}$ are not included in the sample. The left-truncated cases caused by the start of the observation period (units three, four, five, and seven in \textit{Figure}~\ref{fig:left_trunc_example}) tend to over-represent low-risk cases since any high risk case installed at the same time is absent from the sample \citep{guo1993}. Observations that arise from a left-truncated distribution can be included in the analysis by re-normalising their lifetime distribution by dividing by the probability of surviving past the truncation time;
+
+\begin{equation}
+    \label{eq:left_trunc}
+    L\left(\theta|y^T_i\right) = \frac{f\left(y^T_i\right)}{1 - F\left(\tau^{\hbox{\tiny{Left}}}_i\right)},
+\end{equation}
+
+\noindent where $y^T_i$ is the left-truncated lifetime, and $\tau^{\hbox{\tiny{Left}}}_i$ is the truncation time.
+
+\subsection{Left-truncation and right-censoring} 
+
+A common scenario in reliability datasets is a combination of both left-truncation and right-censoring. This case naturally arises in historic observational datasets, such as those found in CMMS, where units are repeatedly replaced once they fail and any units that were installed and failed before the start of the observation process (which might be the data a new CMMS was adopted) are absent in the dataset. \textit{Figure}~\ref{fig:left_trunc_and_right_cens_example} shows a toy example of this case, where three units are repeatedly replaced when they fail and we start to observe their failures at $t_{\text{start}}$ and stop at $t_{\text{end}}$. Any lifetimes that fail before $t_{\text{start}}$ are unobserved and so are greyed out, resulting in the first observed lifetime of each unit being a left-truncated sample. Lifetimes that surpass $t_{\text{end}}$ are only partially observed (right censored), hence the portion of these lifetimes that sits to the right of $t_{\text{end}}$ is also greyed out. \citet{hong2009,mitra2013,kundu2016} analyse a dataset of electrical transformer failures that follows this general structure and \citet{mittman2013} looks at a similar case for computer hard drives. The idler frame failure data is also an example of this type of dataset.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{./figures/left_truncation_w_right_censoring_example.pdf}
+    \caption{}
+    \label{fig:left_trunc_and_right_cens_example}
+\end{figure}
+
+\citet{hong2009} shows how a likelihood for data that is left-truncated and right-censored can be constructed using the general approach of integrating out the censored observations,
+
+\begin{equation}
+    \label{eq:left_trunc_and_right_cens_int}
+    L\left(\theta|y^O, t^{\hbox{\tiny{Lower}}}, \tau^L_i\right) = \prod^{N^O}_{i = 1}\left[\frac{f(y^O_i)}{1 - F(\tau^L_i)} \right] \prod^{N^C}_{j = 1}\left[\frac{1 - F(t^{\hbox{\tiny{Lower}}}_j)}{1 - F(\tau^L_j)}\right],
+\end{equation}
+
+\noindent where $\tau^L$ are the truncation times and if the lifetime is not truncated $\tau^L = 0$. \citet{kundu2016} then implements the same approach in a Bayesian framework using a gibbs sampling algorithm to draw samples from the posterior. \citet{mitra2013} takes the alternative approach of imputing the censored lifetimes using an expectation maximisation algorithm and the complete data likelihood
+
+\begin{equation}
+    \label{eq:left_trunc_and_right_cens_imp}
+    L\left(\theta|y^O, \hat{y}^C, \tau^L_i\right) = \prod^{N^O}_{i = 1}\left[\frac{f(y^O_i)}{1 - F(\tau^L_i)} \right] \prod^{N^C}_{j = 1}\left[\frac{f(\hat{y}^C_j)}{1 - F(\tau^L_j)}\right],
+\end{equation}
+
+\noindent where the $\hat{y}^C_j$ are the imputed values of the censored observations. I express the same approach as \ref{eq:left_trunc_and_right_cens_imp} in a Bayesian framework as
+
+\begin{align*}
+    y^O_i|\beta, \eta & \sim \hbox{Weibull}(\beta, \eta) \quad T[\tau^L_i, ]\\
+    y^C_j|\beta, \eta & \sim \hbox{Weibull}_{t^{\hbox{\tiny{Lower}}}_j}(\beta, \eta) \quad T[\tau^L_j, ] \\
+    \beta, \eta & \sim \pi(\theta_{\beta, \eta}),
+\end{align*}
+
+\noindent where $\hbox{Weibull}_{t^{\hbox{\tiny{Lower}}}_j}$ indicates that the random variable $y^C_j$ has a Weibull distribution and is constrained to be greater than the censoring time, and $T[\tau^L, ]$ indicates that the distributions are re-normalised by the probability $P(y > \tau^L)$ (Note: I stole this notation from the stan code). For the moment, I express a joint prior for the parameters in its most general form.
+
+\paragraph{Unknown truncation time}
+
+A problem arises when the installation time of the left-truncated lifetimes is unknown, since to normalise the truncated lifetime distribution of the left-truncated observation $\tau^{\hbox{\tiny{Left}}}$ must be known. For example, if for the dataset shown in \textit{Figure}~\ref{fig:left_trunc_and_right_cens_example} there was no information at all prior to $t_\text{start}$, then we could not use the likelihood in \ref{eq:left_trunc_and_right_cens_int} or \ref{eq:left_trunc_and_right_cens_imp}. This is the case for the idler frame data in. This problem is referred to either as unknown exposure history () or initial conditions (). In these case, there are two approaches that can be taken \citep{guo1993}. The first, discard all of the left-truncated samples \citep{}, in which case the parameter estimates are still unbiased \citep{}. However, in doing so we throw away a large amount of information. In most cases of left-truncation and right censoring, the right censoring masks any information about longer lifetimes and so the left-truncated samples are the only source of information about the upper tail of the lifetime distribution. The second approach is to assume a constant hazard, i.e. $\beta = 1$, since in this case the Weibull distribution reduces to the exponential and, no matter the age of a unit, the probability of it surviving a given period is constant (this is the memoryless trait of the exponential distribution). However, assuming a constant hazard is very restrictive and often one of the aims of performing lifetime analysis in the first place is to determine if $\beta > 1$. Furthermore, assuming an exponential distribution when the data do not have a constant hazard may lead to severe bias in the parameter estimates \citep{heckman1986}. In \textit{Section}~\ref{}
+I show how treating the unknown installation times as a case of censoring and using the method of imputing the censored data, the missing truncation times can also be imputed and reasonable parameter estimates can be obtained.
+
+%Whereas Cases of right and interval censoring are demonstrated in \textit{Figure}~\ref{fig:censoring_example}~\textit{A}. The figure shows three units observed over a period of $5000$ to $75000$ \textit{days} of operation, indicated by the red vertical lines. The installation of the units is represented by a solid dot and its failure by a cross. Any part of the lifetimes that fall outside of the period of observation are unknown and are therefore greyed out. The lifetime of unit three is a fully observed lifetime since the unit is both installed and fails within the observation period. Unit two on the other hand was installed before the period of observation and failed while we were observing it. Unit two is therefore interval censored because we know that it's installation time must be between $t = 0$ and $t = 5000$, and we can therefore deduce that the lifetime must be between $t = 2430$ and $t = 7430$. The last case, unit one, is right censored since it was installed during the observation period and had not yet failed by the time we stopped observing it. For the case of unit one, we can only deduce that the lifetime was at least as long as we observed it for. \textit{Figure}~\ref{fig:censoring_example}~\textit{B} shows how the three case in \textit{A} arise in an experiment. \textit{B} is a simplified case of the idler frame data where there are three similar components(units) on an asset that are continuously replaced when they fail and we only start to properly record the failures after $5000$ \textit{days} of operation. This could be because a twenty year old mine site only started to use electronic maintenance management software capable of capturing the information seven years ago
+
+\section{Imputing truncation times}
+
+Using the toy example in \textit{Figure}~\ref{fig:left_trunc_and_right_cens_example}, say we do not observe any of the installation or failure times to the left of $t_\text{start}$. In this case, we know that the first, partially, observed lifetime from each unit started some time between $t = 0$ and $t = t_\text{start}$. This is a case of interval censoring, where the lower censoring bound is the time from the beginning of observation to the failure time and the upper bound is from $t = 0$ to the failure time. If we did not know the origin time $t = 0$ with respect to $t = t_\text{start}$ then it would be a case of right censoring, but the following logic would still apply. Let $t^{\text{failure}}_{i}$ be the failure time of the $i^{th}$ observation. Treating the observations as interval censored, the left-truncated lifetime can be imputed as in \textit{Section}~\ref{} by sampling from
+
+\begin{equation}
+    \hat{y}^L_i|\beta, \eta ~ \hbox{Weibull}^{t^{\text{failure}}_{i}}_{t^{\text{failure}}_{i} - t_\text{start}}(\beta, \eta).
+\end{equation}
+
+\noindent Using the imputed values of the lifetime it is then possible to calculate the truncation time by
+
+\begin{equation}
+    \tau^L_i = \hat{y}^L_i - \left(t^{\text{failure}}_{i} - t_\text{start}\right).
+\end{equation}
+
+A complication arises when the lifetime is both interval censored by the start of the observation period and right censored by the end, such as unit one in \textit{Figure}~\ref{fig:left_trunc_and_right_cens_example}. In this case the truncation times value is unknown but is between $\tau^L = 0$ and $\tau^L = \min\left(t_\text{start}, \hat{y}^L_i - (t_\text{end} - t_\text{start})\right)$. Since we have no reason to expect that the truncation time is not uniform, we can impute the truncation time using the uniform distribution
+
+\begin{equation}
+    \tau^L_i ~ \hbox{Uniform}(0, \min\left(t_\text{start}, \hat{y}^L_i - (t_\text{end} - t_\text{start})\right)).
+\end{equation}
+
+\noindent Sampling the value of $\tau^L_i$ in this way incorporates the extra uncertainty in our Bayesian estimates
+
+\section{Analysis of simulated data}
+
+%The toy example given in \textit{Figure}~\ref{fig:censoring_example}~\textit{B} is based on the Conveyor Idler Frame data introduced in \textit{Section}~\ref{sec:industry-data}. In the case of the Idler frames, the high reliability of the components when compared to length of the observation period results in heavy censoring; roughly 70 to 80\%. This heavy censoring biases parameter estimates. To demonstrate this bias, in this section, I simulate data from a known Weibull distribution and impose censoring through the same observation process. I then fit a Weibull model, accounting for the censoring, to reclaim the parameter values. Lastly, I compare the reclaimed values with the true, known, parameter values. Using simulated, synthetic, data in this way allows us to assess, in a controlled environment, how well the proposed model can reclaim the the true parameter values given that the model is specified correctly. As Gelman quotes; if the model cannot reclaim the true parameter values for a simulated case where we know the model is correctly specified, then there is no hope for an applied case where we do not know the true model. In the remainder of this section, I first describe how I simulate the censored data, then I fit a weibull distribution to the simulated censored data using both the maximum likelihood and Bayesian approaches. For the Bayesian approach I use a non-informative Bayesian model to show that both the Bayesian method and MLE are equally effected by the bias. I fit the alternative Bayesian censoring model because it offers a little more insight into how the bias arises.
 
 \subsection{Simulation method}
 
-How do we simulate censored lifetime data?
+In order to simulate the data generating process of the idler frames, I sample $N \times M$ draws from a Weibull distribution with known shape parameter $\beta$, and scale parameter $\eta$. I then assign these lifetimes to $M$ units. To calculate failure times rather than lifetimes, I take the cumulative sum of the $N$ lifetimes assigned to each unit. Installation times are calculated by taking the lag of the failure times. I then define a start, $t_{start}$, and end, $t_{end}$, time for the observation window. Any lifetimes where both the install and failure times sit either before $t_{start}$ or after $t_{end}$ are discarded. Of the remaining lifetimes, if the install time is less than $t_{start}$ then $t_{start}$ is substituted for the install time and the lifetime is marked as interval censored, while if the failure time is greater than $t_{end}$ then $t_{end}$ is substituted as the failure time and the lifetime is marked as right censored. If a lifetime is both interval censored at the beginning of the lifetime and right censored at the end, then the install time is set as $t_{start}$, the failure time as $t_{end}$ and it is marked as right censored. \textit{Figure}~\ref{fig:sim_censored_units} shows a simulated idler lifetime data set when $\beta = $, $\eta = $, $t_{start} = $, and $t_{end} = $. \textit{Table}~\ref{tab:sim_censored_units} shows the first ten rows of the simulated censored data shown in \textit{Figure}~\ref{fig:sim_censored_units}. Next we fit the censored weibull model to the simulated data by maximizing the likelihood in \ref{eq:weibull_likelihood} and also by fitting the Bayesian model in \ref{eq:bayesian_censoring_model} with noninformative priors using Hamiltonian Monte Carlo in STAN.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\textwidth]{./figures/sim_data_desc.pdf}
+    \caption{The simulated lifetimes separated by censored(both right and interval) vs noncensored, and ordered by length of observed lifetime.}
+    \label{fig:sim_censored_units}
+\end{figure}
+
+\input{./tables/sim_data_head.tex}
 
 \subsection{Bias in results}
 
-How does the estimated CDF differ from the truth?
+Do demonstrate the bias caused by heavy censoring of the lifetime data, I first demonstrate with the empirical kaplan-mayer approach and fitting the censored weibull model by maximizing the likelihood in \ref{eq:weibull_likelihood}. When fitting the model via MLE I look at two cases; the first where all censored data are treated as right censored (i.e. if I didn't specify an upper bound of the interval censored data); and the second where the intercal censored data is treated properly by defining an upper bound for the lifetimes. This comparison is made purely for demonstration. I then fit the Bayesian equivalent to the MLE, which is the Weibull model with non-informative independent priors on the parameters $\beta$ and $\eta$. I fit both versions of the Bayesian Weibull model. 
+
+\paragraph*{MLE}
+
+- Say we are unsure about defining an upper bound for the interval censored lifetimes and we treat them as right censored; the upper bound is infinite. Th
+
+- Fit the Weibull model w/ MLE and Bayesian non-informative independent priors.
+
+- Plot the joint density of the parameters from the Bayesian posterior and overlay the true values and MLE estimate.
+
+- Show the estimated CDF's with the true CDF and the "true" sample values (i.e. uncensored observations).
+
+- Add small simulation to show that this is not a one off...
+
+\paragraph*{Noninformative Bayesian model}
+
+The priors are sufficiently vague that they encode vary little information into the model. Therefore making the results roughly equivalent to the MLE.
 
 \section{Informative Bayesian analysis}
 
@@ -53,6 +246,19 @@ How can informative priors help us in this case?
 Construction of independent priors.
 
 \paragraph*{Joint}
+
+There is some work on bias correction:
+%\begin{itemize}
+%    \item https://www.tandfonline.com/doi/pdf/10.1080/08982112.2010.503447?casa_token=pkmVviGKzgkAAAAA:_dXqLAKXlplcb5Y_-U1CAnkuJS70HLGZfhaSHqbWNu26KVo2UPRxoXNC4GNcCeObCWJqTpSbFQ
+%    \item The new Weibull handbook.
+%    \item https://www.researchgate.net/publication/345882371_Bias_Corrected_Weibull_Parameter_Estimation_and_Impact_on_Confidence_Bounds
+%    \item https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=902481
+%    \item https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=752011
+%\end{itemize}
+
+But most focus on finding a way of correcting for bias (which is convoluted and difficult to communicate to reliability engineers), also the foundations of these approaches were laid in the late 90s/early 2000 and so the simulations are difficult to follow (Not the right wording but I mean in terms of presenting results and visualisations due to computational limitations).
+
+One paper \citep{kaminskiy2005} investigated using encoding an informative joint prior in a Bayesian framework in order to suplement analysis when data have small sample sizes and heavy censoring. This method is easy to communicate to reliability engineers and practitioners and reduces the bias demonstrated in \ref{}. Through the informative prior, informations can be encoded into the model to inform areas of the posterior where the data do not contain information. However, that is not to say that we are exploring a fictional scenario where we know the truth, but engineers can work closely with manufacturers to understand the upper tail of the distribution of the lifetimes and then encode it into models for their specific population of units in order to get more accurate reliability estimates.
 
 Construction of the joint prior.
 
