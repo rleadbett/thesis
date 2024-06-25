@@ -16,7 +16,6 @@ M3/*
 *.cb
 *.cb2
 .*.lb
-
 ## Bibliography auxiliary files (bibtex/biblatex/biber):
 *.bbl
 *.bcf
@@ -24,7 +23,6 @@ M3/*
 *-blx.aux
 *-blx.bib
 *.run.xml
-
 ## Build tool auxiliary files:
 *.fdb_latexmk
 *.synctex
@@ -33,7 +31,7 @@ M3/*
 *.synctex.gz(busy)
 *.pdfsync
 
-## Quarto
+# For Quarto
 *_cache*
 *_files*
 *.rmarkdown
