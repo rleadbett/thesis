@@ -4,6 +4,7 @@ M3/*
 # For LaTeX
 
 ## Core latex/pdflatex auxiliary files:
+
 *.aux
 *.lof
 *.log
