@@ -1,118 +1,276 @@
-\chapter{Noisy gamma process with unit-to-unit variability}\label{chap:chapter5}
+\chapter{Noisy gamma process with unit-to-unit variability} \label{chap:chapter5}
 
-Unit-to-unit variability description.
+In Chapter~\ref{chap:chapter4}, I discussed how to model a single degradation path using a noisy gamma process postulated through the Bayesian hierarchical modelling framework. I concluded that there is an identifiability issue between the noise and the volatility of the underlying gamma process when there are only a few degradation measurements. A resolution to this preasymptotic nonidentifiability is to add extra information into the analysis of the degradation trace, which can be done by modelling the degradation of a population of $m$ nominaly identical units simultaneously. This raises the question of how the degradation traces of each unit are related to one another. For example, we may assume that all of the units are realisations from the same underlying gamma degradation process.
 
-Introduce crack growth data and adding noise.
+However, this assumption may be too restrictive in practice since there may be additional variability in their degradation resulting from slight variations in operating conditions or their manufacture. The most common approach to modelling this extra layer of heterogeneity between units beyond what can be explained by the volatility of the gamma degradation process and any covariates is to use a `mixed effects' model, in which some of the parameters of the model---so-called `random effects'---vary between units or individuals, whereas others, the `fixed effects', do not\footnote{This definition is just one of five that \citet{Gelman2005} lists.}. Early examples in the degradation literature include \citet{lu1993} and \citet{lawless2004}, who incorporated random effects into a general path model and gamma process, respectively. A more recent example is \citet{rodriguez-picon2018}, who modelled the GaAs laser dataset that was also analysed by \citet{Meeker1998}. To model the heterogeneity in the degradation paths, \citet{rodriguez-picon2018} incorporate random effects into a noise-free gamma process by specifying the effect in either the mean or variance of the gamma process. By contrast, \citet{peng_2018} follow the methodology of \citet{lawless2004} and specify random effects in the scale parameter of a gamma process.
 
-Prior predictive checks for crack growth.
+In this chapter, I show how the hierarchical model for the noisy gamma process can be neatly extended to incorporate unit-to-unit variability through the same BHM formalism and show the advantages of using the mean/coefficient of variation parameterisation in this context. Before going any further, however, it is worth clarifying the terminology that I use. As pointed out above, the terms random and fixed effects are used when mixed effects models are used to describe unit-to-unit variability. However, as \citet{Gelman2005} and \citet{gelman2006} point out, all parameters in a Bayesian analysis are random variables; furthermore, because there is a multiplicity of definitions of fixed and random, such terms can engender considerable confusion [Section~6]\citep{Gelman2005}. Consequently, \citet{Gelman2005} and \citet{gelman2006} make a plea for abandoning these long-used terms in place of more descriptive ones: \emph{varying}, for parameters that differ between groups or units, and \emph{constant}, for parameters that are identical for all groups or units. In this chapter, I simply identify which parameters are common across units, those that are unique to each unit, and, most importantly, the specification of the prior distribution(s) for parameters that vary from unit-to-unit.
 
-\section{Models for multiple units}
+To demonstrate the models for multiple units, I use a data set from an experiment to measure and then model crack-propagation in the terminal of nominally identical electronic devices originally published by \citet{rodriguez-picon2018}. The non-noisy data are shown in Figure~\ref{fig:crack-growth-w-noise} as solid lines. To emulate measurement error, I add a small amount of $\mathrm{N}(0, 0.025)$ noise. These new noisy degradation traces are shown as dashed lines in Fig.~\ref{fig:crack-growth-w-noise}. The soft failure of the terminals is considered to be when the crack length reaches 0.4~mm, and we can see from the figure that by the end of the experiment, several units have yet to fail. There are two reasons why such data may be collected \citep{robinson2000}: to estimate the remaining useful life or failure time distributions of units that have yet to fail during operation, or the corresponding quantities for new units. In the analysis that follows, I model the noisy data and show how to estimate such failure time distributions along with uncertainty intervals.
 
-Commentary on random effects\ldots
+\begin{figure}
+   \centering
+   \includegraphics[width=0.95\textwidth]{./figures/ch-5/noisy-crack-growth-data.pdf}
+   \caption{Crack-growth propagation data of \citet{rodriguez-picon2018}: original data (solid lines); noisy data (dashed lines).}
+   \label{fig:crack-growth-w-noise}
+\end{figure}
 
-\paragraph{complete pooling model}
+In the rest of this chapter, I first propose several noisy gamma process models for the multiple noisy degradation traces in Fig.\ref{fig:crack-growth-w-noise} in Section~\ref{sec:unit-to-unit-models}; a complete pooling model and three where either one or both parameters of the gamma process vary across units. In Section~\ref{sec:unit-to-unit-sampling}, I then go on to sample from and evaluate the posterior distributions of these models conditioned on the noisy crack-growth data set. I also compare the models using $\mbox{elppd}$ and cross-validation methods. I then show how to construct failure time distributions for a new unit and a unit that is currently under test but yet to fail in Section~\ref{sec:unit-to-unit-ft} using both a complete and a partial pooling model. Finally, I discuss the findings and conclusions of the analysis in Section~\ref{sec:unit-to-unit-discussion}.
 
-\paragraph{varying mu model}
+\section{Models for multiple units} \label{sec:unit-to-unit-models}
 
-\paragraph{varying nu model}
+There are three ways in which we might consider allowing a model for the degradation data in Fig.~\ref{fig:crack-growth-w-noise} to vary, each of which leads to a different form of \emph{pooling}, or, alternatively, of how information is shared or not among the units \citep{Johnson_2022}. The added advantage of the mean/coefficient of variation parameterisation is that it makes it explicit which characteristics of the model we are sharing between units. For example, first, we might make the assumption that for a particular characteristic of the model, such as the mean degradation rate (described by the parameter $\mu$), the units do not contain information that may be relevant to each other and therefore estimate completely separate values of $\mu$ for each unit; this corresponds to \emph{no pooling}. Secondly, we might assume that all of the units have the same mean wear rate, and the variation that we observe in Fig.~\ref{fig:crack-growth-w-noise} is only due to the volatility of the gamma process and the fact that we have only observed them over such a short period, and hence estimate the parameter $\mu$ by averaging the data from all units--this is \emph{complete pooling}. Finally, although the units are different from each other, they have the same specifications, so we might expect their average degradation rates share similar characteristics: this supposition can be modelled by allowing the parameter $\mu$ to vary from unit-to-unit yet arise from a common distribution. Doing so results in \emph{partial pooling} of information, which is especially useful when sample sizes are small, but we do not want to make the assumption that all units are identical \cite[Section~13.1]{McElreath_2020}.
 
-\paragraph{varying mu and nu model}
+Different forms of pooling can be applied to each parameter. For example, \citet{lawless2004} allow the rate parameter of the gamma process to vary from unit-to-unit and assume these unit-specific rate parameters arise from a common distribution whose parameters are estimated from the data (partial pooling) while also assuming that the scape parameter is the same for all units; i.e. completely pooled. The multitude of possible pooling combinations is one reason why it is useful to specify a hierarchical model so that the parameters have separate effects on the outcome, like $\mu$, $\nu$, and $\sigma$ do. By doing so, we can use our understanding of the data-generating process to select sensible models.
 
-\section{Computation and posteriors}
+In the analysis that follows, I confine my exploratory modelling of the crack growth data to models where $\sigma$ is completely pooled, and $\mu$ and $\nu$ are either completely or partially pooled across the units. Since the crack growth data is from a formal experiment, it is reasonable to assume that measurement error in the degradation measurements is constant across the units and observation times and hence to completely pool $\sigma$. Moreover, because the degradation traces are from nominally identical units, it makes sense to assume that their mean wear rate and volatility are in some way related; i.e. either partially or completely pool $\mu$ and $\nu$. Furthermore, if there is no pooling of either $\mu$ or $\nu$, there is no way to make statements about new units without using heuristics and one of the motivations for modelling the crack growth data is to produce reliability estimates for new units. In the next section, I define the complete and partial pooling models that I explore in the rest of the chapter. If it was suspected that the measurement error varied between the units, then the same methods that I describe of varying $\mu$ and $\nu$ in section~\ref{subsec:partial-pooling} bellow could be used for $\sigma$.
+
+\subsection{The complete pooling model}
+\label{subsec:complete-pooling}
+
+I denote by $y_{ij}$, $j = 1, 2, \ldots, J$, the measured degradation of $J$ identical units, and without loss of generality, assume that they are measured at the same times $t_i$, $i = 1, 2, \ldots, I$. In a complete pooling model for the crack growth data, both parameters $\mu$ and $\nu$ are completely pooled between the ten units. In other words, each unit is a realisation from the same underlying gamma degradation process. I specify the complete pooling model 
+\begin{align*} 
+   y_{ij}|z_{ij}, \sigma & \sim \mbox{N}(z_{ij}, \sigma) && \mbox{data model} \\
+   \Delta z_{ij}|\mu, \nu & \sim \mbox{Ga} \left( \frac{\Delta t_{i}}{\nu^2}, \frac{1}{\mu \nu^2} \right) && \mbox{process model} \\
+   \sigma & \sim \mbox{Unif}(0, 10) && \mbox{parameter model} \\
+   \mu & \sim \mbox{N}^{+}(0.5, 0.2) \\
+   \nu & \sim t^{+}_3(0, 0.5)
+\end{align*}
+for the crack growth data. Note that this model is essentially the same model as I explored in Chap~\ref{chap:chapter4} except there are now multiple realisations from the gamma process for each $\Delta t_{i}$ corresponding to the jump in degradation from each unit. I also use new values of the hyperparameters that are adjusted to the scale of the crack growth data. I chose these new priors using prior predictive checking.
+
+Figure~\ref{fig:ppc-multi-unit} shows four prior predictive simulations from the noisy crack growth model with complete pooling. In the figure, each simulated dataset contains the same number of units and observations as the true data set in Fig.~\ref{fig:crack-growth-w-noise}. Clearly, the simulations are noticeably different from the true data; in the first simulation, the units wear much faster; in the second and third, the degradation traces are much more volatile; and in the fourth, there is almost no variability between the pathways. However, as I stressed in Sec.~\ref{sec:Bayesian-methods}, the point of performing prior predictive checks is not to tune the prior until it matches the observed data but rather to ensure that the model produces plausible realisations of the data, which appears to be the case here. Interestingly, through the prior predictive simulations, we can see that the volatility of the gamma process with no varying parameters already allows for a reasonable amount of variation in the degradation traces of the units. Next, I explain how I extended the complete pooling model to allow the parameters to vary between units.
+
+\begin{figure}
+   \centering
+   \includegraphics[width=0.95\textwidth]{./figures/ch-5/PPC_multi_unit.pdf}
+   \caption{Four non-noisy prior predictive simulations from the complete pooling model. Each simulation contains the same number of units and observations as the crack growth data in Fig.~\ref{fig:crack-growth-w-noise}.}
+   \label{fig:ppc-multi-unit} 
+\end{figure}
+
+\subsection{Partial pooling models} \label{subsec:partial-pooling}
+
+To incorporate unit-to-unit variability into the complete pooling model above, I assign a hierarchical prior on $\mu$, $\nu$, or both $\mu$ and $\nu$ and then estimate the hyperparameters from the data. I use the general structure
+\begin{align*}
+   \theta_j| \mu_\theta, \sigma_\theta & \sim \mbox{N}^{+}(\mu_\theta, \sigma_\theta) \\
+   \mu_\theta & \sim \prescript{}{\theta}{\pi}\\
+   \sigma_\theta & \sim \mbox{Cauchy}^{+}(0, 1) \\
+\end{align*}
+for the hierarchical prior, where $\theta$ represents the parameter we allow to vary between units, $\theta_j$ are the unit-specific parameters, and $\prescript{}{\theta}{\pi}$ the corresponding prior for that parameter in the complete pooling model. In this hierarchical prior distribution, I assume that the $\theta_j$ arise from a Gaussian distribution whose hyperparameters $\mu_\theta$ and $\sigma_\theta$ are to be estimated. In this way, information is shared across units since a unit-specific estimate of the parameter influences the hyperparameters and, hence, the other unit-specific parameters. I use the same prior for $\mu_\theta$ as the prior used for the completely pooled case of $\theta$ in the complete pooling model since $\mu_\theta$ now expresses the expected value of the $\theta_j$. Finally, I use a vague truncated Cauchy hyperprior for the standard deviation of the hierarchical prior following the recommendations of \citet[chap.~17]{BDA2020}. These choices are just a general starting point; the more mass close to zero in the hyper prior for $\sigma_\theta$, the more information is pooled between the units \citep{McElreath_2020}, and if I were to use a distribution with heavier tails than a Gaussian, such as the student t, then inference about the hyperparameters would be more robust to outlying untis \citep[chap.~17]{BDA2020}. Using this general structure of a hierarchical prior, I explore a varying $\mu$ model, varying $\nu$ model and a model where both $\mu$ and $\nu$ vary from unit-to-unit.
+
+\paragraph{varying $\mu$ model} In the varying $\mu$ model, I am assuming that each of the degradation traces in Fig.\ref{fig:crack-growth-w-noise} arise from different gamma processes where these processes have the same volatility (described by $\nu$)  and similar but not the same the average degradation rates. The varying $\mu$ model is specified as
+\begin{align*} 
+   y_{ij}|z_{ij}, \sigma & \sim \mbox{N}(z_{ij}, \sigma)  && \mbox{data model} \\
+   \Delta z_{ij}|\mu_j, \nu & \sim \mbox{Ga} \left( \frac{\Delta t_{i}}{\nu^2}, \frac{1}{\mu_j \nu^2} \right) && \mbox{process model} \\
+   \sigma & \sim \mbox{Unif}(0, 10) && \mbox{parameter model} \\
+   \mu_j & \sim \mbox{N}^{+}(\mu_{\mu}, \sigma_{\mu}) \\
+   \nu & \sim t^{+}_3(0, 0.5) \\
+   \mu_{\mu} & \sim \mbox{N}^{+}(1, 0.2) \\
+   \sigma_{\mu} & \sim \mbox{Cauchy}^{+}(0, 1).
+\end{align*}
+
+\paragraph{varying $\nu$ model} In the varying $\nu$ model, I once again assume that each degradation trace is a realisation from a different gamma process. However, this time, I assume that all of these processes share the same average degradation rate $\mu$ but have varying degrees of volatility $\nu$. I specify the varying $\nu$ model as
+\begin{align*} 
+   y_{ij}|z_{ij}, \sigma & \sim \mbox{N}(z_{ij}, \sigma)  && \mbox{data model} \\
+   \Delta z_{ij}|\mu, \nu_j & \sim \mbox{Ga} \left( \frac{\Delta t_{i}}{\nu_j^2}, \frac{1}{\mu \nu_j^2} \right) && \mbox{process model} \\
+   \sigma & \sim \mbox{Unif}(0, 10) && \mbox{parameter model} \\
+   \mu & \sim \mbox{N}^{+}(1, 0.2) \\
+   \nu_j & \sim \mbox{N}^{+}(\mu_{\nu}, \sigma_{\nu}) \\
+   \mu_{\nu} & \sim t^{+}_3(0, 0.5) \\
+   \sigma_{\nu} & \sim \mbox{Cauchy}^{+}(0, 1).
+\end{align*}
+
+\paragraph{varying $\mu$ and $\nu$ model} In the final and most flexible model, I assume that the gamma processes that each degradation trace arises from have unique values of $\mu$ and $\nu$. This model where both $\mu$ and $\nu$ are partially pooled is
+\begin{align*} 
+   y_{ij}|z_{ij}, \sigma & \sim \mbox{N}(z_{ij}, \sigma)  && \mbox{data model} \\
+   \Delta z_{ij}|\mu_j, \nu_j & \sim \mbox{Ga} \left( \frac{\Delta t_{i}}{\nu_j^2}, \frac{1}{\mu_j \nu_j^2} \right) && \mbox{process model} \\
+   \sigma & \sim \mbox{Unif}(0, 10) && \mbox{parameter model} \\
+   \mu_j & \sim \mbox{N}^{+}(\mu_{\mu}, \sigma_{\mu}) \\
+   \nu_j & \sim \mbox{N}^{+}(\mu_{\nu}, \sigma_{\nu}) \\
+   \mu_{\mu} & \sim t^{+}_3(0, 0.5) \\
+   \sigma_{\mu} & \sim \mbox{Cauchy}^{+}(0, 1) \\
+   \mu_{\nu} & \sim t^{+}_3(0, 0.5) \\
+   \sigma_{\nu} & \sim \mbox{Cauchy}^{+}(0, 1).
+\end{align*}
+
+These models can be seen as a set of nested models where the varying $\mu$, varying $\nu$, and complete pooling models are special cases of the model where both $\mu$ and $\nu$ vary. In models where either $\mu$, $\nu$, or both (as in the complete pooling model) are constant across the different units, the complete pooling is equivalent to a model in which the hyperparameters $\sigma_\mu$ or $\sigma_\nu \longrightarrow 0$ and hence the unit specific parameters are forced to be equal to the mean hyperparameters $\mu_\mu$ or $\mu_\nu$.
+
+\section{Computation, posteriors, and predictive distributions} \label{sec:unit-to-unit-sampling}
+
+I fit all four models using the probabilistic programming language Stan. The code is available on a GitHub repository. The HMC algorithm is remarkably efficient, particularly for the complete pooling model, and exploring the posterior distributions requires only six chains of length 1000 after a burn-in period of 1000 iterations. The $n_{\mbox{eff}}$ and $\hat{R}$ statistics for the parameters of interest for all four models indicate that in all cases chains have mixed well \citep{Vehtari_2021}, these statistics are shown in tables \ref{tab:cp}, \ref{tab:pp_mu}, \ref{tab:pp_nu}, and \ref{tab:pp_both} for the different models. During the sampling from the posteriors of the hierarchical models, divergent transitions occur, particularly in models where $\nu$ varies from unit-to-unit. Table~\ref{tab:n_divergent} lists the number of divergent transitions that occur while sampling from the posterior of each model. In the first part of this section, I summarise the inference from each model and show that all models have been able to reclaim the scale of the measurement error and the true underlying degradation paths from the noisy data. I also investigate the cause of the divergent transitions for the hierarchical models, identifying the cause to be the tight curvature in the posterior distributions where the partial pooling collapses towards the complete pooling case. I then show some brief posterior predictive checking to understand the practical differences between the fitted models. In the last part of the section, I use the $\hbox{elppd}_{\text{\tiny{LOO-CV}}}$ scoring method described in Chap.~\ref{chap:chapter1} to compare the four models.
+
+\input{./tables/ch-5/n_divergent.tex}
+
+\paragraph{Complete pooling} The posterior samples from the complete pooling model for the parameters $\sigma$, $\mu$, and $\nu$ are summarised in Table~\ref{tab:cp}. The model has done a reasonable job at reclaiming the standard deviation of the measurement error (which is $0.025$) since the expected value of $\sigma$ is $0.030$ and the majority of the posterior mass sits between $\sigma = 0.020$ and $\sigma = 0.040$. The BHM also provides posterior distributions of the underlying degradation. These are shown in Fig.~\ref{fig:cp_filtered} as 95\% credible intervals, along with the noisy data and the true underlying degradation traces from which they were generated. As we can see, the credible intervals contain the underlying true degradation over the entire time span for each of the ten units, with few exceptions.
+
+\input{./tables/ch-5/stan_fit_cp_table.tex}
+
+\begin{figure}
+   \centering
+   \includegraphics[width=0.8\columnwidth]{./figures/ch-5/plot-cp-filtered.pdf}
+   \caption{Marginal posterior distributions of the underlying gamma process from a BHM where all parameters are completely pooled.}
+   \label{fig:cp_filtered}
+\end{figure}
+
+\paragraph{Varying $\mu$} Table~\ref{tab:pp_mu} shows some summary statistics of the marginal posterior distributions from the varying $\mu$ model for select model parameters, and Fig.~\ref{fig:pp_mu_marg} shows the marginal posterior distributions of the parameters $\sigma$, $\nu$, $\mu_1, \ldots, \mu_{10}$, $\mu_{\mu}$ and $\sigma_{\mu}$. As Table~\ref{tab:pp_mu} and Fig.~\ref{fig:pp_mu_marg} show, a posteriori, the mean degradation rates of the units arise from the distribution $\mbox{N}^{+}(0.38, 0.07)$. The small expected standard deviation of $0.07$ indicates that the unit-specific mean degradation rates vary in a relatively narrow range, as the posterior distributions in Fig.~\ref{fig:pp_mu_marg} indicate. In addition, the lower tail of the marginal posterior of $\sigma_\mu$ has a considerable mass near zero, and hence, there is reasonable evidence that the average degradation rate is constant across units. 
+
+Interestingly, the marginal posterior of $\mu_\mu$ is wider relative to $\mu$ in the CP model; however, both have the same mean, and the uncertainty intervals of the unit-specific $\mu_j$ are even wider still. A possible reason is that because I am not making the simplifying assumption that all of the $\mu_j$ are equal, the data do not inform the parameters as strongly since there are now even more parameters to estimate in the model, and hence the uncertainty is larger. Additionally, the estimate of $\nu$ has shrunk slightly (particularly in the lower tail). From the shrinkage of $\nu$, it appears that because more of the variability between the traces is being attributed to the variation of the $\mu_j$, the resulting traces are less volatile. Despite these slight changes in inference regarding the mean wear rates and coefficient of variation, the varying $\mu$ model reclaims the true value of $\sigma$ to effectively the same degree as the complete pooling model.
+
+\input{./tables/ch-5/stan_fit_pp_mu_table.tex}
+
+\begin{figure}
+   \centering
+   \includegraphics[width=0.95\textwidth]{./figures/ch-5/plot-pp-mu-marg-post-1.pdf}
+   \caption{Marginal posterior distributions of parameters from the model where mean degradation rate $\mu_j$ varies from unit-to-unit.}
+   \label{fig:pp_mu_marg} 
+\end{figure}
+
+During the sampling from the posterior of the varying $\mu$ model, a small number (23) of divergent transitions occur. Figure~\ref{fig:pp_mu_pairs} show the pairs plots of the samples from the posterior for the parameters $\mu_1$, $\mu_2$, $\mu_\mu$, and $\sigma_\mu$. The 23 divergent transitions are plotted in red in each of the bivariate scatter plots. From the plots (particularly those in the lower off-diagonal), we can see that the divergent trajectories tend to occur for very small values of $\sigma_\mu$. This pattern suggests that in the area of the posterior where the partial pooling model collapses towards the simpler complete pooling case--when $\mu_\mu = \mu_1 = \ldots = \mu_{10}$ and $\sigma_\mu = 0$--there is tight curvature, and hence the sampler starts to misbehave. To confirm this hypothesis, Figure~\ref{fig:pp_mu_parcoord} show the parallel coordinate plot for $\sigma$, $\mu_\mu$, $\mu_1$, \ldots, $\mu_{10}$, and $\sigma_\mu$ with the non-divergent traces plotted in blue and the divergent traces plotted in red. Tracking the divergent traces through the parameter space, it is clear that the divergencies occur when all the unit specific $\mu_j$ are very close to the mean hyperparameter $\mu_\mu$ and the standard deviation hyperparameter is very close to zero.
+
+\begin{figure}
+   \centering
+   \includegraphics[width=0.95\textwidth]{./figures/ch-5/plot-pp-mu-pairs.pdf}
+   \caption{A pairs plot of the posterior samples of $\mu_1$, $\mu_2$, $\mu_\mu$, and $\log(\sigma_\mu)$ from the varying $\mu$ model. In each bivariate plot, divergencies are plotted in red.}
+   \label{fig:pp_mu_pairs} 
+\end{figure}
+
+\begin{figure}
+   \centering
+   \includegraphics[width=0.95\textwidth]{./figures/ch-5/plot-pp-mu-parcoord.pdf}
+   \caption{Parallel coordinate plot for the parameters and hyper parameters of the varying $\mu$ model. The divergent traces are plotted in red.}
+   \label{fig:pp_mu_parcoord} 
+\end{figure}
+
+Despite the small issues with sampling, in the varying $\mu$ model, the posterior predictive distributions for the reclaimed `non-noisy' degradation traces match the true degradation traces of the units very closely. Figure~\ref{fig:pp_mu_filtered} shows the posterior predictive distributions of each unit's degradation using the varying $\mu$ model. Like with the complete pooling case, the 95\% posterior predictive intervals from the varying $\mu$ model contain the true underlying degradation traces most of the time.
+
+\begin{figure}
+   \centering
+   \includegraphics[width=0.8\columnwidth]{./figures/ch-5/plot-pp-mu-filtered.pdf}
+   \caption{Marginal posterior distributions of the underlying gamma process from a BHM where mean degradation rate $\mu_j$ varies from unit-to-unit.}
+   \label{fig:pp_mu_filtered}
+\end{figure}
+
+\paragraph{Varying $\nu$} When $\nu$ is allowed to vary between units instead of $\mu$, all of the $\nu_j$ are effectively equal to the mean $\mu_\nu$, resulting in most of the mass of $\sigma_\nu$ being very close to zero; Table~\ref{tab:pp_nu}. In other words, there is little evidence that $\nu$ varies unit-to-unit. Like in the posterior of the varying $\mu$ model, the expected value of the hierarchical prior, in this case, $\mu_\nu$, is effectively the same as the expected value of the parameter in the complete pooling posterior, $\nu$, and the uncertainty intervals are slightly wider in the partial pooling case. As for the completely pooled parameters, the marginal posteriors of $\mu$ in Table~\ref{tab:pp_nu} and Table~\ref{tab:cp} are almost identical, as are the marginal posteriors of $\sigma$. The posterior predictive distributions of the degradation traces (not shown) also look similar to the complete pooling and varying $\mu$ cases.
+
+\input{./tables/ch-5/stan_fit_pp_nu_table.tex}
+
+Like the varying $\mu$ model, divergent transitions occur while sampling from the posterior of the varying $\nu$ model. However, there are almost five times more divergencies when fitting the varying $\nu$ model than the varying $\mu$ model; Table~\ref{tab:n_divergent}. Figure~\ref{fig:pp_nu_parcoord} shows the parallel coordinate plot of the MCMC draws for the parameters $\sigma$, $\mu_\nu$, $\nu_1$, \ldots, $\nu_{10}$, and $\sigma_\nu$. Like with varying $\mu$ model, the divergent transitions diagnose a degenerate area in the posterior around $\mu_\nu = \nu_1 = \ldots = \nu_{10}$ and $\sigma_\nu = 0$. In the case of the varying $\nu$ model, there is even more posterior mass around this area since there is little evidence that $\nu$ should vary from unit to unit, and so a higher number of divergent transitions occur.
+
+\begin{figure}
+   \centering
+   \includegraphics[width=0.95\textwidth]{./figures/ch-5/plot-pp-nu-parcoord.pdf}
+   \caption{Parallel coordinate plot for the parameters and hyper parameters of the varying $\nu$ model. The divergent traces are plotted in red.}
+   \label{fig:pp_nu_parcoord} 
+\end{figure}
+
+\paragraph{varying $\mu$ and $\nu$} The posterior of the varying $\mu$ and $\nu$ model is summarised in Table~\ref{tab:pp_both}. When both parameters are allowed to vary unit-to-unit, the results are almost a synthesis of the two models where only one of the parameters varies from unit-to-unit. In Table~\ref{tab:pp_both}, the summaries of the unit specific $\mu_j$ match the results of the varying $\mu$ model almost exactly (Table~\ref{tab:pp_mu}), and like for the varying $\nu$ model, there is very little variation between $\nu_1$, $\nu_2$, and $\mu_\nu$ and $\sigma_\nu$ has considerable mas near zero. In Table~\ref{tab:pp_both}, the marginal posterior distributions of the unit specific $\nu_j$ and their mean $\mu_\nu$ match the completely pooled estimate of $\nu$ from the varying $\mu$ model. While obtaining the samples from the posterior of the varying $\mu$ and $\nu$ model, the poor behaviour of the sampler is even more severe than the models where only $\mu$ or $\nu$ vary; roughly 3\% of the transitions are divergent. Still, the varying $\mu$ and $\nu$ model is able to reclaim the true scale of the measurement error and underlying degradation traces of the units.
+
+\input{./tables/ch-5/stan_fit_pp_both_table.tex}
+
+\paragraph{Posterior predictive checks} Besides the sampling issues, it is hard to differentiate one model from the others since in all of the posteriors $\sigma$ and the underlying degradation paths of the units are reclaimed to roughly the same level. The easiest way to understand the practical differences between the four models is to look at posterior simulations of new datasets. Figure~\ref{fig:post-pc} shows three posterior predictive simulations generated from the posteriors of the different models. In each subplot, each of the different colours/line types indicates a posterior predictive simulation with the same number of units and observations as the original data. These simulations from the posterior now look a lot more like the observed data than the prior predictive simulations in Fig.~\ref{fig:ppc-multi-unit} did. In Fig~\ref{fig:post-pc}, there is little difference between plot (a) and (c) as well as between (b) and (d) since there is so little variation between the unit-specific $\nu_j$ when we allow $\nu$ to vary unit to unit. The main difference between the plots is when $\mu$ is allowed to vary between units. In (b) and (d), where $\mu$ varies from unit-to-unit, the spread of the degradation traces is wider, and the paths are slightly straighter than in (a) and (c), where $\mu$ is constant. The posterior simulations from the models where $\mu$ is completely pooled look more like the true data. However, I could not say that the data in Fig.~\ref{fig:crack-growth-w-noise} did not come from one of the varying $\mu$ models; some of the simulated datasets in the two models where $\mu$ varies from unit-to-unit also look very similar to the observed data. With no obvious choice just by visually evaluating the posteriors, I quantitatively compare the models using cross-validation in the next section.
+
+\begin{figure}
+   \centering
+   \includegraphics[width=0.95\textwidth]{./figures/ch-5/post_pc.pdf}
+   \caption{Posterior predictive simulations from each of the four models. Each simulated dataset, is indicated by a different colour and line type. Plot (a) shows three simulated datasets from the fitted complete pooling model, (b) from the model with varying $\mu$, (c) from the varying $\nu$ model, and (d) from the model where both $\mu$ and $\nu$ vary from unit-to-unit.}
+   \label{fig:post-pc} 
+\end{figure}
 
 \subsection{Model comparison}
 \label{subsec:modcomp}
 
-Having fitted several models to the crack-growth data in Fig.~\ref{fig:RP_w_noise}, the next step is to check how well they describe the data generating process and to compare them. To do so, we evaluate their ability to predict new observations. In the absence of an independent, external test set, it is conventional to use \textit{information criteria} to compare models. These criteria, such as AIC, DIC, and others, are used to seek a compromise between goodness-of-fit and model complexity and to assess out-of-sample prediction accuracy. AIC and DIC are easy to calculate, but they are not fully Bayesian; hence, criteria such as WAIC (Watanabe-Akaike Information Criterion) and leave-one-out cross-validation (LOO-CV) are to be preferred \citep{Vehtari2017}.
+Having chosen four suitable models, fitted them to the data, and checked that the sampling and inference appear reasonable, the next step is to compare the models. To do so, I use the \textit{elppd} and cross-validation methods introduced in Sec.~\ref{sec:Bayesian-methods}. In the case of the crack growth data, as mentioned previously, the motivation for analysis is to predict the failure time of new units and the units currently under test but yet to fail. Doing so requires that the models predict the future degradation of the units under test and any new, unobserved units. Hence, it makes sense to compare the four models with respect to these two things.
 
-In comparing the models below, we use LOO-CV, where the measure of distributional predictive accuracy is the \emph{log score}. The log score is the log likelihood of a new observation $\Tilde{y}_i$ given the posterior distribution of the parameters. It is also the posterior predictive density, and it can be written as,
+The ability to predict the degradation of new units can be estimated from eq.~(\ref{eq:elppd_loo}) by treating the $I$ observations from each unit $j$ collectively as a single new observation, i.e., $y_j = (y_{1j}, \ldots, y_{Ij})$. We call this method leave-one-unit-out cross-validation ($\hbox{LOUO-CV}$) and the $\hbox{elppd}$ score calculated in this way the $\hbox{elppd}_{\hbox{\tiny{LOUO-CV}}}$. By contrast, the $\hbox{elppd}$ for new observations from the units under test can be approximated using eq.~(\ref{eq:elppd_loo}) by sequentially withholding the final observation, $y_{Ij}$, from each of the $J$ units; we refer to this method as step-ahead cross-validation ($\hbox{SA-CV}$) and the corresponding score as $\hbox{elppd}_{\hbox{\tiny{SA-CV}}}$. In both cases, we construct the likelihood of the withheld observations in the same way since we have assumed in the data model that the noisy observations $y_{ij}$ from the different units are independent and normally distributed conditional on the true underlying degradation, $\tilde{z}_{i, j}$, and the measurement error, $\sigma$. However, the definition of the posterior predictive distribution of $\tilde{z}$ that should be used depends on both the cross-validation method ($\hbox{LOUO-CV}$ or $\hbox{SA-CV}$) and the model structure (i.e. complete pooling or partial pooling). The details of constructing the posterior predictive distribution of $\tilde{z}$ for $\hbox{LOUO-CV}$ or $\hbox{SA-CV}$ and the results are outlined below, and the code may be found on the GitHub repository.
 
-\begin{equation} \label{eq:lpd}
-    \hbox{lpd} = \log \int p(\Tilde{y}_i|\theta)p(\theta|y)d\theta = \log p(\Tilde{y}_i | y),
+\input{./tables/ch-5/cv_elppd_table.tex}
+
+\paragraph{Leave-one-unit-out cross-validation} 
+
+To calculate $\hbox{elppd}_{\hbox{\tiny{LOUO-CV}}}$, we iteratively withhold the data from each unit $j$, condition on the data from the remaining $J-1$ units and then calculate the log-likelihood of the withheld unit's observations, $y_{j} = (y_{1j}, \ldots, y_{Ij})$. This calculation is based on posterior predictive draws of a new unit's (the withheld unit) filtered degradation path under the fitted model, $\tilde{z}_{j} = (\tilde{z}_{1j}, \ldots, \tilde{z}_{Ij})$, and the posterior draws of $\sigma$. Thus, we can write $\hbox{elppd}_{\hbox{\tiny{LOUO-CV}}}$ as
+\begin{equation} \label{eq:elppd_louo}
+ \hbox{elppd}_{\hbox{\tiny{LOUO-CV}}} = \sum^J_{j = 1}\sum^{I}_{i = 1} \log \frac{1}{S} \sum^S_{s = 1} p(y_{ij} | \left[\Tilde{z}_{ij}, \sigma \right]_{-j}^s).
 \end{equation}
+To generate posterior predictive draws of the non-noisy degradation path of a new unit, we sample $I-1$ jumps $\Delta\tilde{z}^s_{ij}$ in degradation from $\hbox{Ga}(\left[\tilde{\mu}_j, \tilde{\nu}_j\right]_{-i}^s)$ and then calculate their cumulative sum to generate the degradation path. If $\mu$ is completely pooled, the $\tilde{\mu}^s_j$ are taken from posterior draws $\mu^s$; similarly, if $\nu$ is completely pooled, the $\tilde{\nu}^s_j$ are posteriors draws $\nu^s$. If, however, the mean degradation varies across units, $\tilde{\mu}^s_j$ is sampled from the (hierarchical prior) $\hbox{N}^{+}(\mu^s_\mu, \sigma^s_\mu)$; in the same way, $\tilde{\nu}^s_j$ would be also sampled from $\hbox{N}^{+}(\mu_\nu, \sigma_\nu)$ if the coefficient of variation varied across units. For the models discussed in Sec.~\ref{subsec:complete-pooling} and~\ref{subsec:partial-pooling}, the first column of Table~\ref{tab:elppd_loo} shows the $\hbox{elppd}_{\hbox{\tiny{LOUO-CV}}}$ scores calculated in this way.
 
-where $\theta$ is the set of parameters and $y$ is the observed data. The parameters can also include unobserved latent variables; in models for the noisy gamma process, the latent variables represent the underlying gamma process.   This measure in eq.~(\ref{eq:lpd}) is called the log posterior density (lpd). If we observe multiple new data points $\Tilde{y} = (\Tilde{y}_1, ..., \Tilde{y}_I)$, this can be dealt with in a point-wise fashion using the log point-wise posterior density (lppd),
+\paragraph{Step-ahead cross-validation}
 
-\begin{equation} \label{eq:lppd}
-    \hbox{lppd} = \sum^I_{i = 1} \log p(\Tilde{y}_i|y).
+Step-ahead cross-validation is carried out by iteratively withholding the most recent observation from each of the units under test, and the $\hbox{SA-CV}$ estimate of $\hbox{elppd}$ is calculated as
+\begin{equation} \label{eq:elppd_sa_cv}
+ \hbox{elppd}_{\hbox{\tiny{SA-CV}}} = \sum^{J}_{j = 1} \log \frac{1}{S} \sum^S_{s = 1} p(y_{Ij} | \left[\tilde{z}_{Ij}, \sigma \right]_{-\left[ Ij \right]}^s).
 \end{equation}
+To generate the posterior predictive draws in this case, we sample the jump in degradation for unit $j$ from $\hbox{Ga}(\mu_j, \nu_j)$ and then add this jump to the posterior draws of $\tilde{z}_{I-1,j}$. Where either $\mu$ or $\nu$ are completely pooled, $\mu_j$ and $\nu_j$ are posterior draws $\mu^s$ and $\nu^s$, respectively; otherwise, we use the draws from the posterior distributions of the unit-specific parameters of the gamma process. The $\hbox{elppd}_{\hbox{\tiny{SA-CV}}}$ scores for each of the different models are shown in the right-hand column of Table~\ref{tab:elppd_loo}.
 
-In cases where each of the new observations are independent of one another given the parameters and latent variables, which is the case here, the point-wise predictive density is equal to the joint predictive density of the set of new observations; $\log p(\Tilde{y}|y) = {\sum}^I_{i = 1} \log p(\Tilde{y}_i|y)$. \eqref{ep:lpd} and \eqref{ep:lppd} are defined for a given set of new observations, but the new unobserved data points $\Tilde{y}_i$ arises from the true data generating process and so are a random variable with distribution
+As the $\hbox{elppd}$ results in Table~\ref{tab:elppd_loo} show, for the LOUO case, the models where $\mu$ is allowed to vary between units perform slightly better, whereas, for the SA scores, the units where $\mu$ is constant across units perform slightly better. However, the difference in both cases is marginal. The similarity of inference from the complete pooling model to that from the partial pooling models---as well as the fact that it has the highest $\hbox{elppd}_{\hbox{\tiny{SA-CV}}}$ score---suggests that the completely pooled gamma process with measurement error is sufficient to explain the variability in the degradation traces. However, the added variability of the unit-specific $\mu_j$ helps slightly when generalising to new units. Although, it is worth noting that the closeness of the models means that the $\hbox{elppd}$ results are sensitive to the priors. In \citet{leadbetter2024} we used a slightly miss-specified prior for $\mu$, and the result is that the complete pooling model has the highest $\hbox{elppd}$ scores for both $\hbox{LOUO-CV}$ and $\hbox{SA-CV}$.
 
-\begin{equation} \label{ep:y_tild_dist}
-    \Tilde{Y}_i = f(\Tilde{y}_i).
-\end{equation}
+In this section, I have shown how to fit different noisy gamma process models for multiple units and demonstrated a principled way of evaluating and comparing them to identify the most appropriate models for the data set being analysed. In the case of the crack growth data, there is a marginal difference between all of the models I explore; this may not be the case for other datasets. The $\hbox{elppd}$ scores seem to suggest that both the completely pooled and a model where $\mu$ varies between units are useful for predicting the degradation of the current units under test and new units, respectively. From both posterior predictive checking and $\hbox{elppd}$ scores, there is little motivation to allow $\nu$ to vary between units compared to the simpler constant $\nu$ alternative. Holding $\nu$ constant also results in better-behaved sampling. Therefore, in the next section, I construct failure time distributions for the units under test as well as for new units using only the complete pooling and varying $\mu$ model.
 
-Hence, a better measure of predicted accuracy is the expectation of the lppd, the elppd, which is obtained by integrating over $\Tilde{Y}_i$
+\section{Failure time distributions} \label{sec:unit-to-unit-ft}
 
-\begin{equation} \label{ep:elppd}
-    \hbox{elppd} = \sum^I_{i = 1} \int \log p(\Tilde{y}_i|y)f(\Tilde{y}_i) d\Tilde{y}_i.
-\end{equation}
+As noted in the introduction, degradation measurements are collected to estimate the failure time distribution of individual units that are in-service but have not failed and/or of new units with the same nominal specifications as the experimental units. The soft failure of the terminals is considered to be when the crack length exceeds $z_f = 0.4$mm. For degradation models and a soft definition of failure, the failure time $T$ can be defined as the first passage time when the true degradation path crosses the failure threshold $z_f$\citep{balakrishnan_2017}, that is,
+$$
+T = \inf\left[ t|Z_t \geq z_f \right].
+$$
+Note that it depends on the true degradation path, not on the observed one, and hence, it does not involve the measurement error \citep{hamada_2008}. In the Bayesian context, we write the failure time distribution as $F_{T|\Theta}(t)$, where $\Theta$ denotes the (hyper) parameters in the model. It can, therefore, be written as
+$$
+F_{T|\Theta}(t) = p(T < t | \Theta) = p(Z_t > z_f | \Theta).
+$$
+One of the advantages of using a fully Bayesian treatment is that we can use the posterior predictive distribution of the underlying degradation $Z_t$ to calculate the failure time distribution, thereby incorporating uncertainty in the parameters, which will be reflected in credible intervals for $F_{T|\Theta}(t)$. Alternatives to a fully Bayesian treatment include, for example, bootstrapping \citep{peng_2018}.
 
-In the context of Bayesian models fit with MCMC, the computed elppd can be calculated by averaging over the $s = 1, ..., S$ MCMC draws from the posterior,
+Although there is no explicit expression for $F_{T|\Theta}(t)$ it is straightforward to obtain the posterior distribution of $F_{T|\Theta}(t)$ by simulation and numerical evaluation of the distribution function of a gamma distribution (e.g., by using the R function \texttt{pgamma}), using a modified version of the procedure outlined by \citet[Sec.~8.2.1]{hamada_2008}. For the complete pooling and varying $\mu$ models, the algorithms are shown in Table~\ref{fig:FT_algs}.
 
-\begin{equation} \label{ep:computed_elppd}
-   \hbox{computed elppd} = \sum^I_{i = 1} \int \log \frac{1}{S} \sum^S_{s = 1} p(\Tilde{y}_i|\theta^s)f(\Tilde{y}_i) d\Tilde{y}_i.
-\end{equation}
+\begin{table}
+\centering
+\begin{multicols}{2}
 
-Although this would be the best measure of predictive accuracy for our Bayesian models, we obviously do not know the true data generating process and so cannot define $f(\Tilde{y}_i)$. We can, however, approximate the expectation above by using cross-validation whereby we iteratively withhold a portion of the observed data, sample from the posterior conditioned on the wrest of the data, and then calculate the log likelihood of the withheld portion of the data given the samples from the posterior. The simplest form of cross-validation is leave one out (loo), where we withhold each observation,
+\textbf{Complete pooling}
+\begin{enumerate}
+    \item Draw a sample from the posterior distribution of $(\mu, \nu)$;
+    \item Given that $Z_t|\mu, \nu \sim \mbox{Ga}(t/\nu^2, 1/\mu \nu^2)$, calculate $p(Z_t > z_f)$ numerically for a range of values of $t$ to generate one draw of $F_T(t)$;
+    \item Repeat Steps~1. and 2. $n_{\hbox{\small{sim}}}$ times.
+\end{enumerate}
 
-\begin{equation} \label{ep:elppd_loo}
-   \hbox{elppd}_{loo} = \sum^I_{i = 1} \log \frac{1}{S} \sum^S_{s = 1} p(y_i|\left[\theta\right]_{-\left[i\right]}^s).
-\end{equation}
+\columnbreak
 
-$\left[\theta\right]_{-\left[i\right]}^s$ is the posterior draws for the set of parameters and latent variables conditioned on all the observed data except the withheld observation $y_i$.
+\textbf{Varying $\mu$}
+\begin{enumerate}
+    \item Draw a sample from the posterior distribution of $(\mu_\mu, \sigma_\mu, \nu)$;
+    \item Generate $\mu_j$ from $\hbox{N}^{+}(\mu_\mu, \sigma_\mu)$;
+    \item Using the $\mu_j$ from Step~2. and the corresponding value of $\nu$ in Step~1., generate a draw of $F_T(t)$ for a range of values of $t$ as in Step~2. for complete pooling;
+    \item Repeat Steps 1.--3. $n_{\hbox{\small{sim}}}$ times.
+\end{enumerate}
 
-In hierarchical models, the definition of a new observation and the likelihood of those observations depends on what aspect of the model's predictive performance we are trying to assess. For example, in the crack growth problem, we could obtain new observations for the same units at the same observation times, $\Tilde{y}_{n,i} | z_{n, i}, \sigma$ (although this case is a bit unrealistic), new observations for an observed unit at some time in the future, $\Tilde{y}_{n, I + 1}|\Tilde{z}_{n, I + 1}, \sigma$, or we could observe an entirely new unit, $\Tilde{y}_{n + 1}|\Tilde{z}_{n + 1}, \sigma$, where $\Tilde{y}_{n + 1} = \left[\Tilde{y}_{n + 1, 1}, ..., \Tilde{y}_{n + 1, I}\right]$. Here we focus on the last two of these cases; $\Tilde{y}_{n,i + 1}|\Tilde{z}_{n, i + 1}, \sigma$, since we would like to compare the models on their ability to forecast the future degradation for each of the units being tested (step ahead prediction); and $\Tilde{y}_{n + 1}|\Tilde{z}_{n + 1}, \sigma$ to compare the models on their ability to predict completely new, unseen, units (leave one unit out). In both cases, the likelihood of the observations conditional on the draws from the posterior predictive distribution are the same, since we assume in our data model that any noisy observations are independent and normally distributed given the underlying filtered degradation and the standard deviation of the measurement error, that is,
+\end{multicols}
+\caption{Algorithms for calculating the posterior distribution of the failure time distribution $F_T(t)$ for the complete pooling and varying $\mu$ models.}\label{fig:FT_algs}
+\end{table}
 
-\begin{equation} \label{ep:elppd_likelihood}
-   p(\Tilde{y}_{n, i}|\Tilde{z}_{n, i}, \sigma) = \frac{1}{\sigma \sqrt{2\pi}}\exp{-\frac{1}{2}\left( \frac{\Tilde{y}_{n, i} - \Tilde{z}_{n, i}}{\sigma}\right)^2},
-\end{equation}
+Fig.~\ref{fig:FT_CP_VM_new} shows the posterior of the failure time distributions for new units, calculated from the complete pooling and varying $\mu$ models. There is considerably greater uncertainty in $F_T(t)$ from the partial pooling model, but this is not surprising: in addition to the inherent variability of the gamma process, the partial pooling model also includes the variability in the $\mu_j$. 
 
-however, the predictive distributions of the $\Tilde{z}_{n, i}$ may be different in the two cases depending on the model's hierarchical structure.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.95\columnwidth]{./figures/ch-5/FT_dist.pdf}
+    \caption{Posterior distributions of the failure time distributions from the complete pooling model (left) and the varying $\mu$ model (right).}
+    \label{fig:FT_CP_VM_new}
+\end{figure}
 
-\paragraph{Step ahead prediction}
+Using slight modifications of the algorithms shown in Table~\ref{fig:FT_algs}, we can also calculate the failure time distribution for a unit that is currently under test and that has yet to fail, for example, Unit 3. This distribution, also known as the predictive failure time distribution\citep{lawless2004}, is conditional on the unit not having failed by $t_I$ and having attained a degradation level $z_I$. Since $z_I$ is a latent variable in the model, the posterior distribution contains samples of $z_I$ from which we can calculate the jump in degradation that corresponds to a soft failure. Figure~\ref{fig:FT_CP_VM_U3} shows the posterior predictive failure time distributions for Unit 3, which has not failed; again, we see that because of the additional layer of uncertainty, the credible intervals for the varying $\mu$ model are wider than those from the complete pooling model, although the difference is not as extreme compared to the failure time distributions for new units. Comparing Fig.~\ref{fig:FT_CP_VM_new} with Figure~\ref{fig:FT_CP_VM_U3}, the unit-specific failure time distributions have tighter uncertainty intervals than their new unit counterparts. This difference is more significant for the varying $\mu$ model since the unit-specific estimate does not average over the variability in the $\mu_j$ and so is a much more precise estimate.
 
-For the case of step ahead prediction, the $\hbox{elppd}_{\hbox{step ahead}}$ can be estimated using leave one out,
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.95\columnwidth]{./figures/ch-5/FT_dist_Unit3.pdf}
+    \caption{Posterior distributions of the predictive failure time distributions from the complete pooling model (left) and the varying $\mu$ model (right) for Unit~3.}
+    \label{fig:FT_CP_VM_U3}
+\end{figure}
 
-\begin{equation} \label{ep:elppd_loo_sa}
-   \hbox{elppd}_{\hbox{step ahead}} = \sum^N_{n = 1} log \frac{1}{S} \sum^S_{s = 1} p(y_{n, I} | \left[\Tilde{z}_{n, I}, \sigma \right]_{-\left[ n, I \right]}^s),
-\end{equation}
+\section{Discussions} \label{sec:unit-to-unit-discussion}
 
-where $\left[\Tilde{z}_{n, I}, \sigma \right]_{-\left[ n, I \right]}^s$ are the draws from the posterior distribution of $\sigma$ and posterior predictive distribution of $\Tilde{z}_{n, I}$ conditioned on all data except the withheld observation $y_{n, I}$. The draw from the posterior predictive distribution of $\Tilde{z}_{n, I}$ is calculated by sampling a value of predicted jump in degradation $\Delta\Tilde{z}_{n, I}^s|\left[\mu_n, \nu_n \right]^s_{-\left[ n, I \right]}, (t_I - t_{I-1})$ according to the process model (Note that this will be different depending on which hierarchical structure we are using\ldots for the complete pooling model we would use $\mu$ and $\nu$ whereas for the partial pooling models we wold use $\mu_n$ or $\nu_n$ when applicable). Then, we add the sampled jump to the draw of the previous filtered degradation measurement for unit $n$ to get a draw from the posterior predictive distribution of $\Tilde{z}_{n, I}$;
+In this chapter, I showed how the noisy gamma process model for a single degradation path from Chap.~\ref{chap:chapter4} could be extended---using the same hierarchical modelling framework---to incorporate unit-to-unit variability when modelling the noisy degradation traces of multiple nominally-identical units, and how allowing some parameters to vary determines how information is shared between observational units. I then demonstrated the fitting, evaluation, and comparison of these models on an experimental crack growth dataset with added measurement error. Lastly, I showed how failure time distributions (with uncertainty bands) can be constructed for both new units and units under test using the posterior distributions of either a complete pooling or partial pooling gamma process model. In this final section, I review the chapter's main points and discuss the key findings, contributions, and areas for future work.
 
-\begin{equation} \label{ep:elppd_loo_sa}
-   \Tilde{z}_{n, I}^s = z_{n, I - 1}^s + \Delta\Tilde{z}_{n, I}^s.
-\end{equation}
+To model the ten units' noisy degradation traces in Fig.~\ref{fig:crack-growth-w-noise} simultaneously, I explored several models: one where all of the degradation traces arise from the same underlying gamma process (complete pooling) and others where either $\mu$, $\nu$, or both are allowed to vary between units (partial pooling). The parameterisation in terms of $\mu$ and $\nu$ clarifies how unit-to-unit variability can be incorporated into the model and forces the analyst to be explicit in how they expect the units to vary---do we expect the mean wear rate to vary among units, or the volatility? In the same way, the new parameterisation also clarifies how we might model the effect of covariates on the degradation: would we expect, for example, environmental variables such as varying temperature or humidity to affect the mean wear or the volatility? There are no covariates for the crack growth data, but extending the BHM to include covariate information would be interesting future work if data were available to do so. The fact that parameters $\mu$ and $\nu$ have clear and separate effects also helps diagnose the sampling issues and interpret the posterior of the parameters and hyperparameters directly.
 
-The $\hbox{elppd}_{\hbox{step ahead}}$ for the several different models are displayed in Table-
+Based on the $\hbox{elppd}$ criterion, the models where $\mu$ varies between units perform best for predicting out-of-sample. In contrast, models where $\mu$ is constant across observational units predict the future observations of the units under test best. Although, the differences in the $\hbox{elppd}$ scores are relatively small. All of the models explored fit the data well since the predictive distribution of each unit's underlying degradation path recovers the true underlying degradation path; in addition, the marginal posterior distributions of $\sigma$ include the true value of $\sigma = 0.025$ that I used to simulate the measurement error. In the posterior distributions of the partial pooling models, there is some evidence that we should allow $\mu$ to vary between units since there is some variability in the modes of the marginal posteriors of the unit-specific $\mu_j$; however, these distributions are wide enough to encompass the mean $\mu_\mu$ and the posterior of $\sigma_\mu$ has mass near zero and therefore it could well be that all units share the same value, even under a model where we allow them to vary. In the models where $\nu$ varies, the marginal posterior distributions of the unit specific $\nu_j$ are very similar, and the marginal posterior of $\sigma_\nu$ has considerable mass near zero, showing that there is little evidence that the coefficient of variation varies among the units.
 
-! Add Table of results.
+Given the weak evidence in the hierarchical models' posteriors that $\mu$ varies amongst the different units and even weaker evidence that $\nu$ varies, it is understandable that the complete pooling case performs at the same level as the partial pooling cases for the crack growth data. The complete pooling model performs best in the case of $\hbox{elppd}_\text{SA-CV}$, possibly because assuming the simpler model structure results in the data more strongly informing the three parameters and hence more precisely estimating the volatility of the gamma process ($\nu$), which is important for accurately forecasting future degradation. Because of the marginal difference between models, it is not surprising that in \citet{leadbetter2024}, where we used a slightly different prior for $\mu$, the complete pooling model performs best with respect to both $\hbox{elppd}_\text{LOUO-CV}$ and $\hbox{elppd}_\text{SA-CV}$; showing that the ordering is sensitive to the model specification and prior. \citet{rodriguez-picon2018} analyses the same data using gamma processes that incorporate unit-to-unit variability but without measurement error. They find that, when the data do not include measurement error, one of the partial-pooling models they explore outperforms the complete pooling model according to information criteria methods. However, there is also very little difference among the models they explore.
 
-\paragraph{Leave on unit out} 
+The struggle to clearly identify the best model could be caused by the nested structure of the models. When the observed variability of the degradation traces can easily be explained by the complete pooling model (which appears to be the case for the crack growth data), all of the models I explored here contain this `true' model. Future work exploring how well the $\hbox{elppd}$ methods identify the true model from complete and partial pooling models when the data are generated from one of the models would be interesting. The presence of measurement error adds an additional `degree of freedom' to the models, making it even more difficult to clearly identify the best `underlying' model candidate. To this end, it would also be helpful if future work exploring $\hbox{elppd}$ through simulation looked at the effect of sample size and noise level on how well true models are reclaimed. In an early work on unit-to-unit variability, \citet{lawless2004} devise a statistical test to determine whether or not a random effect should be included in a degradation model when working in a non-Bayesian framework. Similar guidance for Bayesian models would be helpful.
 
-The same can be done for an entirely new unit, except the likelihood for all the observations from a new unit is
-
-\begin{equation} \label{ep:likelihood_new_unit}
-   p(\Tilde{y}_{N + 1}|\Tilde{z}_{N + 1}, \sigma) = \prod^I_{i = 1} p(\Tilde{y}_{N + 1, i}|\Tilde{z}_{N + 1, i}, \sigma).
-\end{equation}
-
-Using cross validation, iteratively withholding each unit, we can estimate the $\hbox{elppd}_{\hbox{new unit}}$ via
-
-\begin{equation} \label{ep:elppd_loo_sa}
-   \hbox{elppd}_{\hbox{new unit}} = \sum^N_{n = 1}\sum^{I}_{i = 1} log \frac{1}{S} \sum^S_{s = 1} p(y_{n, i} | \left[\Tilde{z}_{n, i}, \sigma \right]_{-\left[ n \right]}^s).
-\end{equation}
-
-Note that for each iteration of the leave one unit out the posterior is conditioned on the dataset with \textbf{all} the observations from unit $n$ being withheld. In this case, draws from the posterior predictive distribution of $\Tilde{z}_{n, i}$ are obtained by sampling $I$ jumps in degradation from the data model conditional on the hyper parameters, $\Delta \Tilde{z}_{n}|\theta^s_{-[n]}$, and then taking the cumulative sum of the jumps to get the $\Tilde{z}_{n}$; $\Tilde{z}_{n} = cumsum(\Delta \Tilde{z}_{n})$. The draws of the hyper parameters for the new unit, $\theta^s_{-[n]}$, are either sampled from the hierarchical prior using the draws of the hyperparameters, i.e. $\Tilde{\mu}^s_{n}|[\mu_{\mu}, \sigma_{\mu}]^s_{-[n]}$ and $\Tilde{\nu}^s_{n}|[\nu_{\nu}, \sigma_{\nu}]^s_{-[n]}$, or taken to be the posterior draws of the parameters $\mu^s_{-[n]}$ and $\nu^s_{-[n]}$ depending on whether or not the parameter is partially pooled (the former case) or completely pooled (the latter case). Table- shows the estimated $\hbox{elppd}_{\hbox{new unit}}$ for the several different models using the leave one out procedure.
-
-! Add Table of results.
-
-Both of the comparisons above involve repeatedly re-fitting the model to different subsets of the data, which is computationally inefficient. A much more efficient method is to approximate the $\hbox{elppd}$ such as in \citet{Vehtari2017}, however, in hierarchical modeling cases, where the "left out" portions of the data are nested and as the size of the nested portions increases, the approximations are less likely to work well \citep{Vehtari2017}. Hence, why we choose to use the full cross validation scheme and incur the computational overhead.
-
-\^(WAIC) is not an approximation like PSIS-LOO is \ldots
-
-\section{Failure time distributions}
-
-\section{Discussion}
-
-- Discuss how the sampling gets stuck around the smaller model, just like in the single path with very few measurements.
+The crack growth data that I have analysed do not show strong signs that there is variability among the units outside of the usual `jumpiness' of a gamma process. For other data, identifying a suitable partial pooling model may be much more obvious. Nevertheless, I have shown how analysts can propose, fit, check, and then, finally, choose the most suitable model candidate for a set of Bayesian models using a fully Bayesian framework.
