@@ -2550,8 +2550,8 @@ Using the posterior we can also generate a failure time distribution for the bel
 
 p_ft_list <- lapply(
   c(
-    "ft-8-obs-gp.rds",
-    "ft-9-obs-gp.rds"
+    "ft-7-obs-gp.rds",
+    "ft-8-obs-gp.rds"
   ),
   function(ft_file) {
     ft_dist <- readRDS(ft_file)
@@ -2566,7 +2566,7 @@ p_ft_list <- lapply(
       ggplot(aes(x = ft, y = CDF, xmin = .lower, xmax = .upper)) +
       geom_lineribbon() +
       scale_fill_brewer() +
-      xlim(0.8, 1.3) +
+      xlim(0.5, 1.3) +
       ylim(0, 1.05) +
       theme(legend.position = "bottom")
     
@@ -2609,8 +2609,8 @@ dev.off()
 
 p_ft_list <- lapply(
   c(
-    "ft-8-obs-lm.rds",
-    "ft-9-obs-lm.rds"
+    "ft-7-obs-lm.rds",
+    "ft-8-obs-lm.rds"
   ),
   function(ft_file) {
     ft_dist <- readRDS(ft_file)
@@ -2625,7 +2625,7 @@ p_ft_list <- lapply(
       ggplot(aes(x = ft, y = CDF, xmin = .lower, xmax = .upper)) +
       geom_lineribbon() +
       scale_fill_brewer() +
-      xlim(0.8, 1.01) +
+      xlim(0.5, 1) +
       ylim(0, 1.05) +
       theme(legend.position = "bottom")
     

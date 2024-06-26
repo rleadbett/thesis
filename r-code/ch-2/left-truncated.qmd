@@ -72,7 +72,7 @@ beta <- 1.1
 eta <- 1
 
 # number of units
-N <- 200
+N <- 100
 t_start <- 5
 t_window <- 1
 t_end <- t_start + t_window
@@ -282,12 +282,12 @@ stan_fit_lt_r_imputed <- sampling(
   stan_model_lt_r_imputed,
   stan_data_lt_observed,
   cores = 4,
-  iter = 600,
-  warmup = 200#,
-  #open_progress = FALSE,
-  #verbose = FALSE,
-  #show_messages = FALSE,
-  #refresh = FALSE
+  iter = 5000,
+  warmup = 500,
+  open_progress = FALSE,
+  verbose = FALSE,
+  show_messages = FALSE,
+  refresh = FALSE
 )
 
 p2 <- mcmc_scatter(
@@ -711,13 +711,12 @@ stan_fit_unknown_lt_rc <- sampling(
   stan_model_unknown_lt_rc,
   stan_data_lt_unobserved_rc,
   chains = 4,
-  iter = 800,
-  warmup = 400#,
-  #control = list(adapt_delta = 0.99, max_treedepth = 14)#,
-  #open_progress = FALSE,
-  #verbose = FALSE,
-  #show_messages = FALSE,
-  #refresh = FALSE
+  iter = 1000,
+  warmup = 500,
+  open_progress = FALSE,
+  verbose = FALSE,
+  show_messages = FALSE,
+  refresh = FALSE
 )
 
 p5 <- mcmc_scatter(
@@ -977,8 +976,8 @@ stan_fit_lt_r_imputed_joint <- sampling(
     t2_mean = 0.98,
     t2_var = 0.05
   ),
-  cores = 4,
-  iter = 5000,
+  chains = 4,
+  iter = 1000,
   warmup = 500,
   open_progress = FALSE,
   verbose = FALSE,
@@ -994,7 +993,7 @@ geom_point(x = 1.1, y = 1, colour = "red") +
 xlim(0, 3) +
 ylim(0, 3)
 
-p_cdf_lt_r_imputed_joint <- stan_fit_lt_r_imputed_joint %>%
+p_cdf_lt_rc_imputed_joint <- stan_fit_lt_r_imputed_joint %>%
   as_draws_df() %>%
   select(beta, eta) %>%
   split(., seq(nrow(.))) %>%
@@ -1023,7 +1022,7 @@ p_cdf_lt_r_imputed_joint <- stan_fit_lt_r_imputed_joint %>%
 
 plot_grid(
   p2, p2.2,
-  p_cdf_lt_rc_integrated, p_cdf_lt_r_imputed_joint,
+  p_cdf_lt_rc_imputed, p_cdf_lt_rc_imputed_joint,
   nrow = 2
 )
 ```
@@ -1090,8 +1089,8 @@ stan_fit_rc_integrated_joint <- sampling(
     t2_mean = 0.98,
     t2_var = 0.05
   ),
-  cores = 4,
-  iter = 5000,
+  chains = 4,
+  iter = 1000,
   warmup = 500,
   open_progress = FALSE,
   verbose = FALSE,
@@ -1251,12 +1250,12 @@ stan_fit_unknown_lt_rc_joint <- sampling(
     t2_var = 0.05
   ),
   chains = 4,
-  iter = 800,
-  warmup = 400#,
-  #open_progress = FALSE,
-  #verbose = FALSE,
-  #show_messages = FALSE,
-  #refresh = FALSE
+  iter = 1000,
+  warmup = 500,
+  open_progress = FALSE,
+  verbose = FALSE,
+  show_messages = FALSE,
+  refresh = FALSE
 )
 
 p5.2 <- mcmc_scatter(
@@ -1270,6 +1269,44 @@ ylim(0, 3)
 plot_grid(p2, p5, p5.2, nrow = 1)
 ```
 
+
+```{r}
+p_cdf_unknown_lt_rc_joint <- stan_fit_unknown_lt_rc_joint %>%
+  as_draws_df() %>%
+  select(beta, eta) %>%
+  split(., seq(nrow(.))) %>%
+  lapply(
+    function(draw) {
+      df_CDF <- data.frame(
+        q = grid,
+        p = pweibull(grid, draw$beta, draw$eta)
+      )
+      return(df_CDF)
+    }
+  ) %>%
+  bind_rows() %>%
+  ggplot() +
+  stat_lineribbon(
+    aes(x = q, y = p),
+    .width = c(0.5, 0.8, 0.98)
+  ) +
+  scale_fill_brewer() +
+  geom_function(
+    fun = pweibull,
+    args = list(shape = beta, scale = eta),
+    colour = "red"
+  ) +
+  theme_minimal()
+
+plot_grid(
+  p2, p3, p5,
+  p_cdf_lt_rc_imputed, p_cdf_rc_integrated, p_cdf_unknown_lt_rc,  
+  p2.2, p3.2, p5.2,
+  p_cdf_lt_rc_imputed_joint, p_cdf_rc_integrated_joint, p_cdf_unknown_lt_rc_joint,
+  nrow = 4,
+  ncol = 3
+)
+```
 
 
 ```{r}
@@ -1335,4 +1372,70 @@ plot_grid(
   label_size = 10,
   label_x = 0.2
 )
+```
+
+
+
+
+
+```{r}
+n_draws <- 500
+beta <- rnorm(n_draws, 1.1, 0.2)
+eta <- rnorm(n_draws, 1, 0.2)
+grid <- seq(0, 5, 0.01)
+data.frame(
+  t = rep(grid, n_draws),
+  draw = rep(1:n_draws, each = length(grid)),
+  beta = rep(beta, each = length(grid)),
+  eta = rep(eta, each = length(grid))
+) %>%
+filter(
+  beta > 0,
+  eta > 0
+) %>%
+mutate(
+  cdf = pweibull(t, beta, eta)
+) %>%
+ggplot(
+  aes(x = t, y = cdf, group = draw)
+) +
+geom_line(
+  alpha = 0.2
+)
+```
+
+
+```{r}
+n_draws <- 500
+n_obs <- 50
+p_a <- data.frame(
+  draw = rep(1:n_draws, each = n_obs),
+  t = rweibull((n_draws * n_obs), 1.1, 1)
+) %>%
+arrange(draw, t) %>%
+mutate(
+  ecdf = rep((1:n_obs) / n_obs, n_draws)
+) %>%
+ggplot(aes(x = t, y = ecdf, group = draw)) +
+geom_step(
+  direction = "vh",
+  alpha = 0.2
+) +
+xlim(0, 5)
+n_obs <- 15
+p_b <- data.frame(
+  draw = rep(1:n_draws, each = n_obs),
+  t = rweibull((n_draws * n_obs), 1.1, 1)
+) %>%
+arrange(draw, t) %>%
+mutate(
+  ecdf = rep((1:n_obs) / n_obs, n_draws)
+) %>%
+ggplot(aes(x = t, y = ecdf, group = draw)) +
+geom_step(
+  direction = "vh",
+  alpha = 0.2
+) +
+xlim(0, 5)
+plot_grid(p_a, p_b, nrow = 1)
 ```

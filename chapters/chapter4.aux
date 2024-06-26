@@ -1,44 +1,146 @@
 \relax 
 \providecommand\hyper@newdestlabel[2]{}
-\@writefile{toc}{\contentsline {chapter}{\numberline {4}Case study}{21}{chapter.4}\protected@file@percent }
+\citation{lawless2004}
+\citation{ye2015}
+\@writefile{toc}{\contentsline {chapter}{\numberline {4}A noisy gamma process for modelling degradation measurements with uncertainty}{53}{chapter.4}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\newlabel{chap:chapter4}{{4}{21}{Case study}{chapter.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4.1}Idler replacement data}{21}{section.4.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.2}Results}{21}{section.4.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.3}Discussion}{21}{section.4.3}\protected@file@percent }
+\newlabel{chap:chapter4}{{4}{53}{A noisy gamma process for modelling degradation measurements with uncertainty}{chapter.4}{}}
+\citation{abdel-hameed1975}
+\citation{van_noortwijk2009}
+\@writefile{toc}{\contentsline {section}{\numberline {4.1}The gamma process}{54}{section.4.1}\protected@file@percent }
+\newlabel{sec:GP}{{4.1}{54}{The gamma process}{section.4.1}{}}
+\citation{lawless2004}
+\citation{frenk2007}
+\citation{kallen2005}
+\citation{kallen2005}
+\citation{lu2013}
+\newlabel{eq:GP_general}{{4.1}{55}{The gamma process}{equation.4.1.1}{}}
+\newlabel{eq:GP_stationary}{{4.2}{55}{The gamma process}{equation.4.1.2}{}}
+\citation{kallen2005}
+\citation{lu2013}
+\citation{pulcini2016}
+\citation{rodriguez-picon2021}
+\citation{hazra2020,hazra2022}
+\citation{giorgio2019}
+\citation{esposito2022}
+\@writefile{toc}{\contentsline {section}{\numberline {4.2}A noisy gamma process}{56}{section.4.2}\protected@file@percent }
+\newlabel{sec:NGP}{{4.2}{56}{A noisy gamma process}{section.4.2}{}}
+\citation{cox1987}
+\citation{huzurbazar1956}
+\citation{huzurbazar1956}
+\@writefile{toc}{\contentsline {section}{\numberline {4.3}Reparametrisation}{58}{section.4.3}\protected@file@percent }
+\newlabel{sec:GP-reparameterisation}{{4.3}{58}{Reparametrisation}{section.4.3}{}}
+\newlabel{eq:GamDist}{{4.3}{58}{Reparametrisation}{equation.4.3.3}{}}
+\newlabel{eq:GamProp}{{4.4}{58}{Reparametrisation}{equation.4.3.4}{}}
+\citation{kallen2005}
+\citation{gilks_1996}
+\citation{betancourt_2017}
+\newlabel{eq:GP_stationary_reparam}{{4.5}{59}{Reparametrisation}{equation.4.3.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.4}Constructing the prior}{59}{section.4.4}\protected@file@percent }
+\newlabel{sec:GP_priors}{{4.4}{59}{Constructing the prior}{section.4.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.1}{\ignorespaces A simulated degradation trace generated from a gamma process with parameters $\mu = 10$ and $\nu = 1.119$ and the simulated noisy observations of the trace. The black line is the underlying degradation path and the points are the noisy observations.\relax }}{60}{figure.caption.35}\protected@file@percent }
+\newlabel{fig:sim-data}{{4.1}{60}{A simulated degradation trace generated from a gamma process with parameters $\mu = 10$ and $\nu = 1.119$ and the simulated noisy observations of the trace. The black line is the underlying degradation path and the points are the noisy observations.\relax }{figure.caption.35}{}}
+\citation{lawless2004}
+\citation{rodriguez-picon2018}
+\citation{pradhan2011}
+\citation{lawless2004}
+\citation{hodges_2014}
+\citation{gelman_workflow_2020}
+\citation{hodges_2014}
+\citation{gelman_workflow_2020}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.2}{\ignorespaces One hundred realizations from prior predictive distributions of a noise-free gamma process with mean degradation rate of 1 unit per unit time and different prior distributions for parameters: (a) shape, rate $\sim \mbox  {Ga}(1, 0.001)$, (b) shape, rate $\sim \mbox  {Ga}(0.001, 0.001)$, and (c) parameterization mean/coefficient of variation---see text for details.\relax }}{62}{figure.caption.36}\protected@file@percent }
+\newlabel{fig:ppc}{{4.2}{62}{One hundred realizations from prior predictive distributions of a noise-free gamma process with mean degradation rate of 1 unit per unit time and different prior distributions for parameters: (a) shape, rate $\sim \mbox {Ga}(1, 0.001)$, (b) shape, rate $\sim \mbox {Ga}(0.001, 0.001)$, and (c) parameterization mean/coefficient of variation---see text for details.\relax }{figure.caption.36}{}}
+\citation{Simpson_2017}
+\citation{gelman_workflow_2020}
+\@writefile{toc}{\contentsline {section}{\numberline {4.5}Fitting the noisy gamma process}{65}{section.4.5}\protected@file@percent }
+\newlabel{sec:NGP-fitting}{{4.5}{65}{Fitting the noisy gamma process}{section.4.5}{}}
+\citation{Stan2022}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.3}{\ignorespaces The simulated degradation trace with the subset of observations selected for the small dataset highlighted in Red.\relax }}{66}{figure.caption.37}\protected@file@percent }
+\newlabel{fig:sim-data-small}{{4.3}{66}{The simulated degradation trace with the subset of observations selected for the small dataset highlighted in Red.\relax }{figure.caption.37}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5.1}Data simulation}{66}{subsection.4.5.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4.1}{\ignorespaces The twenty simulated noisy degradation observation that make up the `big' data set.\relax }}{67}{table.caption.38}\protected@file@percent }
+\newlabel{tab:big_df}{{4.1}{67}{The twenty simulated noisy degradation observation that make up the `big' data set.\relax }{table.caption.38}{}}
+\citation{bayesplot}
+\citation{betancourt_2017}
+\@writefile{lot}{\contentsline {table}{\numberline {4.2}{\ignorespaces The subset of ten simulated noisy degradation observation from the `big' data set which make up the `small' data set.\relax }}{68}{table.caption.39}\protected@file@percent }
+\newlabel{tab:small_df}{{4.2}{68}{The subset of ten simulated noisy degradation observation from the `big' data set which make up the `small' data set.\relax }{table.caption.39}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5.2}Computation}{68}{subsection.4.5.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4.4}{\ignorespaces The cain energy diagnostics for each chain when sampling from the posterior of the big data set (left) and small data set. Each plot compares the marginal energy distribution, $\pi _E$, with the first differenced distribution, $\pi _{\Delta E}$.\relax }}{69}{figure.caption.40}\protected@file@percent }
+\newlabel{fig:nuts-energies}{{4.4}{69}{The cain energy diagnostics for each chain when sampling from the posterior of the big data set (left) and small data set. Each plot compares the marginal energy distribution, $\pi _E$, with the first differenced distribution, $\pi _{\Delta E}$.\relax }{figure.caption.40}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5.3}Results and diagnostics}{70}{subsection.4.5.3}\protected@file@percent }
+\newlabel{sec:noisy-GP-results}{{4.5.3}{70}{Results and diagnostics}{subsection.4.5.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.5}{\ignorespaces The marginal posterior distributions of the parameters $\sigma $, $\mu $, and $\nu $ when the BHM for the noisy gamma process is fitted to the `large' and `small' simulated data in Fig.\nobreakspace  {}\ref {fig:sim-data}. The points and intervals shown in each distribution represent, respectively, the median and $95\%$ and $66\%$ credible intervals. The values used to simulate the data are shown in the top row.\relax }}{71}{figure.caption.42}\protected@file@percent }
+\newlabel{fig:marginal-post}{{4.5}{71}{The marginal posterior distributions of the parameters $\sigma $, $\mu $, and $\nu $ when the BHM for the noisy gamma process is fitted to the `large' and `small' simulated data in Fig.~\ref {fig:sim-data}. The points and intervals shown in each distribution represent, respectively, the median and $95\%$ and $66\%$ credible intervals. The values used to simulate the data are shown in the top row.\relax }{figure.caption.42}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.6}{\ignorespaces The posterior predictive distribution of the filtered degradation path compared to the true degradation path when the model is fitted using the big (left) and small (right) data set. The median of the predictive distribution is shown as a grey line and the corresponding uncertainty intervals as blue ribbons.\relax }}{72}{figure.caption.44}\protected@file@percent }
+\newlabel{fig:ppd-z}{{4.6}{72}{The posterior predictive distribution of the filtered degradation path compared to the true degradation path when the model is fitted using the big (left) and small (right) data set. The median of the predictive distribution is shown as a grey line and the corresponding uncertainty intervals as blue ribbons.\relax }{figure.caption.44}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.7}{\ignorespaces Pairs plot showing the MCMC draws from the posterior distribution of the parameters $\sigma $, $\mu $, $\log \nu $, and the filtered value $\Delta z_1$ when the BHM of the noisy gamma process is fitted to the small dataset. The red points indicate divergences, which congregate at the end of the funnel in the pairwise plots of $\log \nu $/$\Delta z_1$ and $\log \nu $/$\mu $.\relax }}{74}{figure.caption.46}\protected@file@percent }
+\newlabel{fig:pairs}{{4.7}{74}{Pairs plot showing the MCMC draws from the posterior distribution of the parameters $\sigma $, $\mu $, $\log \nu $, and the filtered value $\Delta z_1$ when the BHM of the noisy gamma process is fitted to the small dataset. The red points indicate divergences, which congregate at the end of the funnel in the pairwise plots of $\log \nu $/$\Delta z_1$ and $\log \nu $/$\mu $.\relax }{figure.caption.46}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.8}{\ignorespaces The parallel coordinate plot of the draws from the posterior conditioned on the small dataset with the divergent traces plotted in red.\relax }}{75}{figure.caption.48}\protected@file@percent }
+\newlabel{fig:par-coord-single}{{4.8}{75}{The parallel coordinate plot of the draws from the posterior conditioned on the small dataset with the divergent traces plotted in red.\relax }{figure.caption.48}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.9}{\ignorespaces The divergent traces overlaid (in red) on the posterior predictive distribution of the degradation path for the small data set.\relax }}{75}{figure.caption.49}\protected@file@percent }
+\newlabel{fig:z-ppd-divergent}{{4.9}{75}{The divergent traces overlaid (in red) on the posterior predictive distribution of the degradation path for the small data set.\relax }{figure.caption.49}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.10}{\ignorespaces .\relax }}{76}{figure.caption.51}\protected@file@percent }
+\newlabel{fig:z-jump-comparison}{{4.10}{76}{.\relax }{figure.caption.51}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5.4}Solutions to computational issues}{76}{subsection.4.5.4}\protected@file@percent }
+\newlabel{sec:comp-sols}{{4.5.4}{76}{Solutions to computational issues}{subsection.4.5.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.11}{\ignorespaces The chain energy diagnostics when the model is fit with a stronger prior on $\sigma $.\relax }}{78}{figure.caption.53}\protected@file@percent }
+\newlabel{fig:energies-strong-prior}{{4.11}{78}{The chain energy diagnostics when the model is fit with a stronger prior on $\sigma $.\relax }{figure.caption.53}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.12}{\ignorespaces The pairs plot of the MCMC draws when using a stronger prior on $\sigma $.\relax }}{78}{figure.caption.54}\protected@file@percent }
+\newlabel{fig:pairs-strong-prior}{{4.12}{78}{The pairs plot of the MCMC draws when using a stronger prior on $\sigma $.\relax }{figure.caption.54}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.6}Discussion}{79}{section.4.6}\protected@file@percent }
+\newlabel{sec:NGP-discussion}{{4.6}{79}{Discussion}{section.4.6}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.13}{\ignorespaces The marginal posterior distributions of the parameters $\sigma $, $\mu $, and $\nu $ when information is added into the analysis either through a stronger prior or supplementary data compared to the original two posteriors.\relax }}{80}{figure.caption.56}\protected@file@percent }
+\newlabel{fig:marginal-post-extra-info}{{4.13}{80}{The marginal posterior distributions of the parameters $\sigma $, $\mu $, and $\nu $ when information is added into the analysis either through a stronger prior or supplementary data compared to the original two posteriors.\relax }{figure.caption.56}{}}
+\citation{tian2024}
+\citation{betancourt_2020}
+\citation{betancourt_2020}
+\citation{whitmore_1995}
+\citation{hamada_2008}
 \@setckpt{chapters/chapter4}{
-\setcounter{page}{22}
-\setcounter{equation}{0}
-\setcounter{enumi}{0}
+\setcounter{page}{84}
+\setcounter{equation}{5}
+\setcounter{enumi}{2}
 \setcounter{enumii}{0}
 \setcounter{enumiii}{0}
 \setcounter{enumiv}{0}
 \setcounter{footnote}{0}
 \setcounter{mpfootnote}{0}
-\setcounter{part}{1}
+\setcounter{part}{2}
 \setcounter{chapter}{4}
-\setcounter{section}{3}
+\setcounter{section}{6}
 \setcounter{subsection}{0}
 \setcounter{subsubsection}{0}
 \setcounter{paragraph}{0}
 \setcounter{subparagraph}{0}
-\setcounter{figure}{0}
-\setcounter{table}{0}
+\setcounter{figure}{13}
+\setcounter{table}{2}
 \setcounter{parentequation}{0}
 \setcounter{AM@survey}{0}
-\setcounter{BibCnt}{0}
+\setcounter{BibCnt}{2}
 \setcounter{NAT@ctr}{0}
 \setcounter{@pps}{0}
 \setcounter{@ppsavesec}{0}
 \setcounter{@ppsaveapp}{0}
-\setcounter{float@type}{8}
+\setcounter{float@type}{16}
 \setcounter{r@tfl@t}{0}
 \setcounter{lstnumber}{1}
 \setcounter{section@level}{1}
-\setcounter{Item}{0}
+\setcounter{Item}{2}
 \setcounter{Hfootnote}{0}
-\setcounter{bookmark@seq@number}{22}
+\setcounter{bookmark@seq@number}{29}
+\setcounter{caption@flags}{2}
+\setcounter{continuedfloat}{0}
+\setcounter{subfigure}{0}
+\setcounter{subtable}{0}
+\setcounter{algorithm}{0}
+\setcounter{ALG@line}{0}
+\setcounter{ALG@rem}{0}
+\setcounter{ALG@nested}{0}
+\setcounter{ALG@Lnr}{2}
+\setcounter{ALG@blocknr}{10}
+\setcounter{ALG@storecount}{0}
+\setcounter{ALG@tmpcounter}{0}
 \setcounter{maskedRefs}{0}
 \setcounter{lstlisting}{0}
 }

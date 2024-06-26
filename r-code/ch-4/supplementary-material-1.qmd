@@ -1531,6 +1531,7 @@ p_marginal_post_extra_info
 #| label: save-fig-sup-data-marginal-post
 #| echo: false
 #| output: false
+#| cache: false
 
 pdf(
   file.path(figure_path, "marginal-post-extra-info.pdf"),
@@ -1599,6 +1600,7 @@ p_joint_nu_jump_extra_info
 #| label: save-fig-comparing-scatter-nu-jump5
 #| echo: false
 #| output: false
+#| cache: false
 
 pdf(
   file.path(figure_path, "joint-nu-jump-extra.pdf"),

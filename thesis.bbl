@@ -1,10 +1,652 @@
 \begin{thebibliography}{}
 
 \bibitem [\protect \citeauthoryear {%
+Abdel-Hameed%
+}{%
+Abdel-Hameed%
+}{%
+{\protect \APACyear {1975}}%
+}]{%
+abdel-hameed1975}
+\APACinsertmetastar {%
+abdel-hameed1975}%
+\begin{APACrefauthors}%
+Abdel-Hameed, M.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{1975}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {A gamma wear process} {A gamma wear process}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{IEEE transactions on Reliability}{24}{2}{152--153}.
+\newblock
+\APACrefnote{Publisher: IEEE}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Bae%
+, Kuo%
+\BCBL {}\ \BBA {} Kvam%
+}{%
+Bae%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2007}}%
+}]{%
+bae2007}
+\APACinsertmetastar {%
+bae2007}%
+\begin{APACrefauthors}%
+Bae, S\BPBI J.%
+, Kuo, W.%
+\BCBL {}\ \BBA {} Kvam, P\BPBI H.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2007}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Degradation models and implied lifetime distributions}
+  {Degradation models and implied lifetime distributions}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Reliability Engineering \& System
+  Safety}{92}{5}{601--608}.
+\newblock
+\begin{APACrefURL}
+  \url{https://www.sciencedirect.com/science/article/pii/S0951832006000536}
+  \end{APACrefURL}
+\newblock
+\begin{APACrefDOI} \doi{https://doi.org/10.1016/j.ress.2006.02.002}
+  \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Balakrishnan%
+, Tsai%
+\BCBL {}\ \BBA {} C.-T.%
+}{%
+Balakrishnan%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2017}}%
+}]{%
+balakrishnan_2017}
+\APACinsertmetastar {%
+balakrishnan_2017}%
+\begin{APACrefauthors}%
+Balakrishnan, N.%
+, Tsai, C\BHBI C.%
+\BCBL {}\ \BBA {} C.-T., L.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2017}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Gamma degradation models: Inference and optimal design}
+  {Gamma degradation models: Inference and optimal design}.{\BBCQ}
+\newblock
+\BIn{} D\BHBI G.~Chen\ (\BED), \APACrefbtitle {Statistical Modeling for
+  Degradation Data} {Statistical modeling for degradation data}\ (\BPGS\
+  171--191).
+\newblock
+\APACaddressPublisher{Singapore}{Springer Nature Singapore Pte. Ltd.}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Berliner%
+}{%
+Berliner%
+}{%
+{\protect \APACyear {1996}}%
+}]{%
+Berliner_1996}
+\APACinsertmetastar {%
+Berliner_1996}%
+\begin{APACrefauthors}%
+Berliner, L\BPBI M.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{1996}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Hierarchical {B}ayesian Time Series Models}
+  {Hierarchical {B}ayesian time series models}.{\BBCQ}
+\newblock
+\BIn{} K\BPBI M.~Hanson\ \BBA {} R\BPBI N.~Silver\ (\BEDS), \APACrefbtitle
+  {Maximum Entropy and Bayesian Methods} {Maximum entropy and bayesian
+  methods}\ (\BPGS\ 15--22).
+\newblock
+\APACaddressPublisher{Dordrecht}{Springer Netherlands}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+M.~Betancourt%
+}{%
+M.~Betancourt%
+}{%
+{\protect \APACyear {2017}}%
+}]{%
+betancourt_2017}
+\APACinsertmetastar {%
+betancourt_2017}%
+\begin{APACrefauthors}%
+Betancourt, M.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2017}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {A {Conceptual} {Introduction} to {Hamiltonian} {Monte}
+  {Carlo}} {A {Conceptual} {Introduction} to {Hamiltonian} {Monte}
+  {Carlo}}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{arXiv}{}{}{}.
+\newblock
+\begin{APACrefURL} \url{https://arxiv.org/abs/1701.02434} \end{APACrefURL}
+\newblock
+\begin{APACrefDOI} \doi{10.48550/ARXIV.1701.02434} \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+M.~Betancourt%
+}{%
+M.~Betancourt%
+}{%
+{\protect \APACyear {2020}}%
+}]{%
+betancourt_2020}
+\APACinsertmetastar {%
+betancourt_2020}%
+\begin{APACrefauthors}%
+Betancourt, M.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2020}{June}{}.
+\newblock
+\APACrefbtitle {{I}dentity {C}risis.} {{I}dentity {C}risis.}
+\newblock
+\begin{APACrefURL}
+  \url{https://betanalpha.github.io/assets/case_studies/identifiability.html}
+  \end{APACrefURL}
+\newblock
+\APACrefnote{Accessed: 31-05-2023}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+M.~Betancourt%
+\ \BBA {} Girolami%
+}{%
+M.~Betancourt%
+\ \BBA {} Girolami%
+}{%
+{\protect \APACyear {2015}}%
+}]{%
+betancourt2015}
+\APACinsertmetastar {%
+betancourt2015}%
+\begin{APACrefauthors}%
+Betancourt, M.%
+\BCBT {}\ \BBA {} Girolami, M.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2015}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Hamiltonian Monte Carlo for Hierarchical Models}
+  {Hamiltonian monte carlo for hierarchical models}.{\BBCQ}
+\newblock
+\BIn{} S\BPBI K.~Upadhyay, U.~Singh, D\BPBI K.~Dey\BCBL {}\ \BBA {}
+  A.~Loganathan\ (\BEDS), \APACrefbtitle {Current Trends in Bayesian
+  Methodology with Applications} {Current trends in bayesian methodology with
+  applications}\ (\BPG~24).
+\newblock
+\APACaddressPublisher{}{Chapman and Hall/CRC}.
+\newblock
+\begin{APACrefDOI} \doi{10.1201/b18502} \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+M\BPBI J.~Betancourt%
+}{%
+M\BPBI J.~Betancourt%
+}{%
+{\protect \APACyear {2015}}%
+}]{%
+betancourt_2015}
+\APACinsertmetastar {%
+betancourt_2015}%
+\begin{APACrefauthors}%
+Betancourt, M\BPBI J.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2015}{}{}.
+\newblock
+\APACrefbtitle {Adiabatic Monte Carlo.} {Adiabatic monte carlo.}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Bortnowski%
+, Kawalec%
+, Król%
+\BCBL {}\ \BBA {} Ozdoba%
+}{%
+Bortnowski%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2022}}%
+}]{%
+bortnowski_2022}
+\APACinsertmetastar {%
+bortnowski_2022}%
+\begin{APACrefauthors}%
+Bortnowski, P.%
+, Kawalec, W.%
+, Król, R.%
+\BCBL {}\ \BBA {} Ozdoba, M.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2022}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Types and causes of damage to the conveyor belt -
+  Review, classification and mutual relations} {Types and causes of damage to
+  the conveyor belt - review, classification and mutual relations}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Engineering Failure Analysis}{140}{}{106520}.
+\newblock
+\begin{APACrefURL}
+  \url{https://www.sciencedirect.com/science/article/pii/S1350630722004940}
+  \end{APACrefURL}
+\newblock
+\begin{APACrefDOI} \doi{https://doi.org/10.1016/j.engfailanal.2022.106520}
+  \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Cox%
+\ \BBA {} Reid%
+}{%
+Cox%
+\ \BBA {} Reid%
+}{%
+{\protect \APACyear {1987}}%
+}]{%
+cox1987}
+\APACinsertmetastar {%
+cox1987}%
+\begin{APACrefauthors}%
+Cox, D\BPBI R.%
+\BCBT {}\ \BBA {} Reid, N.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{1987}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Parameter orthogonality and approximate conditional
+  inference} {Parameter orthogonality and approximate conditional
+  inference}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Journal of the Royal Statistical Society, Series
+  B}{49}{1}{1--39}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Creagh%
+}{%
+Creagh%
+}{%
+{\protect \APACyear {2020}}%
+}]{%
+australianmining2020}
+\APACinsertmetastar {%
+australianmining2020}%
+\begin{APACrefauthors}%
+Creagh, B.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2020}{}{}.
+\newblock
+\APACrefbtitle {Bridgestone: A partner in products, service and technology.}
+  {Bridgestone: A partner in products, service and technology.}
+\newblock
+\APAChowpublished
+  {https://www.australianmining.com.au/wp-content/uploads/2020/04/bridgestone-Material-size-web-1024x768.jpg}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Cressie%
+\ \BBA {} Wikle%
+}{%
+Cressie%
+\ \BBA {} Wikle%
+}{%
+{\protect \APACyear {2011}}%
+}]{%
+cressie_2011}
+\APACinsertmetastar {%
+cressie_2011}%
+\begin{APACrefauthors}%
+Cressie, N\BPBI A\BPBI C.%
+\BCBT {}\ \BBA {} Wikle, C\BPBI K.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYear{2011}.
+\newblock
+\APACrefbtitle {Statistics for {S}patio-{T}emporal {D}ata} {Statistics for
+  {S}patio-{T}emporal {D}ata}.
+\newblock
+\APACaddressPublisher{Hoboken, N.J}{Wiley}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Esposito%
+, Mele%
+, Castanier%
+\BCBL {}\ \BBA {} Giorgio%
+}{%
+Esposito%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2022}}%
+}]{%
+esposito2022}
+\APACinsertmetastar {%
+esposito2022}%
+\begin{APACrefauthors}%
+Esposito, N.%
+, Mele, A.%
+, Castanier, B.%
+\BCBL {}\ \BBA {} Giorgio, M.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2022}{{\APACmonth{01}}}{}.
+\newblock
+{\BBOQ}\APACrefatitle {A new gamma degradation process with random effect and
+  state-dependent measurement error} {A new gamma degradation process with
+  random effect and state-dependent measurement error}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Proceedings of the Institution of Mechanical Engineers,
+  Part O: Journal of Risk and Reliability}{}{}{1748006X2110672}.
+\newblock
+\begin{APACrefURL}
+  [{2022-10-25}]\url{http://journals.sagepub.com/doi/10.1177/1748006X211067299}
+  \end{APACrefURL}
+\newblock
+\begin{APACrefDOI} \doi{10.1177/1748006X211067299} \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Frenk%
+\ \BBA {} Nicolai%
+}{%
+Frenk%
+\ \BBA {} Nicolai%
+}{%
+{\protect \APACyear {2007}}%
+}]{%
+frenk2007}
+\APACinsertmetastar {%
+frenk2007}%
+\begin{APACrefauthors}%
+Frenk, J.%
+\BCBT {}\ \BBA {} Nicolai, R.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2007}{May}{}.
+\newblock
+\APACrefbtitle {Approximating the randomized hitting time distribution of a
+  non-stationary gamma process} {Approximating the randomized hitting time
+  distribution of a non-stationary gamma process}\ \APACbVolEdTR{}{\BTR{}\
+  \BNUM\ 2007-18}.
+\newblock
+\APACaddressInstitution{Erasmus University Rotterdam, Rotterdam, The
+  Netherlands}{Econometric Institute}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Gabry%
+\ \BBA {} Mahr%
+}{%
+Gabry%
+\ \BBA {} Mahr%
+}{%
+{\protect \APACyear {2024}}%
+}]{%
+bayesplot}
+\APACinsertmetastar {%
+bayesplot}%
+\begin{APACrefauthors}%
+Gabry, J.%
+\BCBT {}\ \BBA {} Mahr, T.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2024}{}{}.
+\newblock
+\APACrefbtitle {bayesplot: Plotting for Bayesian Models.} {bayesplot: Plotting
+  for bayesian models.}
+\newblock
+\begin{APACrefURL} \url{https://mc-stan.org/bayesplot/} \end{APACrefURL}
+\newblock
+\APACrefnote{R package version 1.11.1}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Gabry%
+, Simpson%
+, Vehtari%
+, Betancourt%
+\BCBL {}\ \BBA {} Gelman%
+}{%
+Gabry%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2019}}%
+{\protect \APACexlab {{\protect \BCnt {1}}}}}]{%
+gabry_vis_2019a}
+\APACinsertmetastar {%
+gabry_vis_2019a}%
+\begin{APACrefauthors}%
+Gabry, J.%
+, Simpson, D.%
+, Vehtari, A.%
+, Betancourt, M.%
+\BCBL {}\ \BBA {} Gelman, A.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2019{\protect \BCnt {1}}}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {{Discussion on the meeting on `{Data} {Visualization}'}}
+  {{Discussion on the meeting on `{Data} {Visualization}'}}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Journal of the Royal Statistical Society Series A:
+  Statistics in Society}{182}{2}{419--441}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Gabry%
+, Simpson%
+, Vehtari%
+, Betancourt%
+\BCBL {}\ \BBA {} Gelman%
+}{%
+Gabry%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2019}}%
+{\protect \APACexlab {{\protect \BCnt {2}}}}}]{%
+gabry_vis_2019}
+\APACinsertmetastar {%
+gabry_vis_2019}%
+\begin{APACrefauthors}%
+Gabry, J.%
+, Simpson, D.%
+, Vehtari, A.%
+, Betancourt, M.%
+\BCBL {}\ \BBA {} Gelman, A.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2019{\protect \BCnt {2}}}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {{Visualization in Bayesian Workflow}} {{Visualization in
+  Bayesian Workflow}}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Journal of the Royal Statistical Society Series A:
+  Statistics in Society}{182}{2}{389-402}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Gelman%
+}{%
+Gelman%
+}{%
+{\protect \APACyear {2005}}%
+}]{%
+Gelman2005}
+\APACinsertmetastar {%
+Gelman2005}%
+\begin{APACrefauthors}%
+Gelman, A.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2005}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {{Analysis of variance—why it is more important than
+  ever}} {{Analysis of variance—why it is more important than ever}}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{The Annals of Statistics}{33}{1}{1 -- 53}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Gelman%
+, Carlin%
+\BCBL {}\ \protect \BOthers {.}}{%
+Gelman%
+, Carlin%
+\BCBL {}\ \protect \BOthers {.}}{%
+{\protect \APACyear {2020}}%
+}]{%
+BDA2020}
+\APACinsertmetastar {%
+BDA2020}%
+\begin{APACrefauthors}%
+Gelman, A.%
+, Carlin, J.%
+, Stern, H.%
+, Dunson, D.%
+, Vehtari, A.%
+\BCBL {}\ \BBA {} Rubin, D.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYear{2020}.
+\newblock
+\APACrefbtitle {Bayesian Data Analysis, Third Edition} {Bayesian data analysis,
+  third edition}.
+\newblock
+\APACaddressPublisher{Boca Raton, FL}{Taylor \& Francis}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Gelman%
+\ \BBA {} Hill%
+}{%
+Gelman%
+\ \BBA {} Hill%
+}{%
+{\protect \APACyear {2006}}%
+}]{%
+gelman2006}
+\APACinsertmetastar {%
+gelman2006}%
+\begin{APACrefauthors}%
+Gelman, A.%
+\BCBT {}\ \BBA {} Hill, J.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYear{2006}.
+\newblock
+\APACrefbtitle {Data Analysis Using Regression and Multilevel/Hierarchical
+  Models} {Data analysis using regression and multilevel/hierarchical models}.
+\newblock
+\APACaddressPublisher{}{Cambridge University Press}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Gelman%
+\ \BBA {} Rubin%
+}{%
+Gelman%
+\ \BBA {} Rubin%
+}{%
+{\protect \APACyear {1992}}%
+}]{%
+Gelman1992}
+\APACinsertmetastar {%
+Gelman1992}%
+\begin{APACrefauthors}%
+Gelman, A.%
+\BCBT {}\ \BBA {} Rubin, D\BPBI B.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{1992}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {{Inference from Iterative Simulation Using Multiple
+  Sequences}} {{Inference from Iterative Simulation Using Multiple
+  Sequences}}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Statistical Science}{7}{4}{457 -- 472}.
+\newblock
+\begin{APACrefURL} \url{https://doi.org/10.1214/ss/1177011136} \end{APACrefURL}
+\newblock
+\begin{APACrefDOI} \doi{10.1214/ss/1177011136} \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Gelman%
+, Simpson%
+\BCBL {}\ \BBA {} Betancourt%
+}{%
 Gelman%
 \ \protect \BOthers {.}}{%
+{\protect \APACyear {2017}}%
+}]{%
+gelman_2017}
+\APACinsertmetastar {%
+gelman_2017}%
+\begin{APACrefauthors}%
+Gelman, A.%
+, Simpson, D.%
+\BCBL {}\ \BBA {} Betancourt, M.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2017}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {The Prior Can Often Only Be Understood in the Context of
+  the Likelihood} {The prior can often only be understood in the context of the
+  likelihood}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Entropy}{19}{10}{}.
+\newblock
+\begin{APACrefURL} \url{https://www.mdpi.com/1099-4300/19/10/555}
+  \end{APACrefURL}
+\newblock
+\begin{APACrefDOI} \doi{10.3390/e19100555} \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
 Gelman%
-\ \protect \BOthers {.}}{%
+, Vehtari%
+\BCBL {}\ \protect \BOthers {.}}{%
+Gelman%
+, Vehtari%
+\BCBL {}\ \protect \BOthers {.}}{%
 {\protect \APACyear {2020}}%
 }]{%
 gelman_workflow_2020}
@@ -58,6 +700,95 @@ Geraerds, W.%
 \PrintBackRefs{\CurrentBib}
 
 \bibitem [\protect \citeauthoryear {%
+Gilks%
+, Richardson%
+\BCBL {}\ \BBA {} Spiegelhalter%
+}{%
+Gilks%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {1996}}%
+}]{%
+gilks_1996}
+\APACinsertmetastar {%
+gilks_1996}%
+\begin{APACrefauthors}%
+Gilks, W.%
+, Richardson, S.%
+\BCBL {}\ \BBA {} Spiegelhalter, D.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYear{1996}.
+\newblock
+\APACrefbtitle {Markov Chain Monte Carlo in Practice} {Markov chain monte carlo
+  in practice}.
+\newblock
+\APACaddressPublisher{Boca Raton, FL}{Chapman \& Hall/CRC}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Giorgio%
+, Mele%
+\BCBL {}\ \BBA {} Pulcini%
+}{%
+Giorgio%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2019}}%
+}]{%
+giorgio2019}
+\APACinsertmetastar {%
+giorgio2019}%
+\begin{APACrefauthors}%
+Giorgio, M.%
+, Mele, A.%
+\BCBL {}\ \BBA {} Pulcini, G.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2019}{{\APACmonth{03}}}{}.
+\newblock
+{\BBOQ}\APACrefatitle {A perturbed gamma degradation process with degradation
+  dependent non‐{Gaussian} measurement errors} {A perturbed gamma degradation
+  process with degradation dependent non‐{Gaussian} measurement
+  errors}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Applied Stochastic Models in Business and
+  Industry}{35}{2}{198--210}.
+\newblock
+\begin{APACrefURL}
+  [{2022-05-10}]\url{https://onlinelibrary.wiley.com/doi/10.1002/asmb.2377}
+  \end{APACrefURL}
+\newblock
+\begin{APACrefDOI} \doi{10.1002/asmb.2377} \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Guo%
+}{%
+Guo%
+}{%
+{\protect \APACyear {1993}}%
+}]{%
+guo1993}
+\APACinsertmetastar {%
+guo1993}%
+\begin{APACrefauthors}%
+Guo, G.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{1993}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Event-History Analysis for Left-Truncated Data}
+  {Event-history analysis for left-truncated data}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Sociological Methodology}{23}{}{217--243}.
+\newblock
+\begin{APACrefURL} [{2024-05-01}]\url{http://www.jstor.org/stable/271011}
+  \end{APACrefURL}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
 Hamada%
 , Wilson%
 , Reese%
@@ -66,7 +797,7 @@ Hamada%
 Hamada%
 \ \protect \BOthers {.}}{%
 {\protect \APACyear {2008}}%
-}]{%
+{\protect \APACexlab {{\protect \BCnt {1}}}}}]{%
 hamada2008}
 \APACinsertmetastar {%
 hamada2008}%
@@ -78,11 +809,112 @@ Hamada, M\BPBI S.%
 \end{APACrefauthors}%
 \unskip\
 \newblock
-\APACrefYear{2008}.
+\APACrefYear{2008{\protect \BCnt {1}}}.
 \newblock
 \APACrefbtitle {Bayesian Reliability} {Bayesian reliability}.
 \newblock
 \APACaddressPublisher{}{Springer New York, NY}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Hamada%
+, Wilson%
+, Reese%
+\BCBL {}\ \BBA {} Martz%
+}{%
+Hamada%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2008}}%
+{\protect \APACexlab {{\protect \BCnt {2}}}}}]{%
+hamada_2008}
+\APACinsertmetastar {%
+hamada_2008}%
+\begin{APACrefauthors}%
+Hamada, M\BPBI S.%
+, Wilson, A\BPBI G.%
+, Reese, C\BPBI S.%
+\BCBL {}\ \BBA {} Martz, H\BPBI F.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYear{2008{\protect \BCnt {2}}}.
+\newblock
+\APACrefbtitle {Bayesian Reliability} {Bayesian reliability}.
+\newblock
+\APACaddressPublisher{New York, NY}{Springer Science+Business Media, LLC}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Hazra%
+, Bhadra%
+\BCBL {}\ \BBA {} Pandey%
+}{%
+Hazra%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2022}}%
+}]{%
+hazra2022}
+\APACinsertmetastar {%
+hazra2022}%
+\begin{APACrefauthors}%
+Hazra, I.%
+, Bhadra, R.%
+\BCBL {}\ \BBA {} Pandey, M\BPBI D.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2022}{{\APACmonth{12}}}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Likelihood-free {Hamiltonian} {Monte} {Carlo} for
+  modeling piping degradation and remaining useful life prediction using the
+  mixed gamma process} {Likelihood-free {Hamiltonian} {Monte} {Carlo} for
+  modeling piping degradation and remaining useful life prediction using the
+  mixed gamma process}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{International Journal of Pressure Vessels and
+  Piping}{200}{}{104834}.
+\newblock
+\begin{APACrefURL}
+  [{2022-11-23}]\url{https://www.sciencedirect.com/science/article/pii/S0308016122002198}
+  \end{APACrefURL}
+\newblock
+\begin{APACrefDOI} \doi{10.1016/j.ijpvp.2022.104834} \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Hazra%
+, Pandey%
+\BCBL {}\ \BBA {} Manzana%
+}{%
+Hazra%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2020}}%
+}]{%
+hazra2020}
+\APACinsertmetastar {%
+hazra2020}%
+\begin{APACrefauthors}%
+Hazra, I.%
+, Pandey, M\BPBI D.%
+\BCBL {}\ \BBA {} Manzana, N.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2020}{{\APACmonth{06}}}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Approximate {Bayesian} computation ({ABC}) method for
+  estimating parameters of the gamma process using noisy data} {Approximate
+  {Bayesian} computation ({ABC}) method for estimating parameters of the gamma
+  process using noisy data}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Reliability Engineering \& System
+  Safety}{198}{}{106780}.
+\newblock
+\begin{APACrefURL}
+  [{2023-02-16}]\url{https://linkinghub.elsevier.com/retrieve/pii/S0951832019309901}
+  \end{APACrefURL}
+\newblock
+\begin{APACrefDOI} \doi{10.1016/j.ress.2019.106780} \end{APACrefDOI}
 \PrintBackRefs{\CurrentBib}
 
 \bibitem [\protect \citeauthoryear {%
@@ -119,6 +951,201 @@ Heng, A.%
 \PrintBackRefs{\CurrentBib}
 
 \bibitem [\protect \citeauthoryear {%
+Hodges%
+}{%
+Hodges%
+}{%
+{\protect \APACyear {2014}}%
+}]{%
+hodges_2014}
+\APACinsertmetastar {%
+hodges_2014}%
+\begin{APACrefauthors}%
+Hodges, J\BPBI S.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYear{2014}.
+\newblock
+\APACrefbtitle {Richly {Parameterized} {Linear} {Models}. {Additive}, {Time}
+  {Series}, and {Spatial} {Models} {Using} {Random} {Effects}} {Richly
+  {Parameterized} {Linear} {Models}. {Additive}, {Time} {Series}, and {Spatial}
+  {Models} {Using} {Random} {Effects}}.
+\newblock
+\APACaddressPublisher{Boca Raton, FL}{Chapman \& Hall/CRC Press}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Hoffman%
+\ \BBA {} Gelman%
+}{%
+Hoffman%
+\ \BBA {} Gelman%
+}{%
+{\protect \APACyear {2014}}%
+}]{%
+hoffman_2014}
+\APACinsertmetastar {%
+hoffman_2014}%
+\begin{APACrefauthors}%
+Hoffman, M\BPBI D.%
+\BCBT {}\ \BBA {} Gelman, A.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2014}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {The {N}o {U}-{T}urn sampler: {A}daptively setting path
+  lengths in {H}amiltonian {M}onte {C}arlo} {The {N}o {U}-{T}urn sampler:
+  {A}daptively setting path lengths in {H}amiltonian {M}onte {C}arlo}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Journal of Machine Learning
+  Research}{15}{}{1351--1381}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Hong%
+, Meeker%
+\BCBL {}\ \BBA {} McCalley%
+}{%
+Hong%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2009}}%
+}]{%
+hong2009}
+\APACinsertmetastar {%
+hong2009}%
+\begin{APACrefauthors}%
+Hong, Y.%
+, Meeker, W\BPBI Q.%
+\BCBL {}\ \BBA {} McCalley, J\BPBI D.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2009}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {{Prediction of remaining life of power transformers
+  based on left truncated and right censored lifetime data}} {{Prediction of
+  remaining life of power transformers based on left truncated and right
+  censored lifetime data}}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{The Annals of Applied Statistics}{3}{2}{857--879}.
+\newblock
+\begin{APACrefURL} \url{https://doi.org/10.1214/00-AOAS231} \end{APACrefURL}
+\newblock
+\begin{APACrefDOI} \doi{10.1214/00-AOAS231} \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Hormann%
+\ \BBA {} Kokoszka%
+}{%
+Hormann%
+\ \BBA {} Kokoszka%
+}{%
+{\protect \APACyear {2012}}%
+}]{%
+hormann_2012}
+\APACinsertmetastar {%
+hormann_2012}%
+\begin{APACrefauthors}%
+Hormann, S.%
+\BCBT {}\ \BBA {} Kokoszka, P.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2012}{12}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Functional Time Series} {Functional time series}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Handb. Stat.}{30}{}{}.
+\newblock
+\begin{APACrefDOI} \doi{10.1007/978-1-4614-3655-3_16} \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Huzurbazar%
+}{%
+Huzurbazar%
+}{%
+{\protect \APACyear {1956}}%
+}]{%
+huzurbazar1956}
+\APACinsertmetastar {%
+huzurbazar1956}%
+\begin{APACrefauthors}%
+Huzurbazar, V\BPBI S.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{1956}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Sufficient statistics and orthogonal parameters}
+  {Sufficient statistics and orthogonal parameters}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Sankhy\=a: The Indian Journal of Statistics}{17}{3}{}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+{ISO}%
+}{%
+{ISO}%
+}{%
+{\protect \APACyear {2013}}%
+}]{%
+ISO_12489_2013}
+\APACinsertmetastar {%
+ISO_12489_2013}%
+\begin{APACrefauthors}%
+{ISO}.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2013}{}{}.
+\newblock
+\APACrefbtitle {{ISO 12489:2013} Petroleum, petrochemical and natural gas
+  industries — Reliability modelling and calculation of safety systems.}
+  {{ISO 12489:2013} petroleum, petrochemical and natural gas industries —
+  reliability modelling and calculation of safety systems.}
+\newblock
+\APAChowpublished {ISO International Standard}.
+\newblock
+\begin{APACrefURL}
+  \url{https://www.iso.org/obp/ui/en/#iso:std:iso:tr:12489:ed-1:v1:en:sec:3.1.8}
+  \end{APACrefURL}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+{ISO}%
+}{%
+{ISO}%
+}{%
+{\protect \APACyear {2016}}%
+}]{%
+ISO_14224_2016}
+\APACinsertmetastar {%
+ISO_14224_2016}%
+\begin{APACrefauthors}%
+{ISO}.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2016}{}{}.
+\newblock
+\APACrefbtitle {{ISO 14224:2016} Petroleum, petrochemical and natural gas
+  industries — Collection and exchange of reliability and maintenance data
+  for equipment.} {{ISO 14224:2016} petroleum, petrochemical and natural gas
+  industries — collection and exchange of reliability and maintenance data
+  for equipment.}
+\newblock
+\APAChowpublished {ISO International Standard}.
+\newblock
+\begin{APACrefURL}
+  \url{https://www.iso.org/obp/ui/en/#iso:std:iso:14224:ed-3:v2:en}
+  \end{APACrefURL}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
 Jardine%
 \ \BBA {} Tsang%
 }{%
@@ -143,6 +1170,331 @@ Jardine, A\BPBI K.%
   Theory and applications (2nd edition)}.
 \newblock
 \APACaddressPublisher{}{CRC Press}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Johnson%
+, Ott%
+\BCBL {}\ \BBA {} Dogucu%
+}{%
+Johnson%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2022}}%
+}]{%
+Johnson_2022}
+\APACinsertmetastar {%
+Johnson_2022}%
+\begin{APACrefauthors}%
+Johnson, A\BPBI A.%
+, Ott, M\BPBI Q.%
+\BCBL {}\ \BBA {} Dogucu, M.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYear{2022}.
+\newblock
+\APACrefbtitle {Bayes Rules! An Introduction to Applied Bayesian Modeling}
+  {Bayes rules! an introduction to applied bayesian modeling}.
+\newblock
+\APACaddressPublisher{Boca Raton, FL}{CRC Press}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Kallen%
+\ \BBA {} van Noortwijk%
+}{%
+Kallen%
+\ \BBA {} van Noortwijk%
+}{%
+{\protect \APACyear {2005}}%
+}]{%
+kallen2005}
+\APACinsertmetastar {%
+kallen2005}%
+\begin{APACrefauthors}%
+Kallen, M.%
+\BCBT {}\ \BBA {} van Noortwijk, J.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2005}{{\APACmonth{11}}}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Optimal maintenance decisions under imperfect
+  inspection} {Optimal maintenance decisions under imperfect
+  inspection}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Reliability Engineering \& System
+  Safety}{90}{2-3}{177--185}.
+\newblock
+\begin{APACrefURL}
+  [{2022-03-02}]\url{https://linkinghub.elsevier.com/retrieve/pii/S0951832004002443}
+  \end{APACrefURL}
+\newblock
+\begin{APACrefDOI} \doi{10.1016/j.ress.2004.10.004} \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Kaminskiy%
+\ \BBA {} Krivtsov%
+}{%
+Kaminskiy%
+\ \BBA {} Krivtsov%
+}{%
+{\protect \APACyear {2005}}%
+}]{%
+kaminskiy2005}
+\APACinsertmetastar {%
+kaminskiy2005}%
+\begin{APACrefauthors}%
+Kaminskiy, M.%
+\BCBT {}\ \BBA {} Krivtsov, V.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2005}{01}{}.
+\newblock
+{\BBOQ}\APACrefatitle {A simple procedure for Bayesian estimation of the
+  Weibull distribution.} {A simple procedure for bayesian estimation of the
+  weibull distribution.}{\BBCQ}
+\newblock
+\APACjournalVolNumPages{IEEE Transactions on Reliability}{54}{}{612-616}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Kowal%
+}{%
+Kowal%
+}{%
+{\protect \APACyear {2017}}%
+}]{%
+kowal_2017}
+\APACinsertmetastar {%
+kowal_2017}%
+\begin{APACrefauthors}%
+Kowal, D\BPBI R.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYear{2017}.
+\unskip\
+\newblock
+\APACrefbtitle {Bayesian methods for functional and time series data} {Bayesian
+  methods for functional and time series data}\ \APACtypeAddressSchool
+  {\BPhD}{}{Cornell University}.
+\unskip\
+\newblock
+\begin{APACrefURL}
+  \url{https://higherlogicdownload.s3.amazonaws.com/AMSTAT/7328eb46-c57e-49af-8d4f-0460ca4a6a2c/UploadedImages/Kowal.pdf}
+  \end{APACrefURL}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Kundu%
+\ \BBA {} Mitra%
+}{%
+Kundu%
+\ \BBA {} Mitra%
+}{%
+{\protect \APACyear {2016}}%
+}]{%
+kundu2016}
+\APACinsertmetastar {%
+kundu2016}%
+\begin{APACrefauthors}%
+Kundu, D.%
+\BCBT {}\ \BBA {} Mitra, D.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2016}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Bayesian inference of Weibull distribution based on left
+  truncated and right censored data} {Bayesian inference of weibull
+  distribution based on left truncated and right censored data}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Computational Statistics \& Data Analysis}{99}{}{}.
+\newblock
+\begin{APACrefDOI} \doi{https://doi.org/10.1016/j.csda.2016.01.001}
+  \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Lawless%
+\ \BBA {} Crowder%
+}{%
+Lawless%
+\ \BBA {} Crowder%
+}{%
+{\protect \APACyear {2004}}%
+}]{%
+lawless2004}
+\APACinsertmetastar {%
+lawless2004}%
+\begin{APACrefauthors}%
+Lawless, J.%
+\BCBT {}\ \BBA {} Crowder, M.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2004}{09}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Covariates and Random Effects in a Gamma Process Model
+  with Application to Degradation and Failure} {Covariates and random effects
+  in a gamma process model with application to degradation and failure}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Lifetime Data Analysis}{10}{}{213--227}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Leadbetter%
+, Caceres%
+\BCBL {}\ \BBA {} Phatak%
+}{%
+Leadbetter%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2024}}%
+}]{%
+leadbetter2024}
+\APACinsertmetastar {%
+leadbetter2024}%
+\begin{APACrefauthors}%
+Leadbetter, R.%
+, Caceres, G\BPBI G.%
+\BCBL {}\ \BBA {} Phatak, A.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2024}{}{}.
+\newblock
+\APACrefbtitle {Bayesian Hierarchical Modelling of Noisy Gamma Processes: Model
+  Formulation, Identifiability, Model Fitting, and Extensions to Unit-to-Unit
+  Variability.} {Bayesian hierarchical modelling of noisy gamma processes:
+  Model formulation, identifiability, model fitting, and extensions to
+  unit-to-unit variability.}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Lee%
+\ \BBA {} Whitmore%
+}{%
+Lee%
+\ \BBA {} Whitmore%
+}{%
+{\protect \APACyear {2006}}%
+}]{%
+lee2006}
+\APACinsertmetastar {%
+lee2006}%
+\begin{APACrefauthors}%
+Lee, M\BHBI L\BPBI T.%
+\BCBT {}\ \BBA {} Whitmore, G.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2006}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Threshold regression for survival analysis: Modeling
+  event times by a stochastic process reaching a boundary} {Threshold
+  regression for survival analysis: Modeling event times by a stochastic
+  process reaching a boundary}{\BBCQ}\ [Article].
+\newblock
+\APACjournalVolNumPages{Statistical Science}{21}{4}{501 - 513}.
+\newblock
+\APACrefnote{Cited by: 215; All Open Access, Bronze Open Access, Green Open
+  Access}
+\newblock
+\begin{APACrefDOI} \doi{10.1214/088342306000000330} \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+C.~Lu%
+, Meeker%
+\BCBL {}\ \BBA {} Escobar%
+}{%
+C.~Lu%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {1996}}%
+}]{%
+lu1996}
+\APACinsertmetastar {%
+lu1996}%
+\begin{APACrefauthors}%
+Lu, C.%
+, Meeker, W.%
+\BCBL {}\ \BBA {} Escobar, L.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{1996}{01}{}.
+\newblock
+{\BBOQ}\APACrefatitle {A comparison of degradation and failure-time methods for
+  estimating a time-to-failure distribution} {A comparison of degradation and
+  failure-time methods for estimating a time-to-failure distribution}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Statistica Sinica}{6}{}{}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+C\BPBI J.~Lu%
+\ \BBA {} Meeker%
+}{%
+C\BPBI J.~Lu%
+\ \BBA {} Meeker%
+}{%
+{\protect \APACyear {1993}}%
+}]{%
+lu1993}
+\APACinsertmetastar {%
+lu1993}%
+\begin{APACrefauthors}%
+Lu, C\BPBI J.%
+\BCBT {}\ \BBA {} Meeker, W.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{1993}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Using degradation measures to estimate a time-to-failure
+  distribution} {Using degradation measures to estimate a time-to-failure
+  distribution}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Technometrics}{}{}{}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+D.~Lu%
+, Pandey%
+\BCBL {}\ \BBA {} Xie%
+}{%
+D.~Lu%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2013}}%
+}]{%
+lu2013}
+\APACinsertmetastar {%
+lu2013}%
+\begin{APACrefauthors}%
+Lu, D.%
+, Pandey, M\BPBI D.%
+\BCBL {}\ \BBA {} Xie, W\BHBI C.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2013}{{\APACmonth{08}}}{}.
+\newblock
+{\BBOQ}\APACrefatitle {An efficient method for the estimation of parameters of
+  stochastic gamma process from noisy degradation measurements} {An efficient
+  method for the estimation of parameters of stochastic gamma process from
+  noisy degradation measurements}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Proceedings of the Institution of Mechanical Engineers,
+  Part O: Journal of Risk and Reliability}{227}{4}{425--433}.
+\newblock
+\begin{APACrefURL}
+  [{2022-06-08}]\url{http://journals.sagepub.com/doi/10.1177/1748006X13477008}
+  \end{APACrefURL}
+\newblock
+\begin{APACrefDOI} \doi{10.1177/1748006X13477008} \end{APACrefDOI}
 \PrintBackRefs{\CurrentBib}
 
 \bibitem [\protect \citeauthoryear {%
@@ -177,6 +1529,55 @@ Lunn, D.%
 \PrintBackRefs{\CurrentBib}
 
 \bibitem [\protect \citeauthoryear {%
+McElreath%
+}{%
+McElreath%
+}{%
+{\protect \APACyear {2020}}%
+}]{%
+McElreath_2020}
+\APACinsertmetastar {%
+McElreath_2020}%
+\begin{APACrefauthors}%
+McElreath, R.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYear{2020}.
+\newblock
+\APACrefbtitle {Statistical Rethinking} {Statistical rethinking}\
+  (\PrintOrdinal{2nd.}\ \BEd).
+\newblock
+\APACaddressPublisher{Boca Raton, FL}{Chapman and Hall/CRC}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Meeker%
+\ \BBA {} Escobar%
+}{%
+Meeker%
+\ \BBA {} Escobar%
+}{%
+{\protect \APACyear {1998}}%
+}]{%
+Meeker1998}
+\APACinsertmetastar {%
+Meeker1998}%
+\begin{APACrefauthors}%
+Meeker, W\BPBI Q.%
+\BCBT {}\ \BBA {} Escobar, L\BPBI A.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYear{1998}.
+\newblock
+\APACrefbtitle {Statistical Methods for Reliability Data} {Statistical methods
+  for reliability data}\ (\PrintOrdinal{1st.}\ \BEd).
+\newblock
+\APACaddressPublisher{New York, NY}{Wiley}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
 Meeker%
 , Escobar%
 \BCBL {}\ \BBA {} Pascual%
@@ -185,9 +1586,9 @@ Meeker%
 \ \protect \BOthers {.}}{%
 {\protect \APACyear {2022}}%
 }]{%
-meeker2022}
+Meeker2022}
 \APACinsertmetastar {%
-meeker2022}%
+Meeker2022}%
 \begin{APACrefauthors}%
 Meeker, W\BPBI Q.%
 , Escobar, L\BPBI A.%
@@ -197,10 +1598,71 @@ Meeker, W\BPBI Q.%
 \newblock
 \APACrefYear{2022}.
 \newblock
-\APACrefbtitle {Statistical methods for reliability data} {Statistical methods
-  for reliability data}.
+\APACrefbtitle {Statistical Methods for Reliability Data} {Statistical methods
+  for reliability data}\ (\PrintOrdinal{2nd.}\ \BEd).
 \newblock
-\APACaddressPublisher{}{John Wiley \& Sons}.
+\APACaddressPublisher{Hoboken, NJ}{Wiley}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Mitra%
+}{%
+Mitra%
+}{%
+{\protect \APACyear {2013}}%
+}]{%
+mitra2013}
+\APACinsertmetastar {%
+mitra2013}%
+\begin{APACrefauthors}%
+Mitra, D.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYear{2013}.
+\unskip\
+\newblock
+\APACrefbtitle {Likelihood inference for left truncated and right censored
+  lifetime data} {Likelihood inference for left truncated and right censored
+  lifetime data}\ \APACtypeAddressSchool {PhD thesis}{}{}.
+\unskip\
+\newblock
+\APACaddressSchool {Hamilton, ON, Canada}{McMaster University}.
+\unskip\
+\newblock
+\APACrefnote{Available at
+  \url{https://macsphere.mcmaster.ca/handle/11375/12738}}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Mittman%
+}{%
+Mittman%
+}{%
+{\protect \APACyear {2018}}%
+}]{%
+mittman2013}
+\APACinsertmetastar {%
+mittman2013}%
+\begin{APACrefauthors}%
+Mittman, E\BPBI T.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYear{2018}.
+\unskip\
+\newblock
+\APACrefbtitle {Applications of Bayesian hierarchical models in gene expression
+  and product reliability} {Applications of bayesian hierarchical models in
+  gene expression and product reliability}\ \APACtypeAddressSchool {PhD
+  thesis}{}{}.
+\unskip\
+\newblock
+\APACaddressSchool {Ames, IA, United States}{Iowa State University}.
+\unskip\
+\newblock
+\APACrefnote{Available at
+  \url{https://dr.lib.iastate.edu/entities/publication/7c167cf8-a345-476f-a77d-4fc829e4b2c9}}
 \PrintBackRefs{\CurrentBib}
 
 \bibitem [\protect \citeauthoryear {%
@@ -224,6 +1686,95 @@ Moore, D\BPBI F.%
   using r}\ (R.~Gentleman, K.~Hornik\BCBL {}\ \BBA {} G.~Parmigiani, \BEDS{}).
 \newblock
 \APACaddressPublisher{}{Springer Cham}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Neal%
+}{%
+Neal%
+}{%
+{\protect \APACyear {2011}}%
+}]{%
+neal2011}
+\APACinsertmetastar {%
+neal2011}%
+\begin{APACrefauthors}%
+Neal, R\BPBI M.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2011}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {MCMC Using Hamiltonian Dynamics.} {Mcmc using
+  hamiltonian dynamics.}{\BBCQ}
+\newblock
+\BIn{} S.~Brooks, A.~Gelman, G.~Jones\BCBL {}\ \BBA {} X\BHBI L.~Meng\ (\BEDS),
+  \APACrefbtitle {Handbook of Markov Chain Monte Carlo.} {Handbook of markov
+  chain monte carlo.}
+\newblock
+\APACaddressPublisher{}{Chapman and Hall/CRC}.
+\newblock
+\begin{APACrefDOI} \doi{10.1201/b10905} \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Pandey%
+\ \BBA {} Yuan%
+}{%
+Pandey%
+\ \BBA {} Yuan%
+}{%
+{\protect \APACyear {2006}}%
+}]{%
+pandey2006}
+\APACinsertmetastar {%
+pandey2006}%
+\begin{APACrefauthors}%
+Pandey, M.%
+\BCBT {}\ \BBA {} Yuan, X\BHBI X.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2006}{January}{}.
+\newblock
+{\BBOQ}\APACrefatitle {A Comparison of Probabilistic Models of Deterioration
+  for Life Cycle Management of Structures} {A comparison of probabilistic
+  models of deterioration for life cycle management of structures}.{\BBCQ}
+\newblock
+\BIn{} (\BPGS\ 735--746).
+\newblock
+\begin{APACrefDOI} \doi{10.1007/1-4020-4891-2_62} \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Peng%
+\ \BBA {} Ai%
+}{%
+Peng%
+\ \BBA {} Ai%
+}{%
+{\protect \APACyear {2018}}%
+}]{%
+peng_2018}
+\APACinsertmetastar {%
+peng_2018}%
+\begin{APACrefauthors}%
+Peng, C\BHBI Y.%
+\BCBT {}\ \BBA {} Ai, H\BHBI F.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2018}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Degradation Analysis with Measurement Errors}
+  {Degradation analysis with measurement errors}.{\BBCQ}
+\newblock
+\BIn{} D\BPBI C.~et al.\ (\BED), \APACrefbtitle {Proceedings of the Pacific Rim
+  Statistical Conference for Production Engineering} {Proceedings of the
+  pacific rim statistical conference for production engineering}\ (\BPGS\
+  95--122).
+\newblock
+\APACaddressPublisher{Singapore}{Springer Nature Singapore Pte. Ltd.}
 \PrintBackRefs{\CurrentBib}
 
 \bibitem [\protect \citeauthoryear {%
@@ -256,6 +1807,223 @@ Plummer, M.%
 \PrintBackRefs{\CurrentBib}
 
 \bibitem [\protect \citeauthoryear {%
+Pradhan%
+\ \BBA {} Kundu%
+}{%
+Pradhan%
+\ \BBA {} Kundu%
+}{%
+{\protect \APACyear {2011}}%
+}]{%
+pradhan2011}
+\APACinsertmetastar {%
+pradhan2011}%
+\begin{APACrefauthors}%
+Pradhan, B.%
+\BCBT {}\ \BBA {} Kundu, D.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2011}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Bayes estimation and prediction of the two-parameter
+  gamma distribution} {Bayes estimation and prediction of the two-parameter
+  gamma distribution}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Journal of Statistical Computation and
+  Simulation}{81}{9}{1187-1198}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Pulcini%
+}{%
+Pulcini%
+}{%
+{\protect \APACyear {2016}}%
+}]{%
+pulcini2016}
+\APACinsertmetastar {%
+pulcini2016}%
+\begin{APACrefauthors}%
+Pulcini, G.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2016}{{\APACmonth{08}}}{}.
+\newblock
+{\BBOQ}\APACrefatitle {A perturbed gamma process with statistically dependent
+  measurement errors} {A perturbed gamma process with statistically dependent
+  measurement errors}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Reliability Engineering \& System
+  Safety}{152}{}{296--306}.
+\newblock
+\begin{APACrefURL}
+  [{2023-02-02}]\url{https://linkinghub.elsevier.com/retrieve/pii/S095183201630014X}
+  \end{APACrefURL}
+\newblock
+\begin{APACrefDOI} \doi{10.1016/j.ress.2016.03.024} \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Ramsay%
+, Hooker%
+\BCBL {}\ \BBA {} Graves%
+}{%
+Ramsay%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2009}}%
+}]{%
+ramsay_2009}
+\APACinsertmetastar {%
+ramsay_2009}%
+\begin{APACrefauthors}%
+Ramsay, J.%
+, Hooker, G.%
+\BCBL {}\ \BBA {} Graves, S.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYear{2009}.
+\newblock
+\APACrefbtitle {Functional Data Analysis with R and MATLAB} {Functional data
+  analysis with r and matlab}.
+\newblock
+\APACaddressPublisher{New York, NY}{Springer New York}.
+\newblock
+\begin{APACrefURL} \url{https://doi.org/10.1007/978-0-387-98185-7}
+  \end{APACrefURL}
+\newblock
+\begin{APACrefDOI} \doi{10.1007/978-0-387-98185-7} \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Reich%
+\ \BBA {} Ghosh%
+}{%
+Reich%
+\ \BBA {} Ghosh%
+}{%
+{\protect \APACyear {2019}}%
+}]{%
+reich2019}
+\APACinsertmetastar {%
+reich2019}%
+\begin{APACrefauthors}%
+Reich, B.%
+\BCBT {}\ \BBA {} Ghosh, S.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYear{2019}.
+\newblock
+\APACrefbtitle {Bayesian Statistical Methods} {Bayesian statistical methods}.
+\newblock
+\APACaddressPublisher{Boca Raton, FL}{CRC Press}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Robinson%
+\ \BBA {} Crowder%
+}{%
+Robinson%
+\ \BBA {} Crowder%
+}{%
+{\protect \APACyear {2000}}%
+}]{%
+robinson2000}
+\APACinsertmetastar {%
+robinson2000}%
+\begin{APACrefauthors}%
+Robinson, M\BPBI E.%
+\BCBT {}\ \BBA {} Crowder, M\BPBI J.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2000}{12}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Bayesian Methods for a Growth-Curve Degradation Model
+  with Repeated Measures} {Bayesian methods for a growth-curve degradation
+  model with repeated measures}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Lifetime Data Analysis}{6}{}{}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Rodríguez-Picón%
+\ \protect \BOthers {.}}{%
+Rodríguez-Picón%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2021}}%
+}]{%
+rodriguez-picon2021}
+\APACinsertmetastar {%
+rodriguez-picon2021}%
+\begin{APACrefauthors}%
+Rodríguez-Picón, L\BPBI A.%
+, Méndez-González, L\BPBI C.%
+, Romero-López, R.%
+, Pérez-Olguín, I\BPBI J\BPBI C.%
+, Rodríguez-Borbón, M\BPBI I.%
+\BCBL {}\ \BBA {} Valles-Rosales, D\BPBI J.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2021}{{\APACmonth{01}}}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Reliability {Analysis} {Based} on a {Gamma}-{Gaussian}
+  {Deconvolution} {Degradation} {Modeling} with {Measurement} {Error}}
+  {Reliability {Analysis} {Based} on a {Gamma}-{Gaussian} {Deconvolution}
+  {Degradation} {Modeling} with {Measurement} {Error}}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Applied Sciences}{11}{9}{4133}.
+\newblock
+\begin{APACrefURL} [{2022-11-23}]\url{https://www.mdpi.com/2076-3417/11/9/4133}
+  \end{APACrefURL}
+\newblock
+\begin{APACrefDOI} \doi{10.3390/app11094133} \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Rodríguez-Picón%
+, Rodríguez-Picón%
+, Méndez-González%
+, Rodríguez-Borbón%
+\BCBL {}\ \BBA {} Alvarado-Iniesta%
+}{%
+Rodríguez-Picón%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2018}}%
+}]{%
+rodriguez-picon2018}
+\APACinsertmetastar {%
+rodriguez-picon2018}%
+\begin{APACrefauthors}%
+Rodríguez-Picón, L\BPBI A.%
+, Rodríguez-Picón, A\BPBI P.%
+, Méndez-González, L\BPBI C.%
+, Rodríguez-Borbón, M\BPBI I.%
+\BCBL {}\ \BBA {} Alvarado-Iniesta, A.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2018}{{\APACmonth{07}}}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Degradation modeling based on gamma process models with
+  random effects} {Degradation modeling based on gamma process models with
+  random effects}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Communications in Statistics - Simulation and
+  Computation}{47}{6}{1796--1810}.
+\newblock
+\begin{APACrefURL}
+  [{2022-11-03}]\url{https://doi.org/10.1080/03610918.2017.1324981}
+  \end{APACrefURL}
+\newblock
+\begin{APACrefDOI} \doi{10.1080/03610918.2017.1324981} \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
 {SAP SE}%
 }{%
 {SAP SE}%
@@ -275,6 +2043,76 @@ sap}%
 \APACrefbtitle {SAP Software Suite.} {Sap software suite.}
 \newblock
 \APAChowpublished {https://www.sap.com}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Si%
+, Wang%
+, Hu%
+\BCBL {}\ \BBA {} Zhou%
+}{%
+Si%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2011}}%
+}]{%
+si2011}
+\APACinsertmetastar {%
+si2011}%
+\begin{APACrefauthors}%
+Si, X\BHBI S.%
+, Wang, W.%
+, Hu, C\BHBI H.%
+\BCBL {}\ \BBA {} Zhou, D\BHBI H.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2011}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Remaining useful life estimation - A review on the
+  statistical data driven approaches} {Remaining useful life estimation - a
+  review on the statistical data driven approaches}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{European Journal of Operational
+  Research}{213}{1}{1-14}.
+\newblock
+\begin{APACrefURL}
+  \url{https://www.sciencedirect.com/science/article/pii/S0377221710007903}
+  \end{APACrefURL}
+\newblock
+\begin{APACrefDOI} \doi{https://doi.org/10.1016/j.ejor.2010.11.018}
+  \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Simpson%
+, Rue%
+, Riebler%
+, Martins%
+\BCBL {}\ \BBA {} S{\o}rbye%
+}{%
+Simpson%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2017}}%
+}]{%
+Simpson_2017}
+\APACinsertmetastar {%
+Simpson_2017}%
+\begin{APACrefauthors}%
+Simpson, D.%
+, Rue, H.%
+, Riebler, A.%
+, Martins, T\BPBI G.%
+\BCBL {}\ \BBA {} S{\o}rbye, S\BPBI H.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2017}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {{Penalising Model Component Complexity: A Principled,
+  Practical Approach to Constructing Priors}} {{Penalising Model Component
+  Complexity: A Principled, Practical Approach to Constructing Priors}}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Statistical Science}{32}{1}{1 -- 28}.
 \PrintBackRefs{\CurrentBib}
 
 \bibitem [\protect \citeauthoryear {%
@@ -299,6 +2137,281 @@ Stan2022}%
   {R}eference {M}anual}{\BBCQ}\ [\bibcomputersoftwaremanual].
 \newblock
 \APACaddressPublisher{https://mc-stan.org}{}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+{Stan Development Team}%
+}{%
+{Stan Development Team}%
+}{%
+{\protect \APACyear {2024}}%
+}]{%
+stan_user_guide2024}
+\APACinsertmetastar {%
+stan_user_guide2024}%
+\begin{APACrefauthors}%
+{Stan Development Team}.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2024}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {{Stan User's Guide, Version 2.34}} {{Stan User's Guide,
+  Version 2.34}}{\BBCQ}\ [\bibcomputersoftwaremanual].
+\newblock
+\begin{APACrefURL}
+  \url{https://mc-stan.org/docs/2_34/stan-users-guide/truncation-censoring.html#censored-data}
+  \end{APACrefURL}
+\newblock
+\APACrefnote{Chapter: Censored Data}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Tian%
+, Lewis-Beck%
+, Niemi%
+\BCBL {}\ \BBA {} Meeker%
+}{%
+Tian%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2024}}%
+}]{%
+tian2024}
+\APACinsertmetastar {%
+tian2024}%
+\begin{APACrefauthors}%
+Tian, Q.%
+, Lewis-Beck, C.%
+, Niemi, J\BPBI B.%
+\BCBL {}\ \BBA {} Meeker, W\BPBI Q.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2024}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Specifying prior distributions in reliability
+  applications} {Specifying prior distributions in reliability
+  applications}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Applied Stochastic Models in Business and
+  Industry}{40}{1}{5-62}.
+\newblock
+\begin{APACrefURL}
+  \url{https://onlinelibrary.wiley.com/doi/abs/10.1002/asmb.2752}
+  \end{APACrefURL}
+\newblock
+\begin{APACrefDOI} \doi{https://doi.org/10.1002/asmb.2752} \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+van Noortwijk%
+}{%
+van Noortwijk%
+}{%
+{\protect \APACyear {2009}}%
+}]{%
+van_noortwijk2009}
+\APACinsertmetastar {%
+van_noortwijk2009}%
+\begin{APACrefauthors}%
+van Noortwijk, J.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2009}{{\APACmonth{01}}}{}.
+\newblock
+{\BBOQ}\APACrefatitle {A survey of the application of gamma processes in
+  maintenance} {A survey of the application of gamma processes in
+  maintenance}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Reliability Engineering \& System
+  Safety}{94}{1}{2--21}.
+\newblock
+\begin{APACrefURL}
+  [{2022-04-18}]\url{https://linkinghub.elsevier.com/retrieve/pii/S0951832007001111}
+  \end{APACrefURL}
+\newblock
+\begin{APACrefDOI} \doi{10.1016/j.ress.2007.03.019} \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Vehtari%
+, Gelman%
+\BCBL {}\ \BBA {} Gabry%
+}{%
+Vehtari%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2017}}%
+}]{%
+Vehtari2017}
+\APACinsertmetastar {%
+Vehtari2017}%
+\begin{APACrefauthors}%
+Vehtari, A.%
+, Gelman, A.%
+\BCBL {}\ \BBA {} Gabry, J.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2017}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Practical {B}ayesian model evaluation using
+  leave-one-out cross-validation and WAIC} {Practical {B}ayesian model
+  evaluation using leave-one-out cross-validation and waic}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Statistics and Computing}{27}{5}{1413--1432}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Vehtari%
+, Gelman%
+, Simpson%
+, Carpenter%
+\BCBL {}\ \BBA {} B{\"u}rkner%
+}{%
+Vehtari%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2021}}%
+}]{%
+Vehtari_2021}
+\APACinsertmetastar {%
+Vehtari_2021}%
+\begin{APACrefauthors}%
+Vehtari, A.%
+, Gelman, A.%
+, Simpson, D.%
+, Carpenter, B.%
+\BCBL {}\ \BBA {} B{\"u}rkner, P\BHBI C.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2021}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {{Rank-Normalization, Folding, and Localization: An
+  Improved $\widehat{R}$ for Assessing Convergence of MCMC (with Discussion)}}
+  {{Rank-Normalization, Folding, and Localization: An Improved $\widehat{R}$
+  for Assessing Convergence of MCMC (with Discussion)}}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Bayesian Analysis}{16}{2}{667 -- 718}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Webb%
+, Sikorska%
+, Khan%
+\BCBL {}\ \BBA {} Hodkiewicz%
+}{%
+Webb%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2020}}%
+}]{%
+webb_2020}
+\APACinsertmetastar {%
+webb_2020}%
+\begin{APACrefauthors}%
+Webb, C.%
+, Sikorska, J.%
+, Khan, R\BPBI N.%
+\BCBL {}\ \BBA {} Hodkiewicz, M.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2020}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Developing and evaluating predictive conveyor belt wear
+  models} {Developing and evaluating predictive conveyor belt wear
+  models}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Data-Centric Engineering}{1}{}{e3}.
+\newblock
+\begin{APACrefDOI} \doi{10.1017/dce.2020.1} \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Whitmore%
+}{%
+Whitmore%
+}{%
+{\protect \APACyear {1995}}%
+}]{%
+whitmore_1995}
+\APACinsertmetastar {%
+whitmore_1995}%
+\begin{APACrefauthors}%
+Whitmore, G.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{1995}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Estimating Degradation By a {W}iener Diffusion Process
+  Subject to Measurement Error} {Estimating degradation by a {W}iener diffusion
+  process subject to measurement error}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Lifetime Data Analysis}{1}{}{307--319}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Wikle%
+, Zammit-Mangion%
+\BCBL {}\ \BBA {} Cressie%
+}{%
+Wikle%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2019}}%
+}]{%
+wikle_2019}
+\APACinsertmetastar {%
+wikle_2019}%
+\begin{APACrefauthors}%
+Wikle, C\BPBI K.%
+, Zammit-Mangion, A.%
+\BCBL {}\ \BBA {} Cressie, N.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYear{2019}.
+\newblock
+\APACrefbtitle {Spatio-{Temporal} {Statistics} with {R}} {Spatio-{Temporal}
+  {Statistics} with {R}}.
+\newblock
+\APACaddressPublisher{New York}{Chapman and Hall/CRC}.
+\newblock
+\begin{APACrefDOI} \doi{10.1201/9781351769723} \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Ye%
+\ \BBA {} Xie%
+}{%
+Ye%
+\ \BBA {} Xie%
+}{%
+{\protect \APACyear {2015}}%
+}]{%
+ye2015}
+\APACinsertmetastar {%
+ye2015}%
+\begin{APACrefauthors}%
+Ye, Z\BHBI S.%
+\BCBT {}\ \BBA {} Xie, M.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2015}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Stochastic modelling and analysis of degradation for
+  highly reliable products} {Stochastic modelling and analysis of degradation
+  for highly reliable products}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Applied Stochastic Models in Business and
+  Industry}{31}{1}{16-32}.
+\newblock
+\begin{APACrefURL}
+  \url{https://onlinelibrary.wiley.com/doi/abs/10.1002/asmb.2063}
+  \end{APACrefURL}
+\newblock
+\begin{APACrefDOI} \doi{https://doi.org/10.1002/asmb.2063} \end{APACrefDOI}
 \PrintBackRefs{\CurrentBib}
 
 \end{thebibliography}

@@ -440,3 +440,6 @@ ft_dist_7_lm <- stan_fit_7_lm %>%
     )
   ) %>%
   collect()
+
+saveRDS(ft_dist_7_gp, "ft-7-obs-gp.rds")
+saveRDS(ft_dist_7_lm, "ft-7-obs-lm.rds")
