@@ -164,55 +164,13 @@ ft_dist_8_gp <- stan_fit_8_gp %>%
       mu = mu, 
       nu = nu,
       phi = unique(phi),
-      limit = 20
+      limit = 25
     )
   ) %>%
   collect()
 
 saveRDS(ft_dist_8_gp, "ft-8-obs-gp.rds")
 
-# FT for nine observations
-
-stan_fit_9_gp <- sampling(
-  stan_model_gp,
-  stan_data,
-  chains = 4,
-  iter = 2000,
-  warmup = 1000,
-  control = list(
-    adapt_delta = 0.999, 
-    max_treedepth = 14
-  )
-)
-
-ft_dist_9_gp <- stan_fit_9_gp %>%
-  as_draws_rvars() %>%
-  spread_draws(
-    mu[m],
-    nu[m],
-    phi,
-    y[i, m]
-  ) %>%
-  filter((i == (9 - 1)) & (`.draw` %in% subset_draws)) %>%
-  mutate(
-    t = stan_data$t[9],
-    y = y * mu
-  ) %>%
-  group_by(`.draw`) %>%
-  partition(cluster) %>%
-  summarise(
-    ft = ftCDFDraw(
-      y_filt_current = y,
-      t_current = t,
-      mu = mu, 
-      nu = nu,
-      phi = unique(phi),
-      limit = 20
-    )
-  ) %>%
-  collect()
-
-saveRDS(ft_dist_9_gp, "ft-9-obs-gp.rds")
 
 ## Linear general path model
 
@@ -315,47 +273,12 @@ ft_dist_8_lm <- stan_fit_8_lm %>%
       t_current = t,
       mu = mu, 
       phi = unique(phi),
-      limit = 20
+      limit = 25
     )
   ) %>%
   collect()
 
 saveRDS(ft_dist_8_lm, "ft-8-obs-lm.rds")
-
-# All 9 observations
-stan_fit_9_lm <- sampling(
-  stan_model_lm,
-  stan_data,
-  chains = 4,
-  iter = 2000,
-  warmup = 1000,
-  control = list(
-    adapt_delta = 0.999, 
-    max_treedepth = 14
-  )
-)
-
-ft_dist_9_lm <- stan_fit_9_lm %>% 
-  as_draws_rvars() %>%
-  spread_draws(
-    mu[m],
-    phi
-  ) %>%
-  filter(`.draw` %in% subset_draws) %>%
-  mutate(t = stan_data$t[9]) %>%
-  group_by(`.draw`) %>%
-  partition(cluster) %>%
-  summarise(
-    ft = ftCDFDraw_lm(
-      t_current = t,
-      mu = mu, 
-      phi = unique(phi),
-      limit = 20
-    )
-  ) %>%
-  collect()
-
-saveRDS(ft_dist_9_lm, "ft-9-obs-lm.rds")
 
 # FT for 7 obse
 
@@ -416,7 +339,7 @@ ft_dist_7_gp <- stan_fit_7_gp %>%
       mu = mu, 
       nu = nu,
       phi = unique(phi),
-      limit = 20
+      limit = 25
     )
   ) %>%
   collect()
@@ -436,10 +359,91 @@ ft_dist_7_lm <- stan_fit_7_lm %>%
       t_current = t,
       mu = mu, 
       phi = unique(phi),
-      limit = 20
+      limit = 25
     )
   ) %>%
   collect()
 
 saveRDS(ft_dist_7_gp, "ft-7-obs-gp.rds")
 saveRDS(ft_dist_7_lm, "ft-7-obs-lm.rds")
+
+
+# FT for nine observations
+
+stan_fit_9_gp <- sampling(
+  stan_model_gp,
+  stan_data,
+  chains = 4,
+  iter = 2000,
+  warmup = 1000,
+  control = list(
+    adapt_delta = 0.999, 
+    max_treedepth = 14
+  )
+)
+
+
+ft_dist_9_gp <- stan_fit_9_gp %>%
+  as_draws_rvars() %>%
+  spread_draws(
+    mu[m],
+    nu[m],
+    phi,
+    y[i, m]
+  ) %>%
+  filter((i == (9 - 1)) & (`.draw` %in% subset_draws)) %>%
+  mutate(
+    t = stan_data$t[9],
+    y = y * mu
+  ) %>%
+  group_by(`.draw`) %>%
+  partition(cluster) %>%
+  summarise(
+    ft = ftCDFDraw(
+      y_filt_current = y,
+      t_current = t,
+      mu = mu, 
+      nu = nu,
+      phi = unique(phi),
+      limit = 20
+    )
+  ) %>%
+  collect()
+
+saveRDS(ft_dist_9_gp, "ft-9-obs-gp.rds")
+
+
+# All 9 observations
+stan_fit_9_lm <- sampling(
+  stan_model_lm,
+  stan_data,
+  chains = 4,
+  iter = 2000,
+  warmup = 1000,
+  control = list(
+    adapt_delta = 0.999, 
+    max_treedepth = 14
+  )
+)
+
+ft_dist_9_lm <- stan_fit_9_lm %>% 
+  as_draws_rvars() %>%
+  spread_draws(
+    mu[m],
+    phi
+  ) %>%
+  filter(`.draw` %in% subset_draws) %>%
+  mutate(t = stan_data$t[9]) %>%
+  group_by(`.draw`) %>%
+  partition(cluster) %>%
+  summarise(
+    ft = ftCDFDraw_lm(
+      t_current = t,
+      mu = mu, 
+      phi = unique(phi),
+      limit = 20
+    )
+  ) %>%
+  collect()
+
+saveRDS(ft_dist_9_lm, "ft-9-obs-lm.rds")

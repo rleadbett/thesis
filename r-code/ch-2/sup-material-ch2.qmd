@@ -1,0 +1,541 @@
+---
+title: "Main analysis ch2"
+format:
+  html:
+    embed-resources: true
+    self-contained-math: true
+editor: source
+cache: false
+warning: false
+message: false
+---
+
+```{r}
+#| label: load-packages
+library(dplyr)
+library(ggplot2)
+library(ggdist)
+library(cowplot)
+library(rstan)
+library(posterior)
+library(tidybayes)
+library(bayesplot)
+
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+```
+
+```{r}
+#| label: define-rtrunc-function
+rTruncNorm <- function(n, mean, sd, lb = NULL, ub = NULL) {
+  # Check if lower bound is supplied & 
+  # calculate lower bound of uniform dist
+  if (!is.null(lb)) {
+    lb_unif <- pnorm((lb - mean) / sd)
+  } else {
+    lb_unif <- 0
+  }
+  if (!is.null(ub)) {
+    ub_unif <- pnorm((ub - mean) / sd)
+  } else {
+    ub_unif <- 1
+  }
+  # Sample from uniform distribution
+  unif_rv <- runif(n, lb_unif, ub_unif)
+  # Probability integral transformation
+  norm_rv <- (qnorm(unif_rv) * sd) + mean
+  
+  return(norm_rv)
+}
+```
+
+```{r}
+#| label: sup-function-prior
+fn <- function(x) {
+  log(-log(1 - x))
+}
+```
+
+```{r}
+#| label: define global data gen parameters
+beta <- 1.1
+eta <- 1
+```
+
+# Informative prior demonstration
+
+Using the methods of keminskey we can encode a joint prior for the Weibull parameters by eliciting information about the CDF. This is much more intuitive than eliciting information about the parameters directly. The result is covariance in the joint posterior that encodes where we are uncertain. This is usefull in cases where the data are uninformative about some areas of the CDF but we do not want to impose a strong prior on the areas that the data are able to inform; for example right censoring masks longer lifetimes and so we can inject information through the joint prior to inform the upper tail of the distribution while still allowing the data to update the lower tail.
+
+```{r}
+pp1s <- c(0.05, 0.4, 0.9)
+pp2s <- c(0.2, 0.6, 0.99)
+sds <- c(0.01, 0.02, 0.01)
+t1s <- lapply(
+  pp1s,
+  function(p) qweibull(p, beta, eta)
+) %>%
+  unlist()
+t2s <- lapply(
+  pp2s,
+  function(p) qweibull(p, beta, eta)
+) %>%
+  unlist()
+
+p_priors <- lapply(
+  1:3,
+  function(i) {
+    n_draws <- 1000
+    x_range <- c(0, 5)
+    res <- 0.1
+    # sample values of cdf
+    samp_t1 <- rTruncNorm(
+      n = n_draws,
+      mean = pp1s[i], sd = sds[i],
+      lb = 0, ub = 1
+    )
+    samp_t2 <- rTruncNorm(
+      n = n_draws,
+      mean = pp2s[i], sd = sds[i],
+      lb = 0, ub = 1
+    )
+    # calculate Weibull parameters
+    beta_sample <- (fn(samp_t2) - fn(samp_t1)) / log(t2s[i] / t1s[i])
+    eta_sample <- exp(log(t1s[i]) - (fn(samp_t1) / beta_sample))
+    # plot joint dist and CDF
+    cdf_grid <- seq(x_range[1], x_range[2], by = res)
+    p_joint <- data.frame(
+      beta = beta_sample,
+      eta = eta_sample
+    ) %>%
+      ggplot() +
+      geom_point(
+        aes(x = beta_sample, y = eta_sample)
+      ) +
+      geom_point(
+        x = beta,
+        y = eta,
+        col = "red"
+      ) +
+      xlim(0, 3) +
+      ylim(0, 3) +
+      xlab(expression(beta)) +
+      ylab(expression(eta)) +
+      theme_minimal()
+    p_cdf <- data.frame(
+      draw = rep(1:n_draws, each = length(cdf_grid)),
+      t = rep(cdf_grid, n_draws)
+    ) %>%
+      mutate(
+        cdf = pweibull(t, beta_sample[draw], eta_sample[draw])
+      ) %>%
+      ggplot() +
+      stat_lineribbon(
+        aes(x = t, y = cdf),
+        .width = c(0.5, 0.8)
+      ) +
+      scale_fill_brewer() +
+      geom_function(
+        fun = pweibull,
+        args = list(shape = beta, scale = eta),
+        colour = "red"
+      ) +
+      theme_minimal() +
+      theme(legend.position = "none")
+      return(
+        list(joint = p_joint, cdf = p_cdf)
+      )
+  }
+)
+
+plot_grid(
+  p_priors[[1]]$joint, p_priors[[2]]$joint, p_priors[[3]]$joint,
+  p_priors[[1]]$cdf, p_priors[[2]]$cdf, p_priors[[3]]$cdf,
+  nrow = 2,
+  ncol = 3,
+  labels = c(
+    "(a)", "(b)", "(c)",
+    "(d)", "(e)", "(f)"
+  ),
+  label_fontfamily = "Times",
+  label_face = "plain"
+)
+```
+
+# Simulating data
+
+```{r}
+#| label: define sim params
+
+N_units <- 10
+t_start <- 5
+t_window <- 1
+t_end <- t_start + t_window
+```
+
+
+```{r}
+#| label: function-datasim
+
+SimData <- function(
+  beta,
+  eta,
+  n_units,
+  t_start,
+  t_end
+){
+  # Calculate how many lifetimes to sample
+  weibull_05_quant <- qweibull(0.05, shape = beta, scale = eta)
+  n_lifetimes_per_unit <- ceiling(t_end / weibull_05_quant) * 2
+
+  # Create simulation data frame
+  small_sim <- data.frame(
+      # Define units
+      unit = factor(
+        rep(1:n_units, each = n_lifetimes_per_unit),
+        1:n_units
+      ),
+      # Sample for Weibull distribution
+      lifetime = rweibull(
+        n_units * n_lifetimes_per_unit,
+        shape = beta,
+        scale = eta
+      )
+    ) %>% 
+    group_by(unit) %>%
+    # Calculate the failure times and install times
+    mutate(
+      failure_time = cumsum(lifetime),
+      install_time = lag(failure_time),
+      lifetime_id = 1:n()
+    ) %>%
+    ungroup() %>%
+    # Replace NAs created by lag() with t = 0
+    replace(is.na(.), 0) %>%
+    # Discard any lifetimes that didn't fail or within the observation period
+    filter(
+      between(install_time, t_start, t_end) |
+      between(failure_time, t_start, t_end) |
+      ((install_time < t_start) & (failure_time > t_end))
+    ) %>%
+    # Create right and interval censoring indicator variables
+    mutate(
+      int_censored = !between(install_time, t_start, t_end),
+      right_censored = !between(failure_time, t_start, t_end),
+      install_time_obs = ifelse(int_censored, t_start, install_time),
+      failure_time_obs = ifelse(right_censored, t_end, failure_time)
+    )
+
+  return(small_sim)
+}
+```
+
+
+```{r}
+#| label: simulate data
+
+set.seed(549)
+sim_df <- SimData(
+  beta = beta,
+  eta = eta,
+  n_units = N_units,
+  t_start = t_start,
+  t_end = t_end
+)
+
+head(sim_df)
+```
+
+
+```{r}
+sim_df_obs <- sim_df %>%
+  filter(!(right_censored | int_censored))
+sim_df_rc <- sim_df %>%
+  filter(right_censored & !int_censored)
+sim_df_lt <- sim_df %>%
+  filter(!right_censored & int_censored)
+sim_df_lt_rc <- sim_df %>%
+  filter(right_censored & int_censored)
+
+stan_data_full <- list(
+  N_obs = nrow(sim_df_obs),
+  N_rc = nrow(sim_df_rc),
+  N_lt = nrow(sim_df_lt),
+  N_lt_rc = nrow(sim_df_lt_rc),
+  y_obs = sim_df_obs$failure_time - sim_df_obs$install_time,
+  y_rc = sim_df_rc$failure_time_obs - sim_df_rc$install_time,
+  y_lt = sim_df_lt$failure_time - sim_df_lt$install_time,
+  t_lt = sim_df_lt$install_time_obs - sim_df_lt$install_time,
+  y_lt_rc = sim_df_lt_rc$failure_time_obs - sim_df_lt_rc$install_time,
+  t_lt_rc = sim_df_lt_rc$install_time_obs - sim_df_lt_rc$install_time
+)
+
+stan_data_no_lt <- list(
+  N_obs = nrow(sim_df_obs),
+  N_rc = nrow(sim_df_rc),
+  y_obs = sim_df_obs$failure_time - sim_df_obs$install_time,
+  y_rc = sim_df_rc$failure_time_obs - sim_df_rc$install_time
+)
+
+stan_data_unkown_lt <- list(
+  N_obs = nrow(sim_df_obs),
+  N_rc = nrow(sim_df_rc),
+  N_lt = nrow(sim_df_lt),
+  N_lt_rc = nrow(sim_df_lt_rc),
+  y_obs = sim_df_obs$failure_time - sim_df_obs$install_time,
+  y_rc = sim_df_rc$failure_time_obs - sim_df_rc$install_time_obs,
+  y_lt = sim_df_lt$failure_time_obs - sim_df_lt$install_time_obs,
+  y_lt_rc = sim_df_lt_rc$failure_time_obs - sim_df_lt_rc$install_time_obs,
+  t_start = t_start
+)
+```
+
+## Stan models
+
+::: panel-tabset
+### Known truncation times
+
+```{r}
+stan_model_lt_r_imputed <- stan_model(
+  model_code = "
+data {
+int N_obs;
+int N_rc;
+int N_lt;
+int N_lt_rc;
+vector<lower=0>[N_obs] y_obs;
+vector<lower=0>[N_rc] y_rc;
+vector<lower=0>[N_lt] y_lt;
+vector<lower=0>[N_lt] t_lt;
+vector<lower=0>[N_lt_rc] y_lt_rc;
+vector<lower=0>[N_lt_rc] t_lt_rc;
+}
+parameters {
+real<lower = 0> beta;
+real<lower = 0> eta;
+vector<lower = y_rc>[N_rc] y_rc_hat;
+vector<lower = y_lt_rc>[N_lt_rc] y_lt_rc_hat;
+}
+model{
+// Data model
+// fully observed lifetimes
+y_obs ~ weibull(beta, eta);
+// right censored lifetimes
+y_rc_hat ~ weibull(beta, eta);
+// left truncated lifetimes
+for (i in 1:N_lt) {
+  y_lt[i] ~ weibull(beta, eta) T[t_lt[i], ]; 
+}
+// left truncated and right censored lifetimes
+for (j in 1:N_lt_rc) {
+  y_lt_rc_hat[j] ~ weibull(beta, eta) T[t_lt_rc[j], ]; 
+}
+
+// Prior model
+eta ~ normal(1, 1);
+beta ~ normal(1.1, 1);
+}
+
+"
+)
+```
+
+### No truncated samples
+```{r}
+stan_model_no_lt <- stan_model(
+  model_code = "
+data {
+int N_obs;
+int N_rc;
+vector<lower=0>[N_obs] y_obs;
+vector<lower=0>[N_rc] y_rc;
+}
+parameters {
+real<lower = 0> beta;
+real<lower = 0> eta;
+}
+model{
+// Data model
+// fully observed lifetimes
+target += weibull_lpdf(y_obs|beta, eta);
+// right censored lifetimes
+target += weibull_lccdf(y_rc|beta, eta);
+
+// Prior model
+eta ~ normal(1, 1);
+beta ~ normal(1.1, 1);
+}
+
+"
+)
+```
+
+### Impute truncation times
+```{r}
+stan_model_unknown_lt_rc <- stan_model(
+  model_code = "
+data {
+int N_obs;                             # N fully observed lives
+int N_rc;                              # N right censored only lives
+int N_lt;                              # N left truncated only lives
+int N_lt_rc;                           # N right cens and left trunc lives
+array[N_obs] real<lower=0> y_obs;      # Fully observed lifetimes
+array[N_rc] real<lower=0> y_rc;        # Right censored lifetimes
+array[N_lt] real<lower=0> y_lt;        # Left trunc lifetimes
+array[N_lt_rc] real<lower=0> y_lt_rc;  # right cens and left trunc lifetimes
+real<lower=0> t_start;                 # start of the observation window
+}
+transformed data{
+array[N_lt] real<lower=0> y_lt_upper;  # The upper bound of the left trunc lives
+
+for (m in 1:N_lt){
+  y_lt_upper[m] = y_lt[m] + t_start;   # Upper bound = lower bound + start of observation
+}
+
+}
+parameters {
+real<lower= 0> beta;     # weibull shape
+real<lower= 0> eta;      # weibull scale
+array[N_rc] real<lower=y_rc> y_rc_hat;   # imputed right censored values
+array[N_lt] real<lower=y_lt, upper=y_lt_upper> y_lt_hat;  # imputed left trunc values
+array[N_lt_rc] real<lower=y_lt_rc> y_lt_rc_hat;   # imputed left trunc and right cens values
+array[N_lt_rc] real<lower=0, upper=1> t_lt_rc_st; # imputed left truncation times for left trunc and right cens values (standardised)
+}
+transformed parameters{
+array[N_lt] real t_lt;  # imputed left trunc times for left trunc values
+array[N_lt_rc] real<lower=0, upper=t_start> t_lt_rc_upper;
+array[N_lt_rc] real<lower=0, upper=t_lt_rc_upper> t_lt_rc;  # imputed left trunc times for left trunc and right cens values
+
+for (i in 1:N_lt) {
+  t_lt[i] = y_lt_hat[i] - y_lt[i];
+}
+
+for (k in 1:N_lt_rc){
+  if ((y_lt_rc_hat[k] - y_lt_rc[k]) < t_start)
+    t_lt_rc_upper[k] = y_lt_rc_hat[k] - y_lt_rc[k];
+  else
+    t_lt_rc_upper[k] = t_start;
+
+  t_lt_rc[k] = t_lt_rc_st[k] * t_lt_rc_upper[k];
+}
+}
+model{
+// Data model
+// fully observed lifetimes
+y_obs ~ weibull(beta, eta);
+// right censored lifetimes
+y_rc_hat ~ weibull(beta, eta);
+// left truncated lifetimes
+for (i in 1:N_lt) {
+  y_lt_hat[i] ~ weibull(beta, eta) T[t_lt[i], ]; 
+}
+// left truncated and right censored lifetimes
+for (j in 1:N_lt_rc) {
+  y_lt_rc_hat[j] ~ weibull(beta, eta) T[t_lt_rc[j], ]; 
+}
+
+// Prior model
+eta ~ normal(1, 1);
+beta ~ normal(1.1, 1);
+t_lt_rc_st ~ uniform(0, 1);
+}
+
+"
+)
+```
+:::
+
+## Sampling
+
+::: panel-tabset
+### Known truncation times
+```{r}
+#| label: fit-full-model
+stan_fit_lt_r_imputed <- sampling(
+  stan_model_lt_r_imputed,
+  stan_data_full,
+  chains = 4,
+  cores = 1,
+  iter = 1000,
+  warmup = 500
+)
+```
+
+### No truncated samples
+```{r}
+#| label: fit-no-lt-model
+stan_fit_no_lt <- sampling(
+  stan_model_no_lt,
+  stan_data_no_lt,
+  chains = 4,
+  cores = 1,
+  iter = 1000,
+  warmup = 500
+)
+```
+
+### Impute truncation times
+```{r}
+#| label: fit-imp-lt-model
+stan_fit_unknown_lt_rc <- sampling(
+  stan_model_unknown_lt_rc,
+  stan_data_unkown_lt,
+  chains = 4,
+  cores = 1,
+  iter = 1000,
+  warmup = 500
+)
+```
+:::
+
+
+```{r}
+#| label: function-plot-cdf-post
+PlotPostCDF <- function(stan_fit, x_range = c(0, 5), res = 0.05) {
+  grid <- seq(x_range[1], x_range[2], 0.01)
+  p_cdf <- stan_fit %>%
+    as_draws_df() %>%
+    select(beta, eta) %>%
+    split(., seq(nrow(.))) %>%
+    lapply(
+      function(draw) {
+        df_CDF <- data.frame(
+          q = grid,
+          p = pweibull(grid, draw$beta, draw$eta)
+        )
+        return(df_CDF)
+      }
+    ) %>%
+    bind_rows() %>%
+    ggplot() +
+    stat_lineribbon(
+      aes(x = q, y = p),
+      .width = c(0.5, 0.8, 0.98)
+    ) +
+    scale_fill_brewer() +
+    geom_function(
+      fun = pweibull,
+      args = list(shape = beta, scale = eta),
+      colour = "red"
+    ) +
+    theme_minimal()
+    return(p_cdf)
+}
+```
+
+```{r}
+p_full <- stan_fit_lt_r_imputed %>%
+  mcmc_scatter(pars = c("beta", "eta"))
+p_no_lt <- stan_fit_no_lt %>%
+  mcmc_scatter(pars = c("beta", "eta"))
+p_imp_lt <- stan_fit_unknown_lt_rc %>%
+  mcmc_scatter(pars = c("beta", "eta"))
+
+plot_grid(
+  p_full, p_no_lt, p_imp_lt,
+  nrow = 1,
+  ncol = 3
+)
+
+PlotPostCDF(stan_fit_lt_r_imputed)
+```
+

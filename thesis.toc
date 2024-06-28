@@ -73,14 +73,14 @@
 \contentsline {section}{\numberline {6.5}Forecasting degradation curves}{137}{section.6.5}%
 \contentsline {section}{\numberline {6.6}Comparison of methods}{138}{section.6.6}%
 \contentsline {section}{\numberline {6.7}Failure time distributions}{143}{section.6.7}%
-\contentsline {section}{\numberline {6.8}Discussions}{145}{section.6.8}%
-\contentsline {chapter}{\numberline {7}Discussions}{149}{chapter.7}%
-\contentsline {section}{\numberline {7.1}Overview and discussions}{149}{section.7.1}%
-\contentsline {section}{\numberline {7.2}Strengths and limitations}{149}{section.7.2}%
-\contentsline {section}{\numberline {7.3}Future directions}{149}{section.7.3}%
-\contentsline {section}{\numberline {7.4}Implications for industry practitioners}{149}{section.7.4}%
-\contentsline {chapter}{Appendices}{151}{section*.109}%
-\contentsline {chapter}{\numberline {A}Appendix Title}{153}{appendix.a.A}%
+\contentsline {section}{\numberline {6.8}Discussions}{146}{section.6.8}%
+\contentsline {chapter}{\numberline {7}Discussions}{151}{chapter.7}%
+\contentsline {section}{\numberline {7.1}Overview and discussions}{151}{section.7.1}%
+\contentsline {section}{\numberline {7.2}Strengths and limitations}{151}{section.7.2}%
+\contentsline {section}{\numberline {7.3}Future directions}{151}{section.7.3}%
+\contentsline {section}{\numberline {7.4}Implications for industry practitioners}{151}{section.7.4}%
+\contentsline {chapter}{Appendices}{153}{section*.109}%
+\contentsline {chapter}{\numberline {A}Appendix Title}{155}{appendix.a.A}%
 \setcounter {tocdepth}{1}
-\contentsline {chapter}{\numberline {B}Copyright Information}{155}{appendix.a.B}%
-\contentsline {chapter}{References}{157}{appendix*.110}%
+\contentsline {chapter}{\numberline {B}Copyright Information}{157}{appendix.a.B}%
+\contentsline {chapter}{References}{159}{appendix*.110}%
