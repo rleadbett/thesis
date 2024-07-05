@@ -1086,6 +1086,7 @@ INPUT ./figures/left_truncation_w_right_censoring_example.pdf
 INPUT ./figures/left_truncation_w_right_censoring_example.pdf
 INPUT ./figures/left_truncation_w_right_censoring_example.pdf
 INPUT ./figures/left_truncation_w_right_censoring_example.pdf
+INPUT c:/texlive/2022/texmf-dist/fonts/tfm/public/cm/cmtt12.tfm
 INPUT ./figures/sim_data_desc.pdf
 INPUT ./figures/sim_data_desc.pdf
 INPUT ./figures/sim_data_desc.pdf
@@ -1276,7 +1277,6 @@ INPUT ./tables/ch-5/cv_elppd_table.tex
 INPUT ./tables/ch-5/cv_elppd_table.tex
 INPUT ./tables/ch-5/cv_elppd_table.tex
 INPUT ./tables/ch-5/cv_elppd_table.tex
-INPUT c:/texlive/2022/texmf-dist/fonts/tfm/public/cm/cmtt12.tfm
 INPUT ./figures/ch-5/FT_dist.pdf
 INPUT ./figures/ch-5/FT_dist.pdf
 INPUT ./figures/ch-5/FT_dist.pdf
@@ -1458,6 +1458,7 @@ INPUT c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb
 INPUT c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb
 INPUT c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb
 INPUT c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb
+INPUT c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb
 INPUT c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb
 INPUT c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb
 INPUT c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmti8.pfb

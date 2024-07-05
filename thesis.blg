@@ -25,10 +25,11 @@ Reallocated singl_function (elt_size=4) to 100 items from 50.
 Database file #1: references.bib
 Warning--I didn't find a database entry for ""
 Warning--I didn't find a database entry for "heckman1986"
+Warning--I didn't find a database entry for "Krivtsov"
 apacite.bst [2013/07/21 v6.03 APA bibliography style]
 You've used 82 entries,
             6951 wiz_defined-function locations,
-            1806 strings with 26905 characters,
+            1808 strings with 26921 characters,
 and the built_in function-call counts, 164743 in all, are:
 = -- 20379
 > -- 1359
@@ -67,4 +68,4 @@ warning$ -- 0
 while$ -- 865
 width$ -- 0
 write$ -- 2727
-(There were 2 warnings)
+(There were 3 warnings)

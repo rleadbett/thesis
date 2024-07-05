@@ -9,7 +9,6 @@ Incompleteness of a dataset due to censoring and truncation increase uncertainty
 In this chapter of the thesis, I show how right censored and left-truncated lifetimes with unknown exposure history can be handled using fully a Bayesian treatment, and how the methods of \citet{kaminskiy2005} for developing a joint prior for the two parameters of the Weibull distribution can be incorporated into the model to supplement the analysis with additional sources of information and hence "fill in the gaps" left by the incomplete lifetime data. In this chapter I demonstrate the proposed methods using fictitious lifetime data simulated from known parameter values in a way that emulates the idler frame lifetime data to show that the method is capable of reclaiming the true parameter values. In the next chapter, I apply the method to the real idler frame dataset, and show how the fully Bayesian treatment has advantages for... (Follow Meekers paper on the transformers.)
 
 In the remainder of this chapter is structured\ldots
-
 \begin{itemize}
     \item Background on Weibull lifetime, censoring, left-truncation, left-truncation with unknown exposure history, constructing a joint prior.
     \item Demonstrate through simulation that the method accounts for the incompleteness of the data without introducing much bias.
@@ -24,53 +23,31 @@ Lifetime analysis, also called survival analysis, is the analysis of failure tim
 \subsection{Lifetime distribution}
 
 The lifetimes of the units are modelled as a random variable defined in terms of $t$, the exposure time, on $[0, \infty)$. $t$ is some continuous or discrete exposure time from a clearly defined origin, the installation of the component, to a well defined event, the failure of the component. In reliability analysis, the exposure is typically absolute time, the operating time of the unit, or cycles of operation. In this analysis I use absolute time since operating time was not available. Next, a specific parametric lifetime distribution is chosen for the random variable $t$, $p(t|\theta)$, expressed as the probability density function (PDF) and the parameters of the lifetime distribution are estimated from the data. Once the estimates are obtained, different specifications of the lifetime distribution can be used to draw useful insights in order to inform decisions:
-
 \begin{itemize}
     \item \textbf{Cumulative distribution function} (CDF), $F(t)$, it the probability that a unit will have failed by time $T$, i.e. $P(t <= T)$. It is also sometimes called the cumulative risk function.
     \item \textbf{Survival function}, $S(t)$, is the complement of the CDF and defines the probability of a unit surviving up to an exposure time $t$.
     \item \textbf{Hazard function}, $h(t)$, which is the instantaneous failure rate, i.e. the probability that given a unit has survived up to time $T$ it will fail in the next small interval.
 \end{itemize}
-
 For example, the CDF quantifies the risk of unplanned failures given a chosen preventative maintenance interval, and the Hazard function identifies if a units risk of failure increases as it ages and therefore if a preventative maintenance strategy is even suitable at all.
 
 \subsection{The Weibull distribution}
 
 In the analysis that follows, I use the Weibull distribution to model the idler frame lifetimes, that is
-
 \begin{equation}
     y|\beta, \eta \sim \hbox{Weibull}(\beta, \eta),
 \end{equation}
-
 where $\beta$ is the shape parameter and $\eta$ is the scale. The Weibull distribution is a commonly used lifetime distribution because of its ability to capture an increasing, constant, or decreasing risk of failure. In addition, the weibull distribution is the limiting distribution for the minimum value in a sample when the sample space is lower bounded; such as lifetimes, which must be greater than zero. This characteristic of the weibull distribution gives it a convenient interpretation in component reliability; the lifetime of a unit is the time of the first occurring catastrophic failure mode of the unit. In my analysis that follows, I use the coupled parameterization of the two-parameter Weibull distribution, which has PDF
-
 \begin{equation}
     f(t) = \frac{\beta}{\eta}\left(\frac{t}{\eta}\right)^{\beta - 1} \exp^{-\left(\frac{t}{\eta}\right)^{\beta}},
 \end{equation}
-
 CDF
-
 \begin{equation}
     F(t) = 1 - \exp^{-\left(\frac{t}{\eta}\right)^{\beta}},
 \end{equation}
-
 and hazard function
-
 \begin{equation}
     h(t) = \frac{\beta}{\eta}\left(\frac{t}{\eta}\right)^{\beta - 1}.
 \end{equation}
-
-%When specifying independent priors in \textit{section}~\ref{} we use the alternative, uncoupled, parameterization where $\lambda = 1 / \eta^{\beta}$. The uncoupled parameterisation has PDF
-%
-%\begin{equation}
-%    f(t) = \beta \lambda t^{\beta - 1} \exp^{-\lambda t^{\beta}},
-%\end{equation}
-%
-%and CDF
-%
-%\begin{equation}
-%    f(t) = 1 - \exp^{-\lambda t^{\beta}}.
-%\end{equation}
-%
 The shape parameter $\beta$ dictates whether the hazard increases, $\beta > 1$, decreases, $\beta < 1$, or stays constant, $\beta = 1$. The effect of the shape parameter on the hazard function is demonstrated in \textit{Figure}~\ref{fig:hazard_function_demo}. Practically speaking, if the hazard function increases with exposure, then this corresponds to a wear out failure mechanism, where as if it decreases then this corresponds to infant mortality. This is important from a maintenance perspective because if the component does not wear out, then preventative replacement policy is not suitable \citep{jardine2013}. In other words, we want to be sure that $\beta > 1$ before implementing a preventative policy.
 
 \begin{figure}[h]
@@ -92,29 +69,23 @@ It is very common for lifetime data to be censored. Censoring occurs when we onl
 \end{figure}
 
 One way of handling censored data is to treat the censored lifetimes as missing data, which in a Bayesian framework is to treat them as a random variable in the model \citep[p.211]{reich2019}, and constrain their values to fall within the upper and lower censoring bounds \citep{stan_user_guide2024}. This is easily done in probabilistic programming languages like Stan. Treating the missing data as random variables in the model requires us to specify a distribution for the censored lifetimes, which we assume is the same distribution as the rest of the population,
-
 \begin{equation}
     \label{eq:impute-cens}
     y^C_i|\beta, \eta \sim \hbox{Weibull}^{t^{\hbox{\tiny{Upper}}}_i}_{t^{\hbox{\tiny{Lower}}}_i}(\beta, \eta).
 \end{equation}
-
-\noindent Here $y^C_i$ is an unobserved censored lifetimes, and the superscript $t^{\hbox{\tiny{Upper}}}$ and subscript $t^{\hbox{\tiny{Lower}}}$ indicate that the distribution is constrained by the upper and lower censoring times. Once the missing lifetimes have been imputed, the likelihood of the observed and imputed lifetimes can be calculated in the same way as a typical lifetime dataset with no censoring. This approach of imputing the censored lifetimes is not unique to Bayesian methods. The same can be done using an Expectation Maximisation algorithm and maximum likelihood \citep{mitra2013}. However, using the Bayesian approach, along with MCMC methods, it is very simple to derive uncertainty intervals for the parameters, imputed values, and useful quantities.
+Here $y^C_i$ is an unobserved censored lifetimes, and the superscript $t^{\hbox{\tiny{Upper}}}$ and subscript $t^{\hbox{\tiny{Lower}}}$ indicate that the distribution is constrained by the upper and lower censoring times. Once the missing lifetimes have been imputed, the likelihood of the observed and imputed lifetimes can be calculated in the same way as a typical lifetime dataset with no censoring. This approach of imputing the censored lifetimes is not unique to Bayesian methods. The same can be done using an Expectation Maximisation algorithm and maximum likelihood \citep{mitra2013}. However, using the Bayesian approach, along with MCMC methods, it is very simple to derive uncertainty intervals for the parameters, imputed values, and useful quantities.
 
 An alternative approach is to simply integrate out the censored observations. The probability that a censored observation falls between the upper and lower censoring times is
-
 \begin{equation}
     \label{eq:integrate-out-cens}
     Pr\left[t^{\hbox{\tiny{Lower}}} < y^C_i \leq t^{\hbox{\tiny{Upper}}}\right] = \int_{t^{\hbox{\tiny{Lower}}}}^{t^{\hbox{\tiny{Upper}}}} f\left(y^C_i\right) d y^C_i = F\left(t^{\hbox{\tiny{Upper}}}\right) - F\left(t^{\hbox{\tiny{Upper}}}\right).
 \end{equation}
-
-\noindent By integrating out the censored observations, the likelihood can be written as
-
+By integrating out the censored observations, the likelihood can be written as
 \begin{equation}
     \label{eq:censored_likelihood}
     L\left(\theta|y^O, t^{\hbox{\tiny{Upper}}}, t^{\hbox{\tiny{Lower}}}\right) = \prod^{N^O}_{i = 1}f(y^O_i) \prod^{N^C}_{j = 1}\left[F(t^{\hbox{\tiny{Upper}}}_j) - F(t^{\hbox{\tiny{Lower}}}_j)\right],
 \end{equation}
-
-\noindent where $\theta$ are the parameters of the lifetime distribution, $N^O$ and $N^C$ are the number of fully observed and censored observations respectively, and $y^O_i$ are the fully observed lifetime. This second approach is much more commonly used, particularly in the reliability literature (). However, as I show later, for the particular problem when data are also left-truncated with unknown installation times, it is convenient to frame the model in the form of the first imputation approach.
+where $\theta$ are the parameters of the lifetime distribution, $N^O$ and $N^C$ are the number of fully observed and censored observations respectively, and $y^O_i$ are the fully observed lifetime. This second approach is much more commonly used, particularly in the reliability literature (). However, as I show later, for the particular problem when data are also left-truncated with unknown installation times, it is convenient to frame the model in the form of the first imputation approach.
 
 \subsection{Left-truncation}
 
@@ -128,13 +99,11 @@ Truncation arises when a sample comes from an incomplete population, or in other
 \end{figure}
 
 In \textit{Figure}~\ref{fig:left_trunc_example}, units that were installed prior to $t_{\hbox{start}}$ come from a left-truncated distribution since any other unit that was installed at the same time but did not last until $t_{\hbox{start}}$ are not included in the sample. The left-truncated cases caused by the start of the observation period (units three, four, five, and seven in \textit{Figure}~\ref{fig:left_trunc_example}) tend to over-represent low-risk cases since any high risk case installed at the same time is absent from the sample \citep{guo1993}. Observations that arise from a left-truncated distribution can be included in the analysis by re-normalising their lifetime distribution by dividing by the probability of surviving past the truncation time;
-
 \begin{equation}
     \label{eq:left_trunc}
     L\left(\theta|y^T_i\right) = \frac{f\left(y^T_i\right)}{1 - F\left(\tau^{\hbox{\tiny{Left}}}_i\right)},
 \end{equation}
-
-\noindent where $y^T_i$ is the left-truncated lifetime, and $\tau^{\hbox{\tiny{Left}}}_i$ is the truncation time.
+where $y^T_i$ is the left-truncated lifetime, and $\tau^{\hbox{\tiny{Left}}}_i$ is the truncation time.
 
 \subsection{Left-truncation and right-censoring} 
 
@@ -148,28 +117,22 @@ A common scenario in reliability datasets is a combination of both left-truncati
 \end{figure}
 
 \citet{hong2009} shows how a likelihood for data that is left-truncated and right-censored can be constructed using the general approach of integrating out the censored observations,
-
 \begin{equation}
     \label{eq:left_trunc_and_right_cens_int}
     L\left(\theta|y^O, t^{\hbox{\tiny{Lower}}}, \tau^L_i\right) = \prod^{N^O}_{i = 1}\left[\frac{f(y^O_i)}{1 - F(\tau^L_i)} \right] \prod^{N^C}_{j = 1}\left[\frac{1 - F(t^{\hbox{\tiny{Lower}}}_j)}{1 - F(\tau^L_j)}\right],
 \end{equation}
-
-\noindent where $\tau^L$ are the truncation times and if the lifetime is not truncated $\tau^L = 0$. \citet{kundu2016} then implements the same approach in a Bayesian framework using a gibbs sampling algorithm to draw samples from the posterior. \citet{mitra2013} takes the alternative approach of imputing the censored lifetimes using an expectation maximisation algorithm and the complete data likelihood
-
+where $\tau^L$ are the truncation times and if the lifetime is not truncated $\tau^L = 0$. \citet{kundu2016} then implements the same approach in a Bayesian framework using a gibbs sampling algorithm to draw samples from the posterior. \citet{mitra2013} takes the alternative approach of imputing the censored lifetimes using an expectation maximisation algorithm and the complete data likelihood
 \begin{equation}
     \label{eq:left_trunc_and_right_cens_imp}
     L\left(\theta|y^O, \hat{y}^C, \tau^L_i\right) = \prod^{N^O}_{i = 1}\left[\frac{f(y^O_i)}{1 - F(\tau^L_i)} \right] \prod^{N^C}_{j = 1}\left[\frac{f(\hat{y}^C_j)}{1 - F(\tau^L_j)}\right],
 \end{equation}
-
-\noindent where the $\hat{y}^C_j$ are the imputed values of the censored observations. I express the same approach as \ref{eq:left_trunc_and_right_cens_imp} in a Bayesian framework as
-
+where the $\hat{y}^C_j$ are the imputed values of the censored observations. I express the same approach as \ref{eq:left_trunc_and_right_cens_imp} in a Bayesian framework as
 \begin{align*}
     y^O_i|\beta, \eta & \sim \hbox{Weibull}(\beta, \eta) \quad T[\tau^L_i, ]\\
     y^C_j|\beta, \eta & \sim \hbox{Weibull}_{t^{\hbox{\tiny{Lower}}}_j}(\beta, \eta) \quad T[\tau^L_j, ] \\
     \beta, \eta & \sim \pi(\theta_{\beta, \eta}),
 \end{align*}
-
-\noindent where $\hbox{Weibull}_{t^{\hbox{\tiny{Lower}}}_j}$ indicates that the random variable $y^C_j$ has a Weibull distribution and is constrained to be greater than the censoring time, and $T[\tau^L, ]$ indicates that the distributions are re-normalised by the probability $P(y > \tau^L)$ (Note: I stole this notation from the stan code). For the moment, I express a joint prior for the parameters in its most general form.
+where $\hbox{Weibull}_{t^{\hbox{\tiny{Lower}}}_j}$ indicates that the random variable $y^C_j$ has a Weibull distribution and is constrained to be greater than the censoring time, and $T[\tau^L, ]$ indicates that the distributions are re-normalised by the probability $P(y > \tau^L)$ (Note: I stole this notation from the stan code). For the moment, I express a joint prior for the parameters in its most general form.
 
 \paragraph{Unknown truncation time}
 
@@ -181,26 +144,52 @@ I show how treating the unknown installation times as a case of censoring and us
 \section{Imputing truncation times}
 
 Using the toy example in \textit{Figure}~\ref{fig:left_trunc_and_right_cens_example}, say we do not observe any of the installation or failure times to the left of $t_\text{start}$. In this case, we know that the first, partially, observed lifetime from each unit started some time between $t = 0$ and $t = t_\text{start}$. This is a case of interval censoring, where the lower censoring bound is the time from the beginning of observation to the failure time and the upper bound is from $t = 0$ to the failure time. If we did not know the origin time $t = 0$ with respect to $t = t_\text{start}$ then it would be a case of right censoring, but the following logic would still apply. Let $t^{\text{failure}}_{i}$ be the failure time of the $i^{th}$ observation. Treating the observations as interval censored, the left-truncated lifetime can be imputed as in \textit{Section}~\ref{} by sampling from
-
 \begin{equation}
     \hat{y}^L_i|\beta, \eta ~ \hbox{Weibull}^{t^{\text{failure}}_{i}}_{t^{\text{failure}}_{i} - t_\text{start}}(\beta, \eta).
 \end{equation}
-
-\noindent Using the imputed values of the lifetime it is then possible to calculate the truncation time by
-
+Using the imputed values of the lifetime it is then possible to calculate the truncation time by
 \begin{equation}
     \tau^L_i = \hat{y}^L_i - \left(t^{\text{failure}}_{i} - t_\text{start}\right).
 \end{equation}
 
 A complication arises when the lifetime is both interval censored by the start of the observation period and right censored by the end, such as unit one in \textit{Figure}~\ref{fig:left_trunc_and_right_cens_example}. In this case the truncation times value is unknown but is between $\tau^L = 0$ and $\tau^L = \min\left(t_\text{start}, \hat{y}^L_i - (t_\text{end} - t_\text{start})\right)$. Since we have no reason to expect that the truncation time is not uniform, we can impute the truncation time using the uniform distribution
-
 \begin{equation}
     \tau^L_i ~ \hbox{Uniform}(0, \min\left(t_\text{start}, \hat{y}^L_i - (t_\text{end} - t_\text{start})\right)).
 \end{equation}
-
-\noindent Sampling the value of $\tau^L_i$ in this way incorporates the extra uncertainty in our Bayesian estimates
+Sampling the value of $\tau^L_i$ in this way incorporates the extra uncertainty in our Bayesian estimates
 
 \section{Informative joint prior}
+
+In cases where data only provide partial information, such as lifetime data where some lifetimes are masked by censoring, informative priors can help to `fill in the gaps' and inform areas of the model that the data cannot. For example, right censoring masks the upper tail of the lifetime distribution, and if there are no observed failures beyond some censoring time then the data do not contain any information that informs this upper tail of the lifetime. This is clear in Section~\ref{} when I fit a Weibull distribution to censored lifetimes after discarding any truncated lifetimes. An added motivation for using an informative prior in these cases is that non-informative priors can place mass in unreasonable parts of the parameter space and when combined with a week likelihood, this leads to spurious parameter estimates \citep{tian2024}.
+
+\citet{kaminskiy2005} proposes a method for encoding an informative joint prior for the two parameters of the Weibull distribution by eliciting information about cross sections of the weibull CDF. In the proposed method, the analyst provides their expected value of the CDF at two exposure times, $t_1$ and $t_2$, and their level of uncertainty around these estimates. The pair of estimate and uncertainty level at each exposure time $(\mu_{\hat{F}_{t_i}}, \sigma_{\hat{F}_{t_i}})$ are encoded as the mean and standard deviation of a beta distribution. By then sampling realisations of the CDF at each exposure time from the two distributions, ensuring that $\hat{F}_{t_1} < \hat{F}_{t_2}$, the parameters of the Weibull CDF that passes through the two realisations can be calculated to obtain a draw from the informative joint prior. \citet{kaminskiy2005} then show how to obtain a Bayesian point estimate of the CDF at some new exposure time where binomial failure data are available by first calculating the parameters of a new beta distribution that describes the CDF at the new exposure time using the joint prior draws and then updating the parameter estimates with the data, taking advantage of the beta-binomial conjugacy.
+
+The method that \citet{kaminskiy2005} propose to obtain joint draws from an informative prior for the two weibull parameters falls under the recommendations of \citet{gelman_workflow_2020}, who suggest to elicit information on the outcome space---which is more familiar to partitioners---and then translate this information into an informative prior also that indirectly describes how the parameters should be allowed to covary with one another. An alternative method proposed by \citep{Meeker2022} to elicit an informative prior for the Weibull parameters is to reparameterise the distribution in terms of the shape $\beta$ and some quantile, $p_r$, of the distributions and then specify independent priors for $\beta$ and $p_r$. Both methods have proven to be useful in practice and been implemented in reliability software due to their usability \citep{Krivtsov}. However, it can be difficult to elicit information about $\beta$ for practitioners not very familiar with Weibull analysis. Therefore, I use a variation of \citeauthor{kaminskiy2005}s method for obtaining draws from a joint informative prior for the Weibull parameters and build upon their method by showing\ldots
+\begin{itemize}
+    \item Need to discuss Krivtsov's development of \citet{kaminskiy2005} somewhere\ldots
+\end{itemize}
+
+In their proposed procedure, the prior is updated with the data using the conjugacy of the binomial likelihood and beta prior for the CDF at the new exposure time $t_3$. Doing so only provides point estimates of the updated parameter values of the beta distribution at $t_3$. To obtain corresponding values of the Weibull parameters, the analyst must once again sample paris of realisations along the CDF---now at either $t_3$ and $t_1$ or $t_3$ and $t_2$---and calculate the parameters of the Weibull CDF that passes through the two points. In doing so they `reuse' the prior distribution at either $t_1$ or $t_2$ to generate the posterior and so the `prior belief' about the CDF at which ever time is used is not really updated at all. Furthermore, the resulting joint draws will be sensitive to weather $t_1$ or $t_2$ is used to regenerate the joint distribution of the Weibull parameters. By instead implementing the method for obtaining draws from the joint prior within the HMC sampling algorithm, I show how to properly filter the prior through the likelihood to obtain the full posterior. Doing so also means that the prior can be updated with detailed lifetime data(i.e. failure times rather than binomial trial data), censoring and truncation information can be included in the likelihood, and the resulting full posterior contains proper uncertainty quantification. 
+
+Rather than beta distributions, I use normal distribution truncated between zero and one to encode prior belief about the CDF at $t_1$ and $t_2$. This is because when specifying prior information close to the boundary, for example if our estimate of the cdf is $0.95$ or $0.05$, with reasonable uncertainty surrounding the estimate, a beta distribution places lot of mass very close to zero or one which causes numerical issues during sampling. Truncated normal distributions are much better behaved. The prior can be expressed as
+\begin{align*}
+    \hat{F}_{t_1} \sim & \hbox{N}^{1}_{0}(\mu_{\hat{F}_{t_1}}, \sigma_{\hat{F}_{t_1}})             \\
+    \hat{F}_{t_2} \sim & \hbox{N}^{1}_{\hat{F}_{t_1}}\left(\mu_{\hat{F}_{t_1}}, \sigma_{\hat{F}_{t_1}}\right) \\
+    \beta            = & \frac{g(\hat{F}_{t_2}) - g(\hat{F}_{t_1})}{\log(t_1 / t_2)}               \\
+    \eta             = & \exp\left[\log(t_1) - \frac{\hat{F}_{t_1}}{\beta}\right]
+\end{align*}
+where $g(\hat{F}) = \log(-\log(1 - \hat{F}))$ and the superscript and subscripts on the normal distribution indicate the upper and lower constraints of the support.
+
+Depending on the choice of $t_1$ and $t_2$ the analyst encodes different information into the joint prior, which is reflected in how the two parameters covary with one another. For demonstration, plots (a), (b), and (c) in Figure~\ref{fig:kaminskiy-join-priors} show the draws from three different joint priors constructed using this elicitation method. To construct the prior, I specify some `true' values of the parameters $(\beta = 1.1; \eta = 1)$ and then specify the priors to reflect the true value of the CDF at different quantiles $t_i = p_r$ so that all of the priors contain the `true' parameter values. (a) shows a prior where information is encoded at early exposure times ($t_1 = p_{0.05}$ and $t_2 = p_{0.20}$), (b) shows one where information is encoded at times around the median age ($t_1 = p_{0.40}$ and $t_2 = p_{0.60}$), and (c) shows one where the elicitation times are in the upper tail of the lifetime distribution($t_1 = p_{0.90}$ and $t_2 = p_{0.99}$). Plots (d), (e), and (f) in Figure~\ref{fig:kaminskiy-join-priors} show the corresponding uncertainty around the Weibull CDF that results from the different priors in (a), (b), and (c) respectively. We see that the joint prior allows us to express our prior belief in one area of the PDF while allowing the prior to be vague in others. This characteristic has useful application in the context of heavy censoring since censoring masks longer lifetimes and hence increases uncertainty in the upper tail of the distribution, but still contains useful information in the lower tail.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\textwidth, draft]{./figures/ch-2/joint-priors.pdf}
+    \caption{}
+    \label{fig:kaminskiy-join-priors}
+\end{figure}
+
+In this chapter, I compare the informative joint prior shown in Figure~\ref{fig:kaminskiy-join-priors}~(c) and~(f), which encodes information in the upper tail, with the vague independent priors $\beta \sim \hbox{N}^{+}(1.1, 1)$ and $\eta \sim \hbox{N}^{+}(1, 1)$, where the superscript $(+)$ indicates that the prior is truncated to be positive. 
 
 \section{Analysis of simulated data}
 
@@ -219,55 +208,31 @@ In order to simulate the data generating process of the idler frames, I sample $
 
 \input{./tables/sim_data_head.tex}
 
-\subsection{Bias in results}
+\subsection{Weakly informative prior}
 
-Do demonstrate the bias caused by heavy censoring of the lifetime data, I first demonstrate with the empirical kaplan-mayer approach and fitting the censored weibull model by maximizing the likelihood in \ref{eq:weibull_likelihood}. When fitting the model via MLE I look at two cases; the first where all censored data are treated as right censored (i.e. if I didn't specify an upper bound of the interval censored data); and the second where the intercal censored data is treated properly by defining an upper bound for the lifetimes. This comparison is made purely for demonstration. I then fit the Bayesian equivalent to the MLE, which is the Weibull model with non-informative independent priors on the parameters $\beta$ and $\eta$. I fit both versions of the Bayesian Weibull model. 
+Fit the models with a weak prior to a small data set to demonstrate the reduction in uncertainty when I either directly include or impute the truncation times compared to when I throw away all truncated lifetimes.
+\begin{itemize}
+    \item Include truncation times.
+    \item Discard truncation times.
+    \item Impute truncation times.
+\end{itemize}
 
-\paragraph*{MLE}
+\subsection{Strongly informative prior}
 
-- Say we are unsure about defining an upper bound for the interval censored lifetimes and we treat them as right censored; the upper bound is infinite. Th
+Now show the result of using a well constructed informative joint prior. There is a great improvement in the posterior where I've thrown out the left truncated samples, but only a slight improvement in the case where the left truncated samples were either directly included or imputed.
 
-- Fit the Weibull model w/ MLE and Bayesian non-informative independent priors.
+\subsection{Strong likelihood}
 
-- Plot the joint density of the parameters from the Bayesian posterior and overlay the true values and MLE estimate.
+When there are many data, and the window is short, there are many lifetimes that are both left truncated, with unknown exposure history, and right censored. In these cases the estimate can be bias. I think this occurs when $t_start$ is not sufficiently far from $t = 0$ for the uniform entry assumption to be valid.
 
-- Show the estimated CDF's with the true CDF and the "true" sample values (i.e. uncensored observations).
+\section{Simulation experiments}
 
-- Add small simulation to show that this is not a one off...
+\subsection{Factor levels}
 
-\paragraph*{Noninformative Bayesian model}
+\subsection{Accuracy measures}
 
-The priors are sufficiently vague that they encode vary little information into the model. Therefore making the results roughly equivalent to the MLE.
+\subsection{Results}
 
-\section{Informative Bayesian analysis}
-
-How can informative priors help us in this case?
-
-\paragraph*{Independent}
-
-Construction of independent priors.
-
-\paragraph*{Joint}
-
-There is some work on bias correction:
-%\begin{itemize}
-%    \item https://www.tandfonline.com/doi/pdf/10.1080/08982112.2010.503447?casa_token=pkmVviGKzgkAAAAA:_dXqLAKXlplcb5Y_-U1CAnkuJS70HLGZfhaSHqbWNu26KVo2UPRxoXNC4GNcCeObCWJqTpSbFQ
-%    \item The new Weibull handbook.
-%    \item https://www.researchgate.net/publication/345882371_Bias_Corrected_Weibull_Parameter_Estimation_and_Impact_on_Confidence_Bounds
-%    \item https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=902481
-%    \item https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=752011
-%\end{itemize}
-
-But most focus on finding a way of correcting for bias (which is convoluted and difficult to communicate to reliability engineers), also the foundations of these approaches were laid in the late 90s/early 2000 and so the simulations are difficult to follow (Not the right wording but I mean in terms of presenting results and visualisations due to computational limitations).
-
-One paper \citep{kaminskiy2005} investigated using encoding an informative joint prior in a Bayesian framework in order to suplement analysis when data have small sample sizes and heavy censoring. This method is easy to communicate to reliability engineers and practitioners and reduces the bias demonstrated in \ref{}. Through the informative prior, informations can be encoded into the model to inform areas of the posterior where the data do not contain information. However, that is not to say that we are exploring a fictional scenario where we know the truth, but engineers can work closely with manufacturers to understand the upper tail of the distribution of the lifetimes and then encode it into models for their specific population of units in order to get more accurate reliability estimates.
-
-Construction of the joint prior.
-
-\subsection{Effect of informative priors}
-
-Compare the estimated CDF for the three different models with the truth.
-
-\section{Discussion}
+\section{Concluding remarks}
 
 \ldots

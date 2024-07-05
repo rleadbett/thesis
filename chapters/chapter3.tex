@@ -1,21 +1,54 @@
 \chapter{Case study}\label{chap:chapter3}
 
+In this chapter, I apply the work in the previous chapter to the idler frame dataset and show how the draws from the full posterior, obtained through MCMC sampling, can be used to generate useful quantities for decision making, such as expected number of failures in the next small period and expected cost of a maintenance strategy.
 
 \section{Idler frame data}
 
-How do we structure the simulation experiment? What are we testing?
+Summary of the data and relate to findings from previous chapter.
+
+\section{An informative prior}
+
+Justify the prior based on manufacturers information.
 
 \section{Fitting}
 
-Visualise/summarise the results of the simulation experiment.
+Model fitting, joint posterior, and CDF.
 
 \section{Using the posterior}
 
 \paragraph*{ft for each unit with uncertainty}
 
+This naturally comes in the posterior samples
+
 \paragraph*{expected number of failures}
 
+Should be able to determine this for each draw (i.e. the cumulative sum of the imputed failure time of the units still under test.)
+
 \paragraph*{cost function}
+
+Construct my own cost function around the ones presented in Jardine.
+
+Assumptions
+\begin{itemize}
+  \item Shuts are every six weeks. $t_p$ is the replacement interval and therefore must be a multiple of six.
+  \item $N$ is the number of idler frames on the belt.
+  \item $C_p$ is the cost of a preventative replacement.
+  \item When an idler frame fails during operation, there is a $P = 0.1$ chance that it will damage the belt. $C_f$ is the cost of unexpectedly replacing the belt.
+  \item The expected number of failures, $E(N_f)$, in a time interval $t_p$ is $N \times F_{\theta|y}(t_p)$.
+  \item The probability that at least one unplanned idler failure damages the belt during the interval is $1 - (1 - P)^{N F_{\theta|y}(t_p)}$.
+\end{itemize}
+
+\begin{equation}
+  \text{Cost per unit time} = \frac{C_p N + C_f (1 - (1 - P)^{N F_{\theta|y}(t_p)})}{t_p}
+\end{equation}
+
+$F_{\theta|y}(t_p)$ is the posterior CDF of the Weibull distribution (the failure time distribution). Hence, we can average over the uncertainty in the posterior draws to get the expected cost per unit time and uncertainty estimates by calculating the cost function for every posterior draw; $F_{\theta^s}(t_p)$.
+
+If we calculate this for the set of possible shut periods we can compare the choices with uncertainty.
+
+In this example, I have not accounted for the possibility that the belt could be damages, replaced, and then damaged again in a single interval! Jardine talks about some methods for expected number of repeat failures in a time interval in section 2.4.3
+
+This is just a demonstration on how to use the full posterior in the decision making process.
 
 \section{Discussion and conclusions}
 
