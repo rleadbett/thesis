@@ -6,7 +6,7 @@ The censored and left-truncated nature of such data make what would otherwise be
 
 Incompleteness of a dataset due to censoring and truncation increase uncertainty in lifetime analysis, particularly with respect to the upper tail of the lifetime distribution, since the data only contains partial information about the longer lifetimes. To improve analysis, domain knowledge can be used to fill the gap left by censoring, however only if the prior is constructed properly to do so. \citet{kaminskiy2005} propose a method for constructing a joint prior for the two parameters of the Weibull distribution by eliciting domain expert knowledge on the CDF\ldots
 
-In this chapter of the thesis, I show how right censored and left-truncated lifetimes with unknown exposure history can be handled using fully a Bayesian treatment, and how the methods of \citet{kaminskiy2005} for developing a joint prior for the two parameters of the Weibull distribution can be incorporated into the model to supplement the analysis with additional sources of information and hence "fill in the gaps" left by the incomplete lifetime data. In this chapter I demonstrate the proposed methods using fictitious lifetime data simulated from known parameter values in a way that emulates the idler frame lifetime data to show that the method is capable of reclaiming the true parameter values. In the next chapter, I apply the method to the real idler frame dataset, and show how the fully Bayesian treatment has advantages for... (Follow Meekers paper on the transformers.)
+In this chapter of the thesis, I show how right censored and left-truncated lifetimes with unknown exposure history can be handled using fully a Bayesian treatment, and how the methods of \citet{kaminskiy2005} for developing a joint prior for the two parameters of the Weibull distribution can be incorporated into the model to supplement the analysis with additional sources of information and hence `fill in the gaps' left by the incomplete lifetime data. In this chapter I demonstrate the proposed methods using fictitious lifetime data simulated from known parameter values in a way that emulates the idler frame lifetime data to show that the method is capable of reclaiming the true parameter values. In the next chapter, I apply the method to the real idler frame dataset, and show how the fully Bayesian treatment has advantages for... (Follow Meekers paper on the transformers.)
 
 In the remainder of this chapter is structured\ldots
 \begin{itemize}
@@ -145,7 +145,7 @@ I show how treating the unknown installation times as a case of censoring and us
 
 Using the toy example in \textit{Figure}~\ref{fig:left_trunc_and_right_cens_example}, say we do not observe any of the installation or failure times to the left of $t_\text{start}$. In this case, we know that the first, partially, observed lifetime from each unit started some time between $t = 0$ and $t = t_\text{start}$. This is a case of interval censoring, where the lower censoring bound is the time from the beginning of observation to the failure time and the upper bound is from $t = 0$ to the failure time. If we did not know the origin time $t = 0$ with respect to $t = t_\text{start}$ then it would be a case of right censoring, but the following logic would still apply. Let $t^{\text{failure}}_{i}$ be the failure time of the $i^{th}$ observation. Treating the observations as interval censored, the left-truncated lifetime can be imputed as in \textit{Section}~\ref{} by sampling from
 \begin{equation}
-    \hat{y}^L_i|\beta, \eta ~ \hbox{Weibull}^{t^{\text{failure}}_{i}}_{t^{\text{failure}}_{i} - t_\text{start}}(\beta, \eta).
+    \hat{y}^L_i|\beta, \eta \sim \hbox{Weibull}^{t^{\text{failure}}_{i}}_{t^{\text{failure}}_{i} - t_\text{start}}(\beta, \eta).
 \end{equation}
 Using the imputed values of the lifetime it is then possible to calculate the truncation time by
 \begin{equation}
@@ -154,9 +154,9 @@ Using the imputed values of the lifetime it is then possible to calculate the tr
 
 A complication arises when the lifetime is both interval censored by the start of the observation period and right censored by the end, such as unit one in \textit{Figure}~\ref{fig:left_trunc_and_right_cens_example}. In this case the truncation times value is unknown but is between $\tau^L = 0$ and $\tau^L = \min\left(t_\text{start}, \hat{y}^L_i - (t_\text{end} - t_\text{start})\right)$. Since we have no reason to expect that the truncation time is not uniform, we can impute the truncation time using the uniform distribution
 \begin{equation}
-    \tau^L_i ~ \hbox{Uniform}(0, \min\left(t_\text{start}, \hat{y}^L_i - (t_\text{end} - t_\text{start})\right)).
+    \tau^L_i \sim \hbox{Uniform}(0, \min\left(t_\text{start}, \hat{y}^L_i - (t_\text{end} - t_\text{start})\right)).
 \end{equation}
-Sampling the value of $\tau^L_i$ in this way incorporates the extra uncertainty in our Bayesian estimates
+Sampling the value of $\tau^L_i$ in this way should incorporate the extra uncertainty in our Bayesian estimates.
 
 \section{Informative joint prior}
 
@@ -184,55 +184,146 @@ Depending on the choice of $t_1$ and $t_2$ the analyst encodes different informa
 
 \begin{figure}
     \centering
-    \includegraphics[width=1\textwidth, draft]{./figures/ch-2/joint-priors.pdf}
+    \includegraphics[width=1\textwidth]{./figures/ch-2/joint-priors.pdf}
     \caption{}
     \label{fig:kaminskiy-join-priors}
 \end{figure}
 
 In this chapter, I compare the informative joint prior shown in Figure~\ref{fig:kaminskiy-join-priors}~(c) and~(f), which encodes information in the upper tail, with the vague independent priors $\beta \sim \hbox{N}^{+}(1.1, 1)$ and $\eta \sim \hbox{N}^{+}(1, 1)$, where the superscript $(+)$ indicates that the prior is truncated to be positive. 
 
-\section{Analysis of simulated data}
+\section{Analysis of simulated data} \label{sec:weibull-sim-example}
+
+\begin{itemize}
+    \item Here I demonstrate the method with simulation.
+    \item I simulate lifetime data in a way that emulates the observational process of the idler frame data.
+    \item However, I save the installation times of observations that are left truncated by the start of the observation time.
+    \item I then compare the inference of the imputation approach with the alternative where we discard all of the left censored lifetimes and also with the case where we do in fact know exposure history of the left truncated samples.
+    \item For a small sample, the imputation approach gives almost the same inference as the case where we know the true installation times. When we throw out all of the left truncation times, there is a massive increase in uncertainty, particularly around the upper tail of the lifetime distribution, as shown in the posterior of the CDF.
+    \item I then refit the same models to the simulated data but with an informative joint prior encoded in a away that informs the upper tail of the distribution. All of the models now give very similar results, however, the case where we discard the left truncated samples still has larger uncertainty.
+\end{itemize}
 
 %The toy example given in \textit{Figure}~\ref{fig:censoring_example}~\textit{B} is based on the Conveyor Idler Frame data introduced in \textit{Section}~\ref{sec:industry-data}. In the case of the Idler frames, the high reliability of the components when compared to length of the observation period results in heavy censoring; roughly 70 to 80\%. This heavy censoring biases parameter estimates. To demonstrate this bias, in this section, I simulate data from a known Weibull distribution and impose censoring through the same observation process. I then fit a Weibull model, accounting for the censoring, to reclaim the parameter values. Lastly, I compare the reclaimed values with the true, known, parameter values. Using simulated, synthetic, data in this way allows us to assess, in a controlled environment, how well the proposed model can reclaim the the true parameter values given that the model is specified correctly. As Gelman quotes; if the model cannot reclaim the true parameter values for a simulated case where we know the model is correctly specified, then there is no hope for an applied case where we do not know the true model. In the remainder of this section, I first describe how I simulate the censored data, then I fit a weibull distribution to the simulated censored data using both the maximum likelihood and Bayesian approaches. For the Bayesian approach I use a non-informative Bayesian model to show that both the Bayesian method and MLE are equally effected by the bias. I fit the alternative Bayesian censoring model because it offers a little more insight into how the bias arises.
 
 \subsection{Simulation method}
 
-In order to simulate the data generating process of the idler frames, I sample $N \times M$ draws from a Weibull distribution with known shape parameter $\beta$, and scale parameter $\eta$. I then assign these lifetimes to $M$ units. To calculate failure times rather than lifetimes, I take the cumulative sum of the $N$ lifetimes assigned to each unit. Installation times are calculated by taking the lag of the failure times. I then define a start, $t_{start}$, and end, $t_{end}$, time for the observation window. Any lifetimes where both the install and failure times sit either before $t_{start}$ or after $t_{end}$ are discarded. Of the remaining lifetimes, if the install time is less than $t_{start}$ then $t_{start}$ is substituted for the install time and the lifetime is marked as interval censored, while if the failure time is greater than $t_{end}$ then $t_{end}$ is substituted as the failure time and the lifetime is marked as right censored. If a lifetime is both interval censored at the beginning of the lifetime and right censored at the end, then the install time is set as $t_{start}$, the failure time as $t_{end}$ and it is marked as right censored. \textit{Figure}~\ref{fig:sim_censored_units} shows a simulated idler lifetime data set when $\beta = $, $\eta = $, $t_{start} = $, and $t_{end} = $. \textit{Table}~\ref{tab:sim_censored_units} shows the first ten rows of the simulated censored data shown in \textit{Figure}~\ref{fig:sim_censored_units}. Next we fit the censored weibull model to the simulated data by maximizing the likelihood in \ref{eq:weibull_likelihood} and also by fitting the Bayesian model in \ref{eq:bayesian_censoring_model} with noninformative priors using Hamiltonian Monte Carlo in STAN.
+To simulate data in a way that emulates the idler frame lifetime data set, I sample $N \times M$ draws from a Weibull distribution with known shape parameter $\beta = 1.1$, and scale parameter $\eta = 1$. I then assign these lifetimes to $M = 10$ units. To calculate failure times rather than lifetimes, I take the cumulative sum of the $N$ lifetimes assigned to each unit. The installation times are calculated by taking the lag of the failure times. I then define a start, $t_{start} = 5$, and end, $t_{end} = 6$, time for the observation window. Any lifetimes where both the install and failure times sit either before $t_{start}$ or after $t_{end}$ are discarded. Of the remaining lifetimes, if the install time is less than $t_{start}$ then $t_{start}$ is set as the observed start of the lifetime and the observation is marked as left truncated, while if the failure time is greater than $t_{end}$ then $t_{end}$ is substituted as the observed failure time and the observation is marked as right censored. Table~\ref{tab:sim-cmms-data} presents a simulated dataset using this method and parameter values. The simulated observations are also plotted in Figure~\ref{fig:sim_censored_units}, where the start and end of observation are show as red vertical lines and the observed portions of the simulated data are shown in black and the unobserved `incomplete' part is shown in gray. Notice that if we were to throw away the left truncated samples, then we would be discarding more than 50\% of the sample.
 
 \begin{figure}
     \centering
-    \includegraphics[width=1\textwidth]{./figures/sim_data_desc.pdf}
-    \caption{The simulated lifetimes separated by censored(both right and interval) vs noncensored, and ordered by length of observed lifetime.}
+    \includegraphics[width=1\textwidth]{./figures/ch-2/sim-data.pdf}
+    \caption{The simulated lifetimes data.}
     \label{fig:sim_censored_units}
 \end{figure}
 
-\input{./tables/sim_data_head.tex}
+\input{./tables/ch-2/sim_cmms_data.tex}
 
-\subsection{Weakly informative prior}
+\subsection{Weakly informative prior} \label{subsec:weibull-model-fits}
 
-Fit the models with a weak prior to a small data set to demonstrate the reduction in uncertainty when I either directly include or impute the truncation times compared to when I throw away all truncated lifetimes.
-\begin{itemize}
-    \item Include truncation times.
-    \item Discard truncation times.
-    \item Impute truncation times.
-\end{itemize}
+I now fit the imputation model to the simulated data in Table~\ref{tab:sim-cmms-data} and compare the resulting posterior with the case where the installation times of the left truncated samples are known and also with the alternative treatment of the unknown exposure histories, which is to discard all of the left truncated samples. I fit these models with a weakly informative, independent priors
+\begin{align*}
+    \hat{F}_{t_1} \sim & \hbox{N}\left(1.1, 1\right)  \\
+    \hat{F}_{t_2} \sim & \hbox{N}\left(1, 1\right).
+\end{align*}
+The three stan models are available on the GitHub repository. To sample from the posteriors, I use four chains each 1000 iterations long with a burn in of 500. Figure~\ref{fig:joint-post-weibull} shows the three posteriors. Plots (a), (b), and (c) show the joint draws of the two weibull parameters for the fully observed, discarded, and imputed treatment of the left truncated samples respectively. The corresponding CDFs with uncertainty are shown in (d), (e), and (f). The true values of the parameters and the true CDF are plotted in red in the plots. The resulting inference from imputing the installation times of the left truncated samples is almost the exact same as if we had fully observed the left truncated samples. Whereas, discarding the left truncated samples results in a much more diffuse posterior and consequently, more uncertainty around the CDF, particularly for larger exposure times. Next, I refit the models using a slightly more diffuse version of the informative prior shown in Fig.~\ref{fig:kaminskiy-join-priors}~(c) and~(f) which informs the upper tail of the distribution.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\textwidth]{./figures/ch-2/joint-posts.pdf}
+    \caption{The prior distributions.}
+    \label{fig:joint-post-weibull}
+\end{figure}
 
 \subsection{Strongly informative prior}
 
-Now show the result of using a well constructed informative joint prior. There is a great improvement in the posterior where I've thrown out the left truncated samples, but only a slight improvement in the case where the left truncated samples were either directly included or imputed.
+The prior in Fig.~\ref{fig:kaminskiy-join-priors}~(c) and~(f), which elicits information about the CDF at $t_1 = p_{0.80} = 1.54$ and $t_2 = p_{0.95} = 2.71$ encodes an informative prior that strongly informs the Weibull model in the upper tail of the distribution but is sufficiently vague in the lower tail, where the data are strongly informative. Here I refit the weibull models with a slightly more diffuse version of the prior; i.e. I increase the uncertainty around the estimates of the CDF at each elicitation time. The informative prior is
+\begin{align*}
+    \hat{F}_{t_1} \sim & \hbox{N}^{1}_{0}\left(0.8, 0.1\right)    \\
+    \hat{F}_{t_2} \sim & \hbox{N}^{1}_{0}\left(0.95, 0.05\right).
+\end{align*}
+Using the informative prior, I refit the three models from Section~\ref{subsec:weibull-model-fits}. Once again, I use four chains each 1000 iterations long with a burn in of 500 to sample from the three posteriors. The resulting draws are plotted in (a), (b), and (c) of Figure~\ref{fig:joint-post-weibull-inf} for the fully observed, discarded, and imputed treatment of the left truncated samples respectively. Comparing the posterior of the imputation method (plots~(c)) with the case where the left truncated samples are fully observed (plots~(a)), the resulting inference is again very similar. However, now using the informative prior, the posterior of the case where I have discarded the left truncated samples, plot~(b), is much closer to the other two posteriors than when a vague prior is used. The corresponding posterior CDFs are shown in (d), (e), and (f) of Fig.~\ref{fig:joint-post-weibull-inf}. The uncertainty in all cases has been refined, but most drastically in the upper right part of the CDF. In Fig.~\ref{fig:joint-post-weibull-inf}~(e), the effect of combining a likelihood that informs the CDF at lower exposure times with a prior that informs the CDF at higher exposure times has resulted in a precise estimate of the CDF. 
 
-\subsection{Strong likelihood}
+\begin{figure}
+    \centering
+    \includegraphics[width=1\textwidth]{./figures/ch-2/joint-posts-inf.pdf}
+    \caption{The prior distributions.}
+    \label{fig:joint-post-weibull-inf}
+\end{figure}
 
-When there are many data, and the window is short, there are many lifetimes that are both left truncated, with unknown exposure history, and right censored. In these cases the estimate can be bias. I think this occurs when $t_start$ is not sufficiently far from $t = 0$ for the uniform entry assumption to be valid.
+In the implementation of the joint prior that I have used, the prior properly updated. i.e. the observed data have slightly updated our belief about the value of the CDF at both $t_1$ and $t_2$. Figure~\ref{fig:weibull-prior-post-comp} compares the distribution of the posterior draws of $\hat{F}(t_i)$ (gray densities) with the prior (red curves). In the three plots in Fig.~\ref{fig:weibull-prior-post-comp}, the posterior distributions are clearly narrower than the prior; more so at $t_1$. Fitting the Weibull a models for the data in Table~\ref{tab:sim-cmms-data} has shown that, for small samples sizes, in cases where we do not know the exposure history of the left truncated samples the imputation method provides almost equivalent inference to if we had fully observed the left-truncated samples. Further more, if we alternatively `throw away' the left truncated observations this results in an large loss of information, however, this loss can be compensated for if there is prior information about longer lifetimes and this information is properly encoded into a joint prior. Here I have shown one case for a reasonably small sample. Next, I devise a small simulation experiment to more rigorously evaluate the imputation method for the left truncated samples with unknown exposure history.
 
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{./figures/ch-2/prior-post-comp.pdf}
+    \caption{Comparison of the prior and posterior for $F_{t_1}$ and $F_{t_2}$ to show how both the elicited distributions have been updated.}
+    \label{fig:weibull-prior-post-comp}
+\end{figure}
+
+%\subsection{Strong likelihood}
+%
+%When there are many data, and the window is short, there are many lifetimes that are both left truncated, with unknown exposure history, and right censored. In these cases the estimate can be bias. I think this occurs when $t_start$ is not sufficiently far from $t = 0$ for the uniform entry assumption to be valid.
+%
 \section{Simulation experiments}
+
+To explore the behaviour of the imputation method for left truncated lifetimes with unknown exposure history, I repeat the simulation and model fitting of Section~\ref{sec:weibull-sim-example} for a number of different combinations of the simulation parameters; number of units, start of observation time, and length of observation time. I compare the imputation method---under both a vague and informative prior---with the alternative method of discarding the left truncated observations as well as with the case where the left truncated samples are fully observed (as a ground truth). First I define the factor levels that make up the factor combinations, next I describe the measures of model accuracy that I use to compare the three models, finally, I present the results of the simulation experiments.
 
 \subsection{Factor levels}
 
+I vary three factors when simulating the datasets, each with three levels;
+\begin{itemize}
+    \item $N$: 10, 100, 500 units
+    \item $t_{start}$: 1, 5, 15 mean lifetimes
+    \item $t_{end} - t_{start}$: 1, 3, 6 mean lifetimes
+\end{itemize}
+Increasing the number of units, $N$, increases the sample size, increasing $t_{start}$ increases the range of possible values the left truncated samples with unobserved truncation time could take---and therefore reduces the information they contribute---and increasing the window size, $t_{end} - t_{start}$, increases the number of fully observed lifetimes, the maximum length of the fully observed lifetimes and the number of samples that are both left truncated and right censored. For each factor combination, I perform one hundred simulations, each time fitting all of the three treatments for the left truncated observations with both a vague and informative prior:
+\begin{itemize}
+    \item model: include lt, discard lt, impute lt
+    \item prior: weakly, strongly informative
+\end{itemize}
+\ldots
+
 \subsection{Accuracy measures}
+
+To compare how well the Bayesian models reclaim the true data generating mechanism, I calculate the Bayesian p-values of the true parameter values---$\beta = 1.1$ and $\eta = 1$---under the fitted posteriors and the $elppd$ of a dataset of one hundred fully observed lifetimes generated from the true weibull distribution. The Bayesian p-value for beta is easily calculated using the posterior draws as
+\begin{equation*}
+    p_{\beta} = \frac{\sum^{S}_{s = 1}{\beta_{true} \le \beta_s}}{S},
+\end{equation*}
+similarly the P-value of $\eta$ can be calculated in the same way. If the model posterior is well calibrated, then the p-values from repeating the same simulation should have a uniform distribution. If the parameter estimates are bias then the P-values should on average sit above or bellow 0.5. If the posterior uncertainty is overly diffuse then the p-values will be clustered around 0.5 and if they the uncertainty is too narrow then the P-values will be pushed towards zero or one. The P-value provides a indication that the model is over or under predicting the parameter values, but do not express to what degree.
+
+To determine the scale of any discrepancy, I also calculate the $elppd$ of a new sample of one hundred fully observed lifetimes under the different posteriors. I do this by simulating one hundred datasets, each with one hundred observations, and calculating the expected log likelihood of each simulated dataset and then taking the average,
+\begin{equation*}
+    elppd_{100} = \frac{\sum_{n = 1}^{100}\frac{1}{S}\sum_{s = 1}^{S}\sum_{i = 1}^{100}f(\tilde{y}_{n, i}|\beta_s, \eta_s)}{100}.
+\end{equation*}
 
 \subsection{Results}
 
+The factor combination effects on the p-values.
+\begin{itemize}
+    \item Description of the plots
+    \item Bias in the estimate when the window size is small (I think comes the issue that stan tries to update the truncation time).
+    \item There is a small bias in the other cases, these get more visible as the dataset becomes more informative and therefore, the prior more precise.
+    \item Despite the slightly biased estimates, the elppd values are remain close. I show this in more detail in the next figure.
+\end{itemize}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{./figures/ch-2/sim-results-pvalues.pdf}
+    \caption{The simulation results}
+    \label{fig:sim-study-pvalue}
+\end{figure}
+
+The effects on the elppd score. (elppd under the true model is -95.7)
+\begin{itemize}
+    \item The value is small when the data set is small and the window size is short
+\end{itemize}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{./figures/ch-2/sim-results-elppd.pdf}
+    \caption{The simulation results}
+    \label{fig:sim-study-elppd}
+\end{figure}
+
+The observed bias is small relative to the noise of the measures.
+
 \section{Concluding remarks}
 
-\ldots

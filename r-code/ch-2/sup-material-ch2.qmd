@@ -25,7 +25,13 @@ library(kableExtra)
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 
-table_path <- file.path(
+fig_path <- file.path(
+  "..",
+  "..",
+  "figures",
+  "ch-2"
+)
+tbl_path <- file.path(
   "..",
   "..",
   "tables",
@@ -34,7 +40,7 @@ table_path <- file.path(
 ```
 
 ```{r}
-#| label: define-rtrunc-function
+#| label: function-rTruncNorm
 rTruncNorm <- function(n, mean, sd, lb = NULL, ub = NULL) {
   # Check if lower bound is supplied & 
   # calculate lower bound of uniform dist
@@ -58,14 +64,14 @@ rTruncNorm <- function(n, mean, sd, lb = NULL, ub = NULL) {
 ```
 
 ```{r}
-#| label: sup-function-prior
+#| label: function-fn
 fn <- function(x) {
   log(-log(1 - x))
 }
 ```
 
 ```{r}
-#| label: define global data gen parameters
+#| label: define-true-weibull-params
 beta <- 1.1
 eta <- 1
 ```
@@ -75,6 +81,8 @@ eta <- 1
 Using the methods of keminskey we can encode a joint prior for the Weibull parameters by eliciting information about the CDF. This is much more intuitive than eliciting information about the parameters directly. The result is covariance in the joint posterior that encodes where we are uncertain. This is usefull in cases where the data are uninformative about some areas of the CDF but we do not want to impose a strong prior on the areas that the data are able to inform; for example right censoring masks longer lifetimes and so we can inject information through the joint prior to inform the upper tail of the distribution while still allowing the data to update the lower tail.
 
 ```{r}
+#| label: fig-joint-priors
+#| fig-cap: "..."
 set.seed(567)
 pp1s <- c(0.05, 0.35, 0.80)
 pp2s <- c(0.20, 0.65, 0.95)
@@ -141,7 +149,7 @@ p_priors <- lapply(
       ggplot() +
       stat_lineribbon(
         aes(x = t, y = cdf),
-        .width = c(0.5, 0.8)
+        .width = c(0.5, 0.9)
       ) +
       scale_fill_brewer() +
       geom_function(
@@ -157,7 +165,7 @@ p_priors <- lapply(
   }
 )
 
-plot_grid(
+p_joint_priors <- plot_grid(
   p_priors[[1]]$joint, p_priors[[2]]$joint, p_priors[[3]]$joint,
   p_priors[[1]]$cdf, p_priors[[2]]$cdf, p_priors[[3]]$cdf,
   nrow = 2,
@@ -169,13 +177,26 @@ plot_grid(
   label_fontfamily = "Times",
   label_face = "plain"
 )
+p_joint_priors
+```
+
+```{r}
+#| label: save-fig-joint-priors
+#| echo: false
+#| output: false
+pdf(
+  file.path(fig_path, "joint-priors.pdf"),
+  height = 6,
+  width = 8
+)
+p_joint_priors
+dev.off()
 ```
 
 # Simulating data
 
 ```{r}
-#| label: define sim params
-
+#| label: define-sim-params
 N_units <- 10
 t_start <- 5
 t_window <- 1
@@ -184,8 +205,7 @@ t_end <- t_start + t_window
 
 
 ```{r}
-#| label: function-datasim
-
+#| label: function-SimData
 SimData <- function(
   beta,
   eta,
@@ -241,7 +261,8 @@ SimData <- function(
 
 
 ```{r}
-#| label: simulate data
+#| label: tbl-sim-data
+#| tbl-cap: "..."
 set.seed(549)
 sim_df <- SimData(
   beta = beta,
@@ -257,18 +278,22 @@ sim_df %>%
 ```
 
 ```{r}
+#| label: save-tbl-sim-data
+#| echo: false
+#| output: false
 sim_df_latex <- sim_df %>%
   select(-c("lifetime_id", "int_censored", "right_censored"))
 colnames(sim_df_latex) <- c(
   "Unit",
   "Lifetime",
-  "True failure time",
-  "True install time",
-  "Observed install time",
-  "Observed failure time"
+  "True failure",
+  "True install",
+  "Observed install",
+  "Observed failure"
 )
 
 sim_df_latex %>%
+  mutate(across(-c("Unit"), ~ round(.x, 2))) %>%
   kbl(
     booktabs = T,
     format = "latex",
@@ -287,7 +312,9 @@ sim_df_latex %>%
 ```
 
 ```{r}
-sim_df %>%
+#| label: fig-sim-data
+#| fig-cap: "..."
+p_sim_data <- sim_df %>%
   mutate(i = 1:n()) %>%
   ggplot() +
   geom_segment(
@@ -307,10 +334,26 @@ sim_df %>%
   theme(
     axis.text.y=element_blank(), 
     axis.ticks.y=element_blank()
-  ) 
+  )
+
+p_sim_data
 ```
 
 ```{r}
+#| label: save-fig-sim-data
+#| echo: false
+#| output: false
+pdf(
+  file.path(fig_path, "sim-data.pdf"),
+  height = 6,
+  width = 6
+)
+p_sim_data
+dev.off()
+```
+
+```{r}
+#| label: prep-stan-data
 sim_df_obs <- sim_df %>%
   filter(!(right_censored | int_censored))
 sim_df_rc <- sim_df %>%
@@ -359,6 +402,7 @@ stan_data_unkown_lt <- list(
 ### Known truncation times
 
 ```{r}
+#| label: known-trunc-stan-model
 stan_model_lt_r_imputed <- stan_model(
   model_code = "
 data {
@@ -405,6 +449,7 @@ beta ~ normal(1.1, 1);
 
 ### No truncated samples
 ```{r}
+#| label: discarded-trunc-stan-model
 stan_model_no_lt <- stan_model(
   model_code = "
 data {
@@ -435,6 +480,7 @@ beta ~ normal(1.1, 1);
 
 ### Impute truncation times
 ```{r}
+#| label: imputed-trunc-stan-model
 stan_model_unknown_lt_rc <- stan_model(
   model_code = "
 data {
@@ -513,12 +559,11 @@ t_lt_rc_st ~ uniform(0, 1);
 ::: panel-tabset
 #### Known truncation times
 ```{r}
-#| label: fit-full-model
+#| label: fit-lt-known-model
 stan_fit_lt_r_imputed <- sampling(
   stan_model_lt_r_imputed,
   stan_data_full,
   chains = 4,
-  cores = 1,
   iter = 1000,
   warmup = 500
 )
@@ -526,12 +571,11 @@ stan_fit_lt_r_imputed <- sampling(
 
 #### No truncated samples
 ```{r}
-#| label: fit-no-lt-model
+#| label: fit-lt-discarded-model
 stan_fit_no_lt <- sampling(
   stan_model_no_lt,
   stan_data_no_lt,
   chains = 4,
-  cores = 1,
   iter = 1000,
   warmup = 500
 )
@@ -539,21 +583,19 @@ stan_fit_no_lt <- sampling(
 
 #### Impute truncation times
 ```{r}
-#| label: fit-imp-lt-model
+#| label: fit-lt-imputed-model
 stan_fit_unknown_lt_rc <- sampling(
   stan_model_unknown_lt_rc,
   stan_data_unkown_lt,
   chains = 4,
-  cores = 1,
   iter = 1000,
   warmup = 500
 )
 ```
 :::
 
-
 ```{r}
-#| label: function-plot-cdf-post
+#| label: function-PlotPostCDF
 PlotPostCDF <- function(stan_fit, x_range = c(0, 5), res = 0.05) {
   grid <- seq(x_range[1], x_range[2], 0.01)
   p_cdf <- stan_fit %>%
@@ -573,7 +615,7 @@ PlotPostCDF <- function(stan_fit, x_range = c(0, 5), res = 0.05) {
     ggplot() +
     stat_lineribbon(
       aes(x = q, y = p),
-      .width = c(0.5, 0.8, 0.98)
+      .width = c(0.5, 0.9)
     ) +
     scale_fill_brewer() +
     geom_function(
@@ -581,39 +623,72 @@ PlotPostCDF <- function(stan_fit, x_range = c(0, 5), res = 0.05) {
       args = list(shape = beta, scale = eta),
       colour = "red"
     ) +
-    theme_minimal()
+    xlab("t") +
+    ylab("cdf") +
+    theme_minimal() +
+    theme(legend.position = "none")
     return(p_cdf)
 }
 ```
 
 ```{r}
-#| label: fig-join-post-and-cdf
+#| label: fig-join-posts
+#| fig-cap: "..."
 p_full <- stan_fit_lt_r_imputed %>%
   mcmc_scatter(pars = c("beta", "eta")) +
   geom_point(x = beta, y = eta, colour = "red") +
   xlim(0, 5) +
-  ylim(0, 5)
+  ylim(0, 5) +
+  xlab(expression(beta)) +
+  ylab(expression(eta)) +
+  theme_minimal()
 p_no_lt <- stan_fit_no_lt %>%
   mcmc_scatter(pars = c("beta", "eta")) +
   geom_point(x = beta, y = eta, colour = "red") +
   xlim(0, 5) +
-  ylim(0, 5)
+  ylim(0, 5) +
+  xlab(expression(beta)) +
+  ylab(expression(eta)) +
+  theme_minimal()
 p_imp_lt <- stan_fit_unknown_lt_rc %>%
   mcmc_scatter(pars = c("beta", "eta")) +
   geom_point(x = beta, y = eta, colour = "red") +
   xlim(0, 5) +
-  ylim(0, 5)
+  ylim(0, 5) +
+  xlab(expression(beta)) +
+  ylab(expression(eta)) +
+  theme_minimal()
 
 p_cdf_full <- PlotPostCDF(stan_fit_lt_r_imputed)
 p_cdf_no_lt <- PlotPostCDF(stan_fit_no_lt)
 p_cdf_imp_lt <- PlotPostCDF(stan_fit_unknown_lt_rc)
 
-plot_grid(
+p_joint_posts <- plot_grid(
   p_full, p_no_lt, p_imp_lt,
   p_cdf_full, p_cdf_no_lt, p_cdf_imp_lt,
   nrow = 2,
-  ncol = 3
+  ncol = 3,
+  labels = c(
+    "(a)", "(b)", "(c)",
+    "(d)", "(e)", "(f)"
+  ),
+  label_fontfamily = "Times",
+  label_face = "plain"
 )
+p_joint_posts
+```
+
+```{r}
+#| label: save-fig-join-posts
+#| echo: false
+#| output: false
+pdf(
+  file.path(fig_path, "joint-posts.pdf"),
+  height = 5,
+  width = 10
+)
+p_joint_posts
+dev.off()
 ```
 
 ## Stan models (informative)
@@ -622,6 +697,7 @@ plot_grid(
 ### Known truncation times
 
 ```{r}
+#| label: known-trunc-stan-model-inf
 stan_model_lt_r_imputed_inf <- stan_model(
   model_code = "
 functions {
@@ -690,6 +766,7 @@ t2CDF ~ normal(t2_mean, t2_var);
 
 ### No truncated samples
 ```{r}
+#| label: discarded-trunc-stan-model-inf
 stan_model_no_lt_inf <- stan_model(
   model_code = "
 functions {
@@ -742,6 +819,7 @@ t2CDF ~ normal(t2_mean, t2_var);
 
 ### Impute truncation times
 ```{r}
+#| label: imputed-trunc-stan-model-inf
 stan_model_unknown_lt_rc_inf <- stan_model(
   model_code = "
 functions {
@@ -835,28 +913,21 @@ t_lt_rc_st ~ uniform(0, 1);
 ```
 :::
 
-```{r}
-stan_fit_unknown_lt_rc_large %>%
-  mcmc_hist(
-    regex_pars = "t_lt_rc_st"
-  )
-```
-
 ### Sampling
 
 ::: panel-tabset
 #### Known truncation times
 ```{r}
-#| label: fit-full-model
+#| label: fit-lt-known-model-inf
 stan_fit_lt_r_imputed_inf <- sampling(
   stan_model_lt_r_imputed_inf,
   c(
     stan_data_full,
     t_1 = qweibull(0.8, beta, eta),
-    t_2 = qweibull(0.98, beta, eta),
+    t_2 = qweibull(0.95, beta, eta),
     t1_mean = 0.8,
     t1_var = 0.1,
-    t2_mean = 0.98,
+    t2_mean = 0.95,
     t2_var = 0.05
   ),
   chains = 4,
@@ -868,16 +939,16 @@ stan_fit_lt_r_imputed_inf <- sampling(
 
 #### No truncated samples
 ```{r}
-#| label: fit-no-lt-model
+#| label: fit-lt-discarded-model-inf
 stan_fit_no_lt_inf <- sampling(
   stan_model_no_lt_inf,
   c(
     stan_data_no_lt,
     t_1 = qweibull(0.8, beta, eta),
-    t_2 = qweibull(0.98, beta, eta),
+    t_2 = qweibull(0.95, beta, eta),
     t1_mean = 0.8,
     t1_var = 0.1,
-    t2_mean = 0.98,
+    t2_mean = 0.95,
     t2_var = 0.05
   ),
   chains = 4,
@@ -889,16 +960,16 @@ stan_fit_no_lt_inf <- sampling(
 
 #### Impute truncation times
 ```{r}
-#| label: fit-imp-lt-model
+#| label: fit-lt-imputed-model-inf
 stan_fit_unknown_lt_rc_inf <- sampling(
   stan_model_unknown_lt_rc_inf,
   c(
     stan_data_unkown_lt,
     t_1 = qweibull(0.8, beta, eta),
-    t_2 = qweibull(0.98, beta, eta),
+    t_2 = qweibull(0.95, beta, eta),
     t1_mean = 0.8,
     t1_var = 0.1,
-    t2_mean = 0.98,
+    t2_mean = 0.95,
     t2_var = 0.05
   ),
   chains = 4,
@@ -910,42 +981,172 @@ stan_fit_unknown_lt_rc_inf <- sampling(
 :::
 
 ```{r}
-#| label: fig-join-post-and-cdf
+#| label: fig-join-posts-inf
+#| fig-cap: "..."
 p_full_inf <- stan_fit_lt_r_imputed_inf %>%
   mcmc_scatter(pars = c("beta", "eta")) +
   geom_point(x = beta, y = eta, colour = "red") +
   xlim(0, 5) +
-  ylim(0, 5)
+  ylim(0, 5) +
+  xlab(expression(beta)) +
+  ylab(expression(eta)) +
+  theme_minimal()
 p_no_lt_inf <- stan_fit_no_lt_inf  %>%
   mcmc_scatter(pars = c("beta", "eta")) +
   geom_point(x = beta, y = eta, colour = "red") +
   xlim(0, 5) +
-  ylim(0, 5)
+  ylim(0, 5) +
+  xlab(expression(beta)) +
+  ylab(expression(eta)) +
+  theme_minimal()
 p_imp_lt_inf <- stan_fit_unknown_lt_rc_inf %>%
   mcmc_scatter(pars = c("beta", "eta")) +
   geom_point(x = beta, y = eta, colour = "red") +
   xlim(0, 5) +
-  ylim(0, 5)
+  ylim(0, 5) +
+  xlab(expression(beta)) +
+  ylab(expression(eta)) +
+  theme_minimal()
 
 p_cdf_full_inf <- PlotPostCDF(stan_fit_lt_r_imputed_inf)
 p_cdf_no_lt_inf <- PlotPostCDF(stan_fit_no_lt_inf)
 p_cdf_imp_lt_inf <- PlotPostCDF(stan_fit_unknown_lt_rc_inf)
 
-plot_grid(
+p_joint_posts_inf <- plot_grid(
   p_full_inf, p_no_lt_inf, p_imp_lt_inf,
   p_cdf_full_inf, p_cdf_no_lt_inf, p_cdf_imp_lt_inf,
   nrow = 2,
-  ncol = 3
+  ncol = 3,
+  labels = c(
+    "(a)", "(b)", "(c)",
+    "(d)", "(e)", "(f)"
+  ),
+  label_fontfamily = "Times",
+  label_face = "plain"
 )
+p_joint_posts_inf
+```
+
+```{r}
+#| label: save-fig-join-posts-inf
+#| echo: false
+#| output: false
+pdf(
+  file.path(fig_path, "joint-posts-inf.pdf"),
+  height = 5,
+  width = 10
+)
+p_joint_posts_inf 
+dev.off()
+```
+
+```{r}
+#| label:fig-prior-post-comparison
+#| fig-cap: "..."
+p1 <- stan_fit_lt_r_imputed_inf %>%
+  as_draws_rvars() %>%
+  gather_rvars(t1CDF, t2CDF) %>%
+  mutate(
+    prior = c(
+      rvar(rnorm(500000, 0.80, 0.1)),
+      rvar(rnorm(500000, 0.95, 0.05))
+    )
+  ) %>%
+  ggplot() +
+  stat_halfeye(aes(xdist = .value, y = .variable)) +
+  stat_slab(aes(xdist = prior, y = .variable), fill = NA, color = "#e41a1c") +
+  scale_y_discrete(
+    labels = c(
+      expression(t[1]),
+      expression(t[2])
+    )
+  ) +
+  ylab("") +
+  xlab(expression(F(t[i]))) +
+  xlim(0, 1) +
+  theme_minimal()
+p2 <- stan_fit_no_lt_inf %>%
+  as_draws_rvars() %>%
+  gather_rvars(t1CDF, t2CDF) %>%
+  mutate(
+    prior = c(
+      rvar(rnorm(500000, 0.80, 0.1)),
+      rvar(rnorm(500000, 0.95, 0.05))
+    )
+  ) %>%
+  ggplot() +
+  stat_halfeye(aes(xdist = .value, y = .variable)) +
+  stat_slab(aes(xdist = prior, y = .variable), fill = NA, color = "#e41a1c") +
+  scale_y_discrete(
+    labels = c(
+      expression(t[1]),
+      expression(t[2])
+    )
+  ) +
+  ylab("") +
+  xlab(expression(F(t[i]))) +
+  xlim(0, 1) +
+  theme_minimal()
+p3 <- stan_fit_unknown_lt_rc_inf %>%
+  as_draws_rvars() %>%
+  gather_rvars(t1CDF, t2CDF) %>%
+  mutate(
+    prior = c(
+      rvar(rnorm(500000, 0.80, 0.1)),
+      rvar(rnorm(500000, 0.95, 0.05))
+    )
+  ) %>%
+  ggplot() +
+  stat_halfeye(aes(xdist = .value, y = .variable)) +
+  stat_slab(aes(xdist = prior, y = .variable), fill = NA, color = "#e41a1c") +
+  scale_y_discrete(
+    labels = c(
+      expression(t[1]),
+      expression(t[2])
+    )
+  ) +
+  ylab("") +
+  xlab(expression(F(t[i]))) +
+  xlim(0, 1) +
+  theme_minimal()
+
+plot_grid(
+  p1, p2, p3,
+  nrow = 1, ncol = 3,
+  labels = c(
+    "(a)", "(b)", "(c)"
+  ),
+  label_fontfamily = "Times",
+  label_face = "plain"
+)
+```
+
+```{r}
+#| label:save-fig-prior-post-comparison
+#| echo: false
+#| output: false
+pdf(
+  file.path(fig_path, "prior-post-comp.pdf"),
+  height = 5,
+  width = 10
+)
+plot_grid(
+  p1, p2, p3,
+  nrow = 1, ncol = 3,
+  labels = c(
+    "(a)", "(b)", "(c)"
+  ),
+  label_fontfamily = "Times",
+  label_face = "plain"
+)
+dev.off()
 ```
 
 # Strong likelihood
 
 ```{r}
 #| label: simulate-large-dataset
-set.seed(549)
-
-N_units_large <- 200
+set.seed(545)
 
 sim_large_df <- SimData(
   beta = beta,
@@ -994,8 +1195,8 @@ stan_data_unkown_lt_large <- list(
   N_lt = nrow(sim_large_df_lt),
   N_lt_rc = nrow(sim_large_df_lt_rc),
   y_obs = sim_large_df_obs$failure_time - sim_large_df_obs$install_time,
-  y_rc = sim_large_df_rc$failure_time_obs - sim_large_df_rc$install_time_obs,
-  y_lt = sim_large_df_lt$failure_time_obs - sim_large_df_lt$install_time_obs,
+  y_rc = sim_large_df_rc$failure_time_obs - sim_large_df_rc$install_time,
+  y_lt = sim_large_df_lt$failure_time - sim_large_df_lt$install_time_obs,
   y_lt_rc = sim_large_df_lt_rc$failure_time_obs - sim_large_df_lt_rc$install_time_obs,
   t_start = 14.5#t_start
 )
@@ -1010,7 +1211,6 @@ stan_fit_lt_r_imputed_large <- sampling(
   stan_model_lt_r_imputed,
   stan_data_full_large,
   chains = 4,
-  cores = 1,
   iter = 1000,
   warmup = 500
 )
@@ -1023,7 +1223,6 @@ stan_fit_no_lt_large <- sampling(
   stan_model_no_lt,
   stan_data_no_lt_large,
   chains = 4,
-  cores = 1,
   iter = 1000,
   warmup = 500
 )
@@ -1036,9 +1235,9 @@ stan_fit_unknown_lt_rc_large <- sampling(
   stan_model_unknown_lt_rc,
   stan_data_unkown_lt_large,
   chains = 4,
-  cores = 1,
   iter = 1000,
-  warmup = 500
+  warmup = 500,
+  control = list(max_treedepth = 13)
 )
 ```
 :::
@@ -1065,369 +1264,16 @@ p_cdf_full_large <- PlotPostCDF(stan_fit_lt_r_imputed_large)
 p_cdf_no_lt_large <- PlotPostCDF(stan_fit_no_lt_large)
 p_cdf_imp_lt_large <- PlotPostCDF(stan_fit_unknown_lt_rc_large)
 
-plot_grid(
+p_strong_likelihood_example <- plot_grid(
   p_full_large, p_no_lt_large, p_imp_lt_large,
   p_cdf_full_large, p_cdf_no_lt_large, p_cdf_imp_lt_large,
   nrow = 2,
   ncol = 3
 )
+
+p_strong_likelihood_example
 ```
 
-## Strong prior
-
-::: panel-tabset
-#### Known truncation times
-```{r}
-#| label: fit-full-model
-stan_fit_lt_r_imputed_inf_large <- sampling(
-  stan_model_lt_r_imputed_inf,
-  c(
-    stan_data_full_large,
-    t_1 = qweibull(0.8, beta, eta),
-    t_2 = qweibull(0.98, beta, eta),
-    t1_mean = 0.8,
-    t1_var = 0.1,
-    t2_mean = 0.98,
-    t2_var = 0.05
-  ),
-  chains = 4,
-  cores = 4,
-  iter = 1000,
-  warmup = 500
-)
-```
-
-#### No truncated samples
-```{r}
-#| label: fit-no-lt-model
-stan_fit_no_lt_inf_large <- sampling(
-  stan_model_no_lt_inf,
-  c(
-    stan_data_no_lt_large,
-    t_1 = qweibull(0.8, beta, eta),
-    t_2 = qweibull(0.98, beta, eta),
-    t1_mean = 0.8,
-    t1_var = 0.1,
-    t2_mean = 0.98,
-    t2_var = 0.05
-  ),
-  chains = 4,
-  cores = 4,
-  iter = 1000,
-  warmup = 500
-)
-```
-
-#### Impute truncation times
-```{r}
-#| label: fit-imp-lt-model
-stan_fit_unknown_lt_rc_inf_large <- sampling(
-  stan_model_unknown_lt_rc_inf,
-  c(
-    stan_data_unkown_lt_large,
-    t_1 = qweibull(0.8, beta, eta),
-    t_2 = qweibull(0.98, beta, eta),
-    t1_mean = 0.8,
-    t1_var = 0.1,
-    t2_mean = 0.98,
-    t2_var = 0.05
-  ),
-  chains = 4,
-  cores = 4,
-  iter = 1000,
-  warmup = 500
-)
-```
-:::
-
-```{r}
-#| label: fig-join-post-and-cdf
-p_full_inf_large <- stan_fit_lt_r_imputed_inf_large %>%
-  mcmc_scatter(pars = c("beta", "eta")) +
-  geom_point(x = beta, y = eta, colour = "red") +
-  xlim(0, 5) +
-  ylim(0, 5)
-p_no_lt_inf_large <- stan_fit_no_lt_inf_large  %>%
-  mcmc_scatter(pars = c("beta", "eta")) +
-  geom_point(x = beta, y = eta, colour = "red") +
-  xlim(0, 5) +
-  ylim(0, 5)
-p_imp_lt_inf_large <- stan_fit_unknown_lt_rc_inf_large %>%
-  mcmc_scatter(pars = c("beta", "eta")) +
-  geom_point(x = beta, y = eta, colour = "red") +
-  xlim(0, 5) +
-  ylim(0, 5)
-
-p_cdf_full_inf_large <- PlotPostCDF(stan_fit_lt_r_imputed_inf_large)
-p_cdf_no_lt_inf_large <- PlotPostCDF(stan_fit_no_lt_inf_large)
-p_cdf_imp_lt_inf_large <- PlotPostCDF(stan_fit_unknown_lt_rc_inf_large)
-
-plot_grid(
-  p_full_inf_large, p_no_lt_inf_large, p_imp_lt_inf_large,
-  p_cdf_full_inf_large, p_cdf_no_lt_inf_large, p_cdf_imp_lt_inf_large,
-  nrow = 2,
-  ncol = 3
-)
-```
-
-# Strong likelihood and `weak' truncation
-
-```{r}
-set.seed(549)
-
-N_units_large <- 500
-t_start <- 15
-t_end <- t_start + 1
-sim_large_df <- SimData(
-  beta = beta,
-  eta = eta,
-  n_units = N_units_large,
-  t_start = t_start,
-  t_end = t_end
-)
-
-head(sim_large_df)
-
-sim_large_df %>%
-  filter(int_censored & right_censored) %>%
-  mutate(
-    trunc_upper_b = ifelse(
-      t_start < (lifetime - (t_end - t_start)),
-      t_start,
-      (lifetime - (t_end - t_start))
-    ),
-    trunc_time = t_start - install_time,
-    trunc_times_std = trunc_time / trunc_upper_b,
-    comp = runif(n())
-  ) %>%
-  ggplot() +
-  geom_histogram(
-    aes(comp), fill = alpha("blue", 0.2), colour = alpha("blue", 0.2)
-  ) +
-  geom_histogram(
-    aes(trunc_times_std), fill = alpha("red", 0.2), colour = alpha("red", 0.2)
-  )
-  
-
-
-sim_large_df_obs <- sim_large_df %>%
-  filter(!(right_censored | int_censored))
-sim_large_df_rc <- sim_large_df %>%
-  filter(right_censored & !int_censored)
-sim_large_df_lt <- sim_large_df %>%
-  filter(!right_censored & int_censored)
-sim_large_df_lt_rc <- sim_large_df %>%
-  filter(right_censored & int_censored)
-
-stan_data_full_large <- list(
-  N_obs = nrow(sim_large_df_obs),
-  N_rc = nrow(sim_large_df_rc),
-  N_lt = nrow(sim_large_df_lt),
-  N_lt_rc = nrow(sim_large_df_lt_rc),
-  y_obs = sim_large_df_obs$failure_time - sim_large_df_obs$install_time,
-  y_rc = sim_large_df_rc$failure_time_obs - sim_large_df_rc$install_time,
-  y_lt = sim_large_df_lt$failure_time - sim_large_df_lt$install_time,
-  t_lt = sim_large_df_lt$install_time_obs - sim_large_df_lt$install_time,
-  y_lt_rc = sim_large_df_lt_rc$failure_time_obs - sim_large_df_lt_rc$install_time,
-  t_lt_rc = sim_large_df_lt_rc$install_time_obs - sim_large_df_lt_rc$install_time
-)
-
-stan_data_no_lt_large <- list(
-  N_obs = nrow(sim_large_df_obs),
-  N_rc = nrow(sim_large_df_rc),
-  y_obs = sim_large_df_obs$failure_time - sim_large_df_obs$install_time,
-  y_rc = sim_large_df_rc$failure_time_obs - sim_large_df_rc$install_time
-)
-
-stan_data_unkown_lt_large <- list(
-  N_obs = nrow(sim_large_df_obs),
-  N_rc = nrow(sim_large_df_rc),
-  N_lt = nrow(sim_large_df_lt),
-  N_lt_rc = nrow(sim_large_df_lt_rc),
-  y_obs = sim_large_df_obs$failure_time - sim_large_df_obs$install_time,
-  y_rc = sim_large_df_rc$failure_time_obs - sim_large_df_rc$install_time_obs,
-  y_lt = sim_large_df_lt$failure_time_obs - sim_large_df_lt$install_time_obs,
-  y_lt_rc = sim_large_df_lt_rc$failure_time_obs - sim_large_df_lt_rc$install_time_obs,
-  t_start = t_start
-)
-```
-
-
-```{r}
-SimLtImpData <- function(t_start) {
-  sim_large_df_2 <- SimData(
-    beta = beta,
-    eta = eta,
-    n_units = 500,
-    t_start = t_start,
-    t_end = t_start + 1
-  )
-  sim_large_df_obs_2 <- sim_large_df_2 %>%
-  filter(!(right_censored | int_censored))
-  sim_large_df_rc_2 <- sim_large_df_2 %>%
-    filter(right_censored & !int_censored)
-  sim_large_df_lt_2 <- sim_large_df_2 %>%
-    filter(!right_censored & int_censored)
-  sim_large_df_lt_rc_2 <- sim_large_df_2 %>%
-    filter(right_censored & int_censored)
-
-  stan_data_unkown_lt_large_2 <- list(
-    N_obs = nrow(sim_large_df_obs_2),
-    N_rc = nrow(sim_large_df_rc_2),
-    N_lt = nrow(sim_large_df_lt_2),
-    N_lt_rc = nrow(sim_large_df_lt_rc_2),
-    y_obs = as.array(sim_large_df_obs_2$failure_time - sim_large_df_obs_2$install_time),
-    y_rc = as.array(sim_large_df_rc_2$failure_time_obs - sim_large_df_rc_2$install_time_obs),
-    y_lt = as.array(sim_large_df_lt_2$failure_time_obs - sim_large_df_lt_2$install_time_obs),
-    y_lt_rc = as.array(sim_large_df_lt_rc_2$failure_time_obs - sim_large_df_lt_rc_2$install_time_obs),
-    t_start = t_start + 10
-  )
-  return(stan_data_unkown_lt_large_2)
-}
-test_data_sets <- lapply(
-  c(0.5, 1, 2, 4, 8, 16),
-  function(t_s) SimLtImpData(t_s)
-)
-test_stan_fits <- lapply(
-  test_data_sets,
-  function(test_data) {
-    test_stan_fit <- sampling(
-      stan_model_unknown_lt_rc,
-      test_data,
-      chains = 2,
-      cores = 2,
-      iter = 600,
-      warmup = 300
-    )
-    return(test_stan_fit)
-  }
-)
-p_test_post <- lapply(
-  test_stan_fits,
-  function(stan_fit) {
-    stan_fit %>%
-      mcmc_scatter(pars = c("beta", "eta")) +
-      geom_point(x = beta, y = eta, colour = "red") +
-      xlim(0, 5) +
-      ylim(0, 5)
-  }
-)
-plot_grid(
-  plotlist = p_test_post,
-  nrow = 2,
-  ncol = 3
-)
-```
-
-```{r}
-#| label: simulate-large-dataset
-set.seed(549)
-
-
-
-head(sim_large_df_2)
-```
-
-```{r}
-
-sim_large_df_obs_2 <- sim_large_df_2 %>%
-  filter(!(right_censored | int_censored))
-sim_large_df_rc_2 <- sim_large_df_2 %>%
-  filter(right_censored & !int_censored)
-sim_large_df_lt_2 <- sim_large_df_2 %>%
-  filter(!right_censored & int_censored)
-sim_large_df_lt_rc_2 <- sim_large_df_2 %>%
-  filter(right_censored & int_censored)
-
-stan_data_full_large_2 <- list(
-  N_obs = nrow(sim_large_df_obs_2),
-  N_rc = nrow(sim_large_df_rc_2),
-  N_lt = nrow(sim_large_df_lt_2),
-  N_lt_rc = nrow(sim_large_df_lt_rc_2),
-  y_obs = as.array(sim_large_df_obs_2$failure_time - sim_large_df_obs_2$install_time),
-  y_rc = as.array(sim_large_df_rc_2$failure_time_obs - sim_large_df_rc_2$install_time),
-  y_lt = as.array(sim_large_df_lt_2$failure_time - sim_large_df_lt_2$install_time),
-  t_lt = as.array(sim_large_df_lt_2$install_time_obs - sim_large_df_lt_2$install_time),
-  y_lt_rc = as.array(sim_large_df_lt_rc_2$failure_time_obs - sim_large_df_lt_rc_2$install_time),
-  t_lt_rc = as.array(sim_large_df_lt_rc_2$install_time_obs - sim_large_df_lt_rc_2$install_time)
-)
-
-stan_data_unkown_lt_large_2 <- list(
-  N_obs = nrow(sim_large_df_obs_2),
-  N_rc = nrow(sim_large_df_rc_2),
-  N_lt = nrow(sim_large_df_lt_2),
-  N_lt_rc = nrow(sim_large_df_lt_rc_2),
-  y_obs = as.array(sim_large_df_obs_2$failure_time - sim_large_df_obs_2$install_time),
-  y_rc = as.array(sim_large_df_rc_2$failure_time_obs - sim_large_df_rc_2$install_time_obs),
-  y_lt = as.array(sim_large_df_lt_2$failure_time_obs - sim_large_df_lt_2$install_time_obs),
-  y_lt_rc = as.array(sim_large_df_lt_rc_2$failure_time_obs - sim_large_df_lt_rc_2$install_time_obs),
-  t_start = t_start + 10
-)
-```
-
-```{r}
-#| label: fit-full-model
-stan_fit_lt_r_imputed_inf_large_2 <- sampling(
-  stan_model_lt_r_imputed_inf,
-  c(
-    stan_data_full_large_2,
-    t_1 = qweibull(0.8, beta, eta),
-    t_2 = qweibull(0.98, beta, eta),
-    t1_mean = 0.8,
-    t1_var = 0.1,
-    t2_mean = 0.98,
-    t2_var = 0.05
-  ),
-  chains = 4,
-  cores = 4,
-  iter = 1000,
-  warmup = 500
-)
-```
-
-```{r}
-#| label: fit-imp-lt-model
-stan_fit_unknown_lt_rc_inf_large_2 <- sampling(
-  stan_model_unknown_lt_rc_inf,
-  c(
-    stan_data_unkown_lt_large_2,
-    t_1 = qweibull(0.8, beta, eta),
-    t_2 = qweibull(0.98, beta, eta),
-    t1_mean = 0.8,
-    t1_var = 0.1,
-    t2_mean = 0.98,
-    t2_var = 0.05
-  ),
-  chains = 4,
-  cores = 4,
-  iter = 1000,
-  warmup = 500
-)
-```
-
-
-```{r}
-p_full_inf_large_2 <- stan_fit_lt_r_imputed_inf_large_2 %>%
-  mcmc_scatter(pars = c("beta", "eta")) +
-  geom_point(x = beta, y = eta, colour = "red") +
-  xlim(0, 5) +
-  ylim(0, 5)
-p_imp_lt_inf_large_2 <- stan_fit_unknown_lt_rc_inf_large_2 %>%
-  mcmc_scatter(pars = c("beta", "eta")) +
-  geom_point(x = beta, y = eta, colour = "red") +
-  xlim(0, 5) +
-  ylim(0, 5)
-
-p_cdf_full_inf_large_2 <- PlotPostCDF(stan_fit_lt_r_imputed_inf_large_2)
-p_cdf_imp_lt_inf_large_2 <- PlotPostCDF(stan_fit_unknown_lt_rc_inf_large_2)
-
-plot_grid(
-  p_full_inf_large_2, p_imp_lt_inf_large_2,
-  p_cdf_full_inf_large_2, p_cdf_imp_lt_inf_large_2,
-  nrow = 2,
-  ncol = 2
-)
-```
 
 # Sim study
 
@@ -1533,10 +1379,12 @@ c(
 ## Simulations
 
 ```{r}
+#| label: load-sim-results
 experiment_results_df <- readRDS("LT_experiment_results_df.rds")
 ```
 
 ```{r}
+#| label: fig-sim-result-factor-plots
 GetFactorValue <- function(x) as.numeric(as.character(x))
 ModelLabeller <- function(name_string) {
   if (stringr::str_detect(name_string, "stan_fit_imp_lt")) {
@@ -1582,41 +1430,74 @@ experiment_results_df %>%
 ```
 
 ```{r}
-experiment_results_df %>%
+#| label: fig-sim-result-factor-plots-means
+p_sim_result_plot <- experiment_results_df %>%
   mutate(
-    model_name = lapply(
+    model = lapply(
       experiment_results_df$model,
       ModelLabeller
     ) %>% unlist(),
-    prior_name = lapply(
+    prior = lapply(
       experiment_results_df$model,
       PriorLabeller
     ) %>% unlist()
   ) %>%
   filter(!is.infinite(E_log_score)) %>%
   group_by(
-    N, t_start, t_window, model_name, prior_name
+    N, t_start, t_window, model, prior
   ) %>%
   summarise(
     p_value_beta = mean(p_value_beta, na.rm = TRUE),
     p_value_eta = mean(p_value_eta, na.rm = TRUE),
-    E_log_score = mean(E_log_score, na.rm = TRUE)
+    elppd = mean(E_log_score, na.rm = TRUE)
   ) %>%
   ggplot(
     aes(
       x = p_value_beta, y = p_value_eta,
-      size = E_log_score, colour = model_name,
-      shape = prior_name
+      size = elppd, colour = model,
+      shape = prior
     )
   ) +
   geom_point(alpha = 0.5) +
   xlim(0, 1) +
   ylim(0, 1) +
-  facet_grid(rows = vars(t_start), cols = vars(N, t_window))
+  facet_grid(rows = vars(N, t_start), cols = vars(t_window)) +
+  xlab(expression(P[beta])) +
+  ylab(expression(P[eta])) +
+  theme(
+    panel.background = element_rect(
+      fill = "white", colour = "white"
+    ),
+    panel.grid.major = element_line(
+      size = 0.5,
+      colour = alpha("lightgrey", 0.5)
+    ),
+    panel.grid.minor =  element_line(
+      size = 0.25,
+      colour = alpha("lightgrey", 0.5)
+    ),
+    axis.ticks.x = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+
+p_sim_result_plot
 ```
 
+```{r}
+#| label:save-fig-sim-result-factor-plots-means
+#| echo: false
+#| output: false
+pdf(
+  file.path(fig_path, "sim-results-pvalues.pdf"),
+  height = 15,
+  width = 10
+)
+p_sim_result_plot
+dev.off()
+```
 
 ```{r}
+#| label: fig-sim-result-elppd-plots
 experiment_results_df %>%
   mutate(
     model_name = lapply(
@@ -1644,38 +1525,69 @@ experiment_results_df %>%
 ```
 
 ```{r}
-experiment_results_df %>%
+#| label: fig-sim-result-elppd-plots-means
+p_sim_res_elppd <- experiment_results_df %>%
   mutate(
-    model_name = lapply(
+    model = lapply(
       experiment_results_df$model,
       ModelLabeller
     ) %>% unlist(),
-    prior_name = lapply(
+    prior = lapply(
       experiment_results_df$model,
       PriorLabeller
     ) %>% unlist()
   ) %>%
   filter(!is.infinite(E_log_score)) %>%
   group_by(
-    N, t_start, t_window, model_name, prior_name
+    N, t_start, t_window, model, prior
   ) %>%
   summarise(
     p_value_beta = mean(p_value_beta, na.rm = TRUE),
     p_value_eta = mean(p_value_eta, na.rm = TRUE),
-    E_log_score = mean(E_log_score, na.rm = TRUE)
+    elppd = mean(E_log_score, na.rm = TRUE)
   ) %>%
   ggplot(
     aes(
-      x = N, y = E_log_score,
-      colour = model_name,
-      shape = prior_name
+      x = N, y = elppd,
+      colour = model,
+      shape = prior
     )
   ) +
   geom_jitter(
     alpha = 0.5,
     width = 0.25
   ) +
-  facet_grid(rows = vars(t_start), cols = vars(t_window))
+  facet_grid(rows = vars(t_window), cols = vars(t_start))+
+  theme(
+    panel.background = element_rect(
+      fill = "white", colour = "white"
+    ),
+    panel.grid.major = element_line(
+      size = 0.5,
+      colour = alpha("lightgrey", 0.5)
+    ),
+    panel.grid.minor =  element_line(
+      size = 0.25,
+      colour = alpha("lightgrey", 0.5)
+    ),
+    axis.ticks.x = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+
+p_sim_res_elppd
+```
+
+```{r}
+#| label:save-fig-sim-result-elppd-plots-means
+#| echo: false
+#| output: false
+pdf(
+  file.path(fig_path, "sim-results-elppd.pdf"),
+  height = 8.,
+  width = 8
+)
+p_sim_res_elppd
+dev.off()
 ```
 
 # Appendix - A
@@ -1918,4 +1830,89 @@ stan_fit_unknown_lt_rc %>%
   mcmc_hist(
     pars = stringr::str_c("t_lt_rc_st[", 1:10, "]")
   )
+```
+
+
+
+```{r}
+test_stan_model <- stan_model(
+  model_code = "
+data{
+int N_o;
+int N_r;
+int N_l;
+int N_lr;
+array[N_o] real<lower=0> y_o;
+array[N_r] real<lower=0> y_r;
+array[N_l] real<lower=0> y_l;
+array[N_lr] real<lower=0> y_lr;
+real<lower = 0> t_start;
+}
+transformed data{
+array[N_l] real<lower = 0> y_l_ub;
+for (n_l_d in 1:N_l) {
+  y_l_ub[n_l_d] = y_l[n_l_d] + t_start;
+}
+}
+parameters {
+real<lower = 0> beta;
+real<lower = 0> eta;
+array[N_r] real<lower = y_r> y_r_hat;
+array[N_l] real<lower = y_l, upper = y_l_ub> y_l_hat;
+array[N_lr] real<lower = y_lr> y_lr_hat;
+array[N_lr] real<lower = 0, upper = 1> t_lr_st;
+}
+transformed parameters {
+array[N_l] real<lower = 0> t_l;
+array[N_lr] real<lower = 0, upper = t_start> t_lr_ub;
+array[N_lr] real<lower = 0, upper = t_lr_ub> t_lr_hat;
+
+for (n_l_p in 1:N_l) {
+  t_l[n_l_p] = y_l_hat[n_l_p] - y_l[n_l_p];
+}
+
+for (n_lr_p in 1:N_lr) {
+  if ((y_lr_hat[n_lr_p] - y_lr[n_lr_p]) < t_start)
+    t_lr_ub[n_lr_p] = (y_lr_hat[n_lr_p] - y_lr[n_lr_p]);
+  else 
+    t_lr_ub[n_lr_p] = t_start;
+  t_lr_hat[n_lr_p] = t_lr_st[n_lr_p] * t_lr_ub[n_lr_p];
+}
+
+}
+model {
+beta ~ normal(1.1, 1);
+eta ~ normal(1, 1);
+t_lr_st ~ uniform(0, 1);
+
+target += weibull_lpdf(y_o | beta, eta);
+target += weibull_lpdf(y_r_hat | beta, eta);
+target += weibull_lpdf(y_l_hat | beta, eta) - weibull_lccdf(t_l | beta, eta);
+target += weibull_lpdf(y_lr_hat | beta, eta) - weibull_lccdf(t_lr_hat | beta, eta);
+}
+"
+)
+```
+
+
+```{r}
+test_stan_data <- list(
+  N_o = nrow(sim_df_obs),
+  N_r = nrow(sim_df_rc),
+  N_l = nrow(sim_df_lt),
+  N_lr = nrow(sim_df_lt_rc),
+  y_o = sim_df_obs$failure_time - sim_df_obs$install_time,
+  y_r = sim_df_rc$failure_time_obs - sim_df_rc$install_time_obs,
+  y_l = sim_df_lt$failure_time_obs - sim_df_lt$install_time_obs,
+  y_lr = sim_df_lt_rc$failure_time_obs - sim_df_lt_rc$install_time_obs,
+  t_start = t_start
+)
+stan_fit_unknown_lt_rc <- sampling(
+  test_stan_model,
+  test_stan_data,
+  chains = 4,
+  iter = 2000,
+  warmup = 1000,
+  control = list(adapt_delta = 0.99, max_treedepth = 14)
+)
 ```

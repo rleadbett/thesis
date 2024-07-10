@@ -1,0 +1,121 @@
+---
+title: "Main analysis ch3"
+format:
+  html:
+    embed-resources: true
+    self-contained-math: true
+editor: source
+cache: false
+warning: false
+message: false
+---
+
+```{r}
+library(dplyr)
+
+idler_data <- readRDS(
+  file.path("..", "..", "data", "idler_frame_life_example.RDS")
+)
+head(idler_data)
+```
+
+Say plant has been in opperation for 20 years.
+
+Some descriptives for the dataset. The largest observed lifetime is 2167 days, just under six years.
+
+```{r}
+range(idler_data$lifetime)
+```
+
+```{r}
+min(idler_data$start)
+max(idler_data$end)
+```
+
+```{r}
+idler_data %>%
+  filter(end == max(idler_data$end)) %>%
+  nrow()
+```
+
+There is one idler that is 
+
+```{r}
+idler_data %>%
+  filter(censored_at_start & censored_at_end)
+```
+
+```{r}
+idler_data$frame_number %>% unique() %>% length()
+```
+
+
+```{r}
+idler_data %>%
+  nrow()
+
+idler_data %>%
+  filter(censored_at_start) %>%
+  nrow()
+
+idler_data %>%
+  filter(!censored_at_start) %>%
+  nrow()
+```
+
+If we were to discard the left truncated samples, then we would be throwing away 35.7% of the data. This data is also less informative than the experiments from ch2 because the past bulk replacement stratergies mean that there is more right censored lifetimes.
+
+
+```{r}
+df_obs <- idler_data %>%
+  filter(lifetime > 7) %>%
+  filter(!(censored_at_start | censored_at_end))
+df_rc <- idler_data %>%
+  filter((!censored_at_start & censored_at_end))
+df_lt <- idler_data %>%
+  filter((censored_at_start & !censored_at_end))
+df_lt_rc <- idler_data %>%
+  filter((censored_at_start & censored_at_end))
+idler_frame_stan_data <- list(
+  N_obs = nrow(df_obs),
+  N_rc = nrow(df_rc),
+  N_lt = nrow(df_lt),
+  N_lt_rc = nrow(df_lt_rc),
+  y_obs = array(df_obs$lifetime),
+  y_rc = array(df_rc$lifetime),
+  y_lt = array(df_lt$lifetime),
+  y_lt_rc = array(df_lt_rc$lifetime),
+  t_start = 15 * 365
+)
+```
+
+
+```{r}
+idler_stan_fit <- sampling(
+  stan_model_unknown_lt_rc_inf,
+  c(
+    idler_frame_stan_data,
+    t_1 = 5 * 365,
+    t_2 = 8 * 365,
+    t1_mean = 0.5,
+    t1_var = 0.1,
+    t2_mean = 0.99,
+    t2_var = 0.05
+  ),
+  chains = 4,
+  cores = 4,
+  iter = 2000,
+  warmup = 500
+)
+```
+
+```{r}
+idler_stan_fit %>%
+  mcmc_scatter(pars = c("beta", "eta")) +
+  xlab(expression(beta)) +
+  ylab(expression(eta)) +
+  xlim(0, 5) + 
+  ylim(0, 5000)+
+  theme_minimal()
+```
+
