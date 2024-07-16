@@ -918,6 +918,41 @@ Hazra, I.%
 \PrintBackRefs{\CurrentBib}
 
 \bibitem [\protect \citeauthoryear {%
+Heckman%
+\ \BBA {} Singer%
+}{%
+Heckman%
+\ \BBA {} Singer%
+}{%
+{\protect \APACyear {1986}}%
+}]{%
+heckman1986}
+\APACinsertmetastar {%
+heckman1986}%
+\begin{APACrefauthors}%
+Heckman, J\BPBI J.%
+\BCBT {}\ \BBA {} Singer, B.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{1986}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Chapter 29: Econometric analysis of longitudinal data}
+  {Chapter 29: Econometric analysis of longitudinal data}.{\BBCQ}
+\newblock
+\BIn{} (\BVOL~3, \BPG~1689-1763).
+\newblock
+\APACaddressPublisher{}{Elsevier}.
+\newblock
+\begin{APACrefURL}
+  \url{https://www.sciencedirect.com/science/article/pii/S157344128603009X}
+  \end{APACrefURL}
+\newblock
+\begin{APACrefDOI} \doi{https://doi.org/10.1016/S1573-4412(86)03009-X}
+  \end{APACrefDOI}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
 Heng%
 , Zhang%
 , Tan%
@@ -1286,6 +1321,34 @@ Kowal, D\BPBI R.%
 \begin{APACrefURL}
   \url{https://higherlogicdownload.s3.amazonaws.com/AMSTAT/7328eb46-c57e-49af-8d4f-0460ca4a6a2c/UploadedImages/Kowal.pdf}
   \end{APACrefURL}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Krivtsov%
+\ \BBA {} Frankstein%
+}{%
+Krivtsov%
+\ \BBA {} Frankstein%
+}{%
+{\protect \APACyear {2017}}%
+}]{%
+krivtsov2017}
+\APACinsertmetastar {%
+krivtsov2017}%
+\begin{APACrefauthors}%
+Krivtsov, V.%
+\BCBT {}\ \BBA {} Frankstein, M.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2017}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {A Bayesian estimation procedure of reliability function
+  for lifetime distributions} {A bayesian estimation procedure of reliability
+  function for lifetime distributions}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{International Journal of Performability
+  Engineering}{13}{2}{129}.
 \PrintBackRefs{\CurrentBib}
 
 \bibitem [\protect \citeauthoryear {%

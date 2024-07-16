@@ -8,83 +8,83 @@
 \contentsline {section}{\numberline {1.5}Structure of this thesis}{23}{section.1.5}%
 \contentsline {part}{I\hspace {1em}Part one: lifetime analysis}{25}{part.1}%
 \contentsline {chapter}{\numberline {2}Heavily censored lifetime data}{29}{chapter.2}%
-\contentsline {section}{\numberline {2.1}Background}{31}{section.2.1}%
+\contentsline {section}{\numberline {2.1}Background}{32}{section.2.1}%
 \contentsline {subsection}{\numberline {2.1.1}Lifetime distribution}{32}{subsection.2.1.1}%
 \contentsline {subsection}{\numberline {2.1.2}The Weibull distribution}{33}{subsection.2.1.2}%
-\contentsline {subsection}{\numberline {2.1.3}Censoring}{34}{subsection.2.1.3}%
+\contentsline {subsection}{\numberline {2.1.3}Censoring}{35}{subsection.2.1.3}%
 \contentsline {subsection}{\numberline {2.1.4}Left-truncation}{37}{subsection.2.1.4}%
-\contentsline {subsection}{\numberline {2.1.5}Left-truncation and right-censoring}{38}{subsection.2.1.5}%
-\contentsline {paragraph}{Unknown truncation time}{40}{section*.25}%
-\contentsline {section}{\numberline {2.2}Imputing truncation times}{41}{section.2.2}%
-\contentsline {section}{\numberline {2.3}Informative joint prior}{42}{section.2.3}%
-\contentsline {section}{\numberline {2.4}Analysis of simulated data}{45}{section.2.4}%
-\contentsline {subsection}{\numberline {2.4.1}Simulation method}{47}{subsection.2.4.1}%
-\contentsline {subsection}{\numberline {2.4.2}Weakly informative prior}{48}{subsection.2.4.2}%
-\contentsline {subsection}{\numberline {2.4.3}Strongly informative prior}{50}{subsection.2.4.3}%
-\contentsline {section}{\numberline {2.5}Simulation experiments}{53}{section.2.5}%
-\contentsline {subsection}{\numberline {2.5.1}Factor levels}{53}{subsection.2.5.1}%
-\contentsline {subsection}{\numberline {2.5.2}Accuracy measures}{54}{subsection.2.5.2}%
-\contentsline {subsection}{\numberline {2.5.3}Results}{55}{subsection.2.5.3}%
-\contentsline {section}{\numberline {2.6}Concluding remarks}{55}{section.2.6}%
-\contentsline {chapter}{\numberline {3}Case study}{59}{chapter.3}%
-\contentsline {section}{\numberline {3.1}Idler frame data}{59}{section.3.1}%
-\contentsline {section}{\numberline {3.2}An informative prior}{59}{section.3.2}%
-\contentsline {section}{\numberline {3.3}Fitting}{59}{section.3.3}%
-\contentsline {section}{\numberline {3.4}Using the posterior}{60}{section.3.4}%
-\contentsline {section}{\numberline {3.5}Discussion and conclusions}{61}{section.3.5}%
-\contentsline {part}{II\hspace {1em}Part two: Degradation modelling}{63}{part.2}%
-\contentsline {chapter}{\numberline {4}A noisy gamma process for modelling degradation measurements with uncertainty}{67}{chapter.4}%
-\contentsline {section}{\numberline {4.1}The gamma process}{68}{section.4.1}%
-\contentsline {section}{\numberline {4.2}A noisy gamma process}{70}{section.4.2}%
-\contentsline {section}{\numberline {4.3}Reparametrisation}{72}{section.4.3}%
-\contentsline {section}{\numberline {4.4}Constructing the prior}{73}{section.4.4}%
-\contentsline {section}{\numberline {4.5}Fitting the noisy gamma process}{79}{section.4.5}%
-\contentsline {subsection}{\numberline {4.5.1}Data simulation}{80}{subsection.4.5.1}%
-\contentsline {subsection}{\numberline {4.5.2}Computation}{82}{subsection.4.5.2}%
-\contentsline {subsection}{\numberline {4.5.3}Results and diagnostics}{84}{subsection.4.5.3}%
-\contentsline {subsection}{\numberline {4.5.4}Solutions to computational issues}{90}{subsection.4.5.4}%
-\contentsline {section}{\numberline {4.6}Discussion}{93}{section.4.6}%
-\contentsline {chapter}{\numberline {5}Noisy gamma process with unit-to-unit variability}{99}{chapter.5}%
-\contentsline {section}{\numberline {5.1}Models for multiple units}{102}{section.5.1}%
-\contentsline {subsection}{\numberline {5.1.1}The complete pooling model}{104}{subsection.5.1.1}%
-\contentsline {subsection}{\numberline {5.1.2}Partial pooling models}{106}{subsection.5.1.2}%
-\contentsline {paragraph}{varying $\mu $ model}{107}{section*.61}%
-\contentsline {paragraph}{varying $\nu $ model}{107}{section*.62}%
-\contentsline {paragraph}{varying $\mu $ and $\nu $ model}{107}{section*.63}%
-\contentsline {section}{\numberline {5.2}Computation, posteriors, and predictive distributions}{108}{section.5.2}%
-\contentsline {paragraph}{Complete pooling}{109}{section*.65}%
-\contentsline {paragraph}{Varying $\mu $}{110}{section*.68}%
-\contentsline {paragraph}{Varying $\nu $}{113}{section*.74}%
-\contentsline {paragraph}{varying $\mu $ and $\nu $}{116}{section*.77}%
-\contentsline {paragraph}{Posterior predictive checks}{117}{section*.79}%
-\contentsline {subsection}{\numberline {5.2.1}Model comparison}{120}{subsection.5.2.1}%
-\contentsline {paragraph}{Leave-one-unit-out cross-validation}{120}{section*.82}%
-\contentsline {paragraph}{Step-ahead cross-validation}{121}{section*.83}%
-\contentsline {section}{\numberline {5.3}Failure time distributions}{123}{section.5.3}%
-\contentsline {section}{\numberline {5.4}Discussions}{125}{section.5.4}%
-\contentsline {chapter}{\numberline {6}Conveyor belt wear forecasting}{129}{chapter.6}%
-\contentsline {section}{\numberline {6.1}Functional data analysis (the data model)}{134}{section.6.1}%
-\contentsline {paragraph}{B-splines}{135}{section*.89}%
-\contentsline {paragraph}{Functional time series}{135}{section*.91}%
-\contentsline {section}{\numberline {6.2}Process models}{137}{section.6.2}%
-\contentsline {subsection}{\numberline {6.2.1}Noisy gamma process}{138}{subsection.6.2.1}%
-\contentsline {subsection}{\numberline {6.2.2}Linear model}{138}{subsection.6.2.2}%
-\contentsline {section}{\numberline {6.3}Parameter model}{139}{section.6.3}%
-\contentsline {section}{\numberline {6.4}Posterior sampling and inference}{143}{section.6.4}%
-\contentsline {paragraph}{Marginal posteriors of parameters}{144}{section*.97}%
-\contentsline {paragraph}{Intermediate quantities}{147}{section*.100}%
-\contentsline {paragraph}{Posterior predictive distributions}{148}{section*.102}%
-\contentsline {section}{\numberline {6.5}Forecasting degradation curves}{151}{section.6.5}%
-\contentsline {section}{\numberline {6.6}Comparison of methods}{152}{section.6.6}%
-\contentsline {section}{\numberline {6.7}Failure time distributions}{157}{section.6.7}%
-\contentsline {section}{\numberline {6.8}Discussions}{160}{section.6.8}%
-\contentsline {chapter}{\numberline {7}Discussions}{165}{chapter.7}%
-\contentsline {section}{\numberline {7.1}Overview and discussions}{165}{section.7.1}%
-\contentsline {section}{\numberline {7.2}Strengths and limitations}{165}{section.7.2}%
-\contentsline {section}{\numberline {7.3}Future directions}{165}{section.7.3}%
-\contentsline {section}{\numberline {7.4}Implications for industry practitioners}{165}{section.7.4}%
-\contentsline {chapter}{Appendices}{167}{section*.111}%
-\contentsline {chapter}{\numberline {A}Appendix Title}{169}{appendix.a.A}%
+\contentsline {subsection}{\numberline {2.1.5}Left-truncation and right-censoring}{39}{subsection.2.1.5}%
+\contentsline {paragraph}{Unknown truncation time}{41}{section*.25}%
+\contentsline {section}{\numberline {2.2}Imputing truncation times}{42}{section.2.2}%
+\contentsline {section}{\numberline {2.3}Informative joint prior}{43}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Analysis of simulated data}{46}{section.2.4}%
+\contentsline {subsection}{\numberline {2.4.1}Simulation method}{48}{subsection.2.4.1}%
+\contentsline {subsection}{\numberline {2.4.2}Weakly informative prior}{51}{subsection.2.4.2}%
+\contentsline {subsection}{\numberline {2.4.3}Strongly informative prior}{51}{subsection.2.4.3}%
+\contentsline {section}{\numberline {2.5}Simulation experiments}{54}{section.2.5}%
+\contentsline {subsection}{\numberline {2.5.1}Factor levels}{55}{subsection.2.5.1}%
+\contentsline {subsection}{\numberline {2.5.2}Accuracy measures}{55}{subsection.2.5.2}%
+\contentsline {subsection}{\numberline {2.5.3}Results}{56}{subsection.2.5.3}%
+\contentsline {section}{\numberline {2.6}Concluding remarks}{60}{section.2.6}%
+\contentsline {chapter}{\numberline {3}Case study}{65}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Idler frame data}{65}{section.3.1}%
+\contentsline {section}{\numberline {3.2}An informative prior}{65}{section.3.2}%
+\contentsline {section}{\numberline {3.3}Fitting}{65}{section.3.3}%
+\contentsline {section}{\numberline {3.4}Using the posterior}{66}{section.3.4}%
+\contentsline {section}{\numberline {3.5}Discussion and conclusions}{67}{section.3.5}%
+\contentsline {part}{II\hspace {1em}Part two: Degradation modelling}{69}{part.2}%
+\contentsline {chapter}{\numberline {4}A noisy gamma process for modelling degradation measurements with uncertainty}{73}{chapter.4}%
+\contentsline {section}{\numberline {4.1}The gamma process}{74}{section.4.1}%
+\contentsline {section}{\numberline {4.2}A noisy gamma process}{76}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Reparametrisation}{78}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Constructing the prior}{79}{section.4.4}%
+\contentsline {section}{\numberline {4.5}Fitting the noisy gamma process}{85}{section.4.5}%
+\contentsline {subsection}{\numberline {4.5.1}Data simulation}{86}{subsection.4.5.1}%
+\contentsline {subsection}{\numberline {4.5.2}Computation}{88}{subsection.4.5.2}%
+\contentsline {subsection}{\numberline {4.5.3}Results and diagnostics}{90}{subsection.4.5.3}%
+\contentsline {subsection}{\numberline {4.5.4}Solutions to computational issues}{96}{subsection.4.5.4}%
+\contentsline {section}{\numberline {4.6}Discussion}{99}{section.4.6}%
+\contentsline {chapter}{\numberline {5}Noisy gamma process with unit-to-unit variability}{105}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Models for multiple units}{108}{section.5.1}%
+\contentsline {subsection}{\numberline {5.1.1}The complete pooling model}{110}{subsection.5.1.1}%
+\contentsline {subsection}{\numberline {5.1.2}Partial pooling models}{112}{subsection.5.1.2}%
+\contentsline {paragraph}{varying $\mu $ model}{113}{section*.61}%
+\contentsline {paragraph}{varying $\nu $ model}{113}{section*.62}%
+\contentsline {paragraph}{varying $\mu $ and $\nu $ model}{113}{section*.63}%
+\contentsline {section}{\numberline {5.2}Computation, posteriors, and predictive distributions}{114}{section.5.2}%
+\contentsline {paragraph}{Complete pooling}{115}{section*.65}%
+\contentsline {paragraph}{Varying $\mu $}{116}{section*.68}%
+\contentsline {paragraph}{Varying $\nu $}{119}{section*.74}%
+\contentsline {paragraph}{varying $\mu $ and $\nu $}{122}{section*.77}%
+\contentsline {paragraph}{Posterior predictive checks}{123}{section*.79}%
+\contentsline {subsection}{\numberline {5.2.1}Model comparison}{126}{subsection.5.2.1}%
+\contentsline {paragraph}{Leave-one-unit-out cross-validation}{126}{section*.82}%
+\contentsline {paragraph}{Step-ahead cross-validation}{127}{section*.83}%
+\contentsline {section}{\numberline {5.3}Failure time distributions}{129}{section.5.3}%
+\contentsline {section}{\numberline {5.4}Discussions}{131}{section.5.4}%
+\contentsline {chapter}{\numberline {6}Conveyor belt wear forecasting}{135}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Functional data analysis (the data model)}{140}{section.6.1}%
+\contentsline {paragraph}{B-splines}{141}{section*.89}%
+\contentsline {paragraph}{Functional time series}{141}{section*.91}%
+\contentsline {section}{\numberline {6.2}Process models}{143}{section.6.2}%
+\contentsline {subsection}{\numberline {6.2.1}Noisy gamma process}{144}{subsection.6.2.1}%
+\contentsline {subsection}{\numberline {6.2.2}Linear model}{144}{subsection.6.2.2}%
+\contentsline {section}{\numberline {6.3}Parameter model}{145}{section.6.3}%
+\contentsline {section}{\numberline {6.4}Posterior sampling and inference}{149}{section.6.4}%
+\contentsline {paragraph}{Marginal posteriors of parameters}{150}{section*.97}%
+\contentsline {paragraph}{Intermediate quantities}{153}{section*.100}%
+\contentsline {paragraph}{Posterior predictive distributions}{154}{section*.102}%
+\contentsline {section}{\numberline {6.5}Forecasting degradation curves}{157}{section.6.5}%
+\contentsline {section}{\numberline {6.6}Comparison of methods}{158}{section.6.6}%
+\contentsline {section}{\numberline {6.7}Failure time distributions}{163}{section.6.7}%
+\contentsline {section}{\numberline {6.8}Discussions}{166}{section.6.8}%
+\contentsline {chapter}{\numberline {7}Discussions}{171}{chapter.7}%
+\contentsline {section}{\numberline {7.1}Overview and discussions}{171}{section.7.1}%
+\contentsline {section}{\numberline {7.2}Strengths and limitations}{171}{section.7.2}%
+\contentsline {section}{\numberline {7.3}Future directions}{171}{section.7.3}%
+\contentsline {section}{\numberline {7.4}Implications for industry practitioners}{171}{section.7.4}%
+\contentsline {chapter}{Appendices}{173}{section*.111}%
+\contentsline {chapter}{\numberline {A}Appendix Title}{175}{appendix.a.A}%
 \setcounter {tocdepth}{1}
-\contentsline {chapter}{\numberline {B}Copyright Information}{171}{appendix.a.B}%
-\contentsline {chapter}{References}{173}{appendix*.112}%
+\contentsline {chapter}{\numberline {B}Copyright Information}{177}{appendix.a.B}%
+\contentsline {chapter}{References}{179}{appendix*.112}%

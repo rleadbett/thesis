@@ -12,6 +12,17 @@ message: false
 
 ```{r}
 library(dplyr)
+library(ggplot2)
+library(ggdist)
+library(cowplot)
+library(rstan)
+library(posterior)
+library(tidybayes)
+library(bayesplot)
+library(kableExtra)
+
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
 
 idler_data <- readRDS(
   file.path("..", "..", "data", "idler_frame_life_example.RDS")
@@ -68,10 +79,11 @@ If we were to discard the left truncated samples, then we would be throwing away
 
 ```{r}
 df_obs <- idler_data %>%
-  filter(lifetime > 7) %>%
+  filter(lifetime > 14) %>%
   filter(!(censored_at_start | censored_at_end))
 df_rc <- idler_data %>%
-  filter((!censored_at_start & censored_at_end))
+  filter((!censored_at_start & censored_at_end) | 
+    ((lifetime < 14) & !(censored_at_start | censored_at_end)))
 df_lt <- idler_data %>%
   filter((censored_at_start & !censored_at_end))
 df_lt_rc <- idler_data %>%
@@ -89,6 +101,98 @@ idler_frame_stan_data <- list(
 )
 ```
 
+```{r}
+stan_model_unknown_lt_rc_inf <- stan_model(
+  model_code = "
+functions {
+// function to simplify the calculation of eta and beta
+real fn(real tCDF) {
+  return log(-log1m(tCDF));
+}
+}
+data {
+int N_obs;                             # N fully observed lives
+int N_rc;                              # N right censored only lives
+int N_lt;                              # N left truncated only lives
+int N_lt_rc;                           # N right cens and left trunc lives
+array[N_obs] real<lower=0> y_obs;      # Fully observed lifetimes
+array[N_rc] real<lower=0> y_rc;        # Right censored lifetimes
+array[N_lt] real<lower=0> y_lt;        # Left trunc lifetimes
+array[N_lt_rc] real<lower=0> y_lt_rc;  # right cens and left trunc lifetimes
+real<lower=0> t_start;                 # start of the observation window
+// Define the prior
+real t_1;
+real t_2;
+real t1_mean;
+real t1_var;
+real t2_mean;
+real t2_var;
+}
+transformed data{
+array[N_lt] real<lower=0> y_lt_upper;  # The upper bound of the left trunc lives
+
+for (m in 1:N_lt){
+  y_lt_upper[m] = y_lt[m] + t_start;   # Upper bound = lower bound + start of observation
+}
+
+}
+parameters {
+real<lower = 0, upper = 1> t1CDF;
+real<lower = t1CDF, upper = 1> t2CDF;
+array[N_rc] real<lower=y_rc> y_rc_hat;   # imputed right censored values
+array[N_lt] real<lower=y_lt, upper=y_lt_upper> y_lt_hat;  # imputed left trunc values
+array[N_lt_rc] real<lower=y_lt_rc> y_lt_rc_hat;   # imputed left trunc and right cens values
+array[N_lt_rc] real<lower=0, upper=1> t_lt_rc_st; # imputed left truncation times for left trunc and right cens values (standardised)
+}
+transformed parameters{
+real<lower = 0> beta;
+real<lower = 0> eta;
+array[N_lt] real t_lt;  # imputed left trunc times for left trunc values
+array[N_lt_rc] real<lower=0, upper=t_start> t_lt_rc_upper;
+array[N_lt_rc] real<lower=0, upper=t_lt_rc_upper> t_lt_rc;  # imputed left trunc times for left trunc and right cens values
+
+// calculate Weibull paramaters based on the
+// draws from the CDF at t1 and t2.
+beta = (fn(t2CDF) - fn(t1CDF)) / log(t_2 / t_1);
+eta = exp(log(t_1) - (fn(t1CDF) / beta));
+
+for (i in 1:N_lt) {
+  t_lt[i] = y_lt_hat[i] - y_lt[i];
+}
+
+for (k in 1:N_lt_rc){
+  if ((y_lt_rc_hat[k] - y_lt_rc[k]) < t_start)
+    t_lt_rc_upper[k] = y_lt_rc_hat[k] - y_lt_rc[k];
+  else
+    t_lt_rc_upper[k] = t_start;
+
+  t_lt_rc[k] = t_lt_rc_st[k] * t_lt_rc_upper[k];
+}
+}
+model{
+// Data model
+// fully observed lifetimes
+y_obs ~ weibull(beta, eta);
+// right censored lifetimes
+y_rc_hat ~ weibull(beta, eta);
+// left truncated lifetimes
+for (i in 1:N_lt) {
+  y_lt_hat[i] ~ weibull(beta, eta) T[t_lt[i], ]; 
+}
+// left truncated and right censored lifetimes
+for (j in 1:N_lt_rc) {
+  y_lt_rc_hat[j] ~ weibull(beta, eta) T[t_lt_rc[j], ]; 
+}
+
+// Prior model
+t1CDF ~ normal(t1_mean, t1_var);
+t2CDF ~ normal(t2_mean, t2_var);
+t_lt_rc_st ~ uniform(0, 1);
+}
+
+"
+)
+```
 
 ```{r}
 idler_stan_fit <- sampling(
@@ -119,3 +223,547 @@ idler_stan_fit %>%
   theme_minimal()
 ```
 
+# Expected failure times
+
+```{r}
+rc_post <- idler_stan_fit %>%
+  as_draws_rvars() %>%
+  gather_rvars(y_rc_hat[i])
+
+rc_post <- cbind(
+  rc_post,
+  df_rc
+)
+
+rc_post %>%
+  filter(
+    end == lubridate::ymd("2021-01-11")
+  ) %>%
+  mutate(
+    f_days = .value - as.numeric(lifetime),
+    f_days_mean = median(f_days)
+  ) %>%
+  arrange(f_days_mean) %>%
+  mutate(j = 1:n()) %>%
+  ggplot() +
+  stat_pointinterval(aes(xdist = f_days, y = j))
+```
+
+# Expected number of failures
+
+```{r}
+idler_stan_fit %>%
+  as_draws_df() %>%
+  gather_draws(y_rc_hat[i]) %>%
+  left_join(
+    df_rc %>%
+      mutate(i = 1:n()),
+    by = "i"
+  ) %>%
+  filter(
+    end == lubridate::ymd("2021-01-11")
+  ) %>%
+  mutate(
+    f_days = .value - as.numeric(lifetime)
+  ) %>%
+  group_by(.draw) %>%
+  arrange(f_days) %>%
+  mutate(j = 1:n()) %>%
+  ggplot() +
+  geom_step(aes(x = f_days, y = j, group = .draw), colour = "gray", alpha = 0.5)
+```
+
+# Cost functions
+
+```{r}
+rvar_pweibull <- rfun(pweibull)
+
+N <- 143
+C_p <- 500
+C_f <- 1000000
+p_bd <- 0.20
+
+weibull_params <- idler_stan_fit %>%
+  as_draws_rvars() %>%
+  spread_rvars(beta, eta)
+
+data.frame(
+  interval_weeks = 1:53
+) %>%
+  mutate(
+    interval_days = interval_weeks * 7,
+    fixed_cost = C_p * N,
+    F_t = rvar_pweibull(interval_days, weibull_params$beta, weibull_params$eta),
+    reactive_cost = C_f * (p_bd * (N * F_t)),
+    cost = (fixed_cost + reactive_cost) / interval_days,
+    median_cost = median(cost),
+    quant90_cost = as.numeric(quantile(cost, prob = 0.9))
+  ) %>%
+  ggplot() +
+  stat_halfeye(aes(xdist = cost, y = interval_weeks)) +
+  geom_point(aes(x = quant90_cost, y = interval_weeks), col = "red")
+```
+
+```{r}
+N <- 143
+C_p <- 500
+C_f <- 1000000
+p_bd <- 0.20
+
+data.frame(
+  interval_weeks = 1:53
+) %>%
+  mutate(
+    interval_days = interval_weeks * 7,
+    fixed_cost = C_p * N,
+    F_t = pweibull(interval_days, 1.5, 1300),
+    reactive_cost = C_f * (p_bd * (N * F_t)),
+    cost = (fixed_cost + reactive_cost) / interval_days
+  ) %>%
+  ggplot() +
+  geom_halfeye(aes(x = cost, y = interval_weeks))
+```
+
+
+```{r}
+SimulateBeltFailure <- function(beta, eta, p) {
+  N <- 143
+  samp <- rweibull(N, beta, eta)
+  samp <- samp[order(samp)]
+  belt_damage <- sample(c(0, 1), N, c((1 - p), p), replace = TRUE)
+  if (sum(belt_damage) == 0) {
+    ft <- NA
+  } else {
+    ft <- samp[min(which(belt_damage == 1))]
+  }
+  return(ft)
+}
+SimulateNinTBeltFailures <- function(t, ...) {
+  belt_lives <- lapply(
+    1:10,
+    function(i) SimulateBeltFailure(...)
+  ) %>%
+    unlist() %>%
+    cumsum()
+  n_failures <- sum(belt_lives < t)
+  return(n_failures)
+}
+ExpectedNBeltFailures <- function(t, ...) {
+  n_failures_sim <- lapply(
+    1:1000000,
+    function(i) SimulateNinTBeltFailures(t, ...)
+  ) %>%
+    unlist()
+  return(mean(n_failures_sim, na.rm = TRUE))
+}
+```
+
+
+```{r}
+N <- 143
+C_p <- 500
+C_f <- 1000000
+
+SimulateNinTBeltFailures(t = (10 * 6 * 8), beta = 1.1, eta = 1300, p = 0.1)
+for (i in 1:10) {
+  ExpectedNBeltFailures(t = (10 * 6 * 7), beta = 1.1, eta = 1300, p = 0.1) %>%
+  print()
+}
+ExpectedNBeltFailures(t = (10 * 6 * 7), beta = 1.1, eta = 1300, p = 0.1)
+
+n_fs <- lapply(
+  6 * (1:20) * 7,
+  function(t) ExpectedNBeltFailures(t = t, beta = 1.1, eta = 1300, p = 0.1)
+) %>%
+  unlist()
+
+plot(x = 6 * (1:20) * 7, y = ((C_p * N) + (C_f * n_fs)) / (6 * (1:20)))
+
+plot(x = 6 * (1:20) * 7, y = ((C_p * N) + (C_f * n_fs)) / (6 * (1:20) * 7))
+
+junk_df <- data.frame(
+  interval_weeks = 6 * (10:20)
+) %>%
+  mutate(
+    interval_days = interval_weeks * 7,
+    fixed_cost = C_p * N,
+    n_belt_failrus = lapply(
+      interval_days,
+      function(t) ExpectedNBeltFailures(t = t, beta = 1.1, eta = 1300, p = 0.1)
+    ) %>%
+      unlist(),
+    reactive_cost = C_f * n_belt_failrus,
+    cost = (fixed_cost + reactive_cost) / interval_weeks
+  )
+junk_df %>%
+  ggplot() +
+  geom_point(aes(x = cost, y = interval_weeks))
+```
+
+
+
+
+```{r}
+stan_model_test <- stan_model(
+  model_code = "
+data {
+int N_obs;                             # N fully observed lives
+int N_rc;                              # N right censored only lives
+int N_lt;                              # N left truncated only lives
+array[N_obs] real<lower=0> y_obs;      # Fully observed lifetimes
+array[N_rc] real<lower=0> y_rc;        # Right censored lifetimes
+array[N_lt] real<lower=0> y_lt;        # Left trunc lifetimes
+real<lower=0> t_start;                 # start of the observation window
+}
+transformed data{
+array[N_lt] real<lower=0> y_lt_upper;  # The upper bound of the left trunc lives
+
+for (m in 1:N_lt){
+  y_lt_upper[m] = y_lt[m] + t_start;   # Upper bound = lower bound + start of observation
+}
+
+}
+parameters {
+real<lower= 0> beta;     # weibull shape
+real<lower= 0> eta;      # weibull scale
+array[N_rc] real<lower=y_rc> y_rc_hat;   # imputed right censored values
+array[N_lt] real<lower=y_lt, upper=y_lt_upper> y_lt_hat;  # imputed left trunc values
+}
+transformed parameters{
+array[N_lt] real t_lt;  # imputed left trunc times for left trunc values
+
+for (i in 1:N_lt) {
+  t_lt[i] = y_lt_hat[i] - y_lt[i];
+}
+}
+model{
+// Data model
+// fully observed lifetimes
+y_obs ~ weibull(beta, eta);
+// right censored lifetimes
+y_rc_hat ~ weibull(beta, eta);
+// left truncated lifetimes
+for (i in 1:N_lt) {
+  y_lt_hat[i] ~ weibull(beta, eta) T[t_lt[i], ]; 
+}
+
+// Prior model
+eta ~ normal(1, 1);
+beta ~ normal(1.1, 1);
+}
+
+"
+)
+```
+
+```{r}
+beta <- 1.1
+eta <- 1
+t_start <- 5
+t_obs <- 0.5
+N_or <- 1
+install_times <- runif(N_or, 0, t_obs)
+FTs <- install_times + rweibull(N_or, beta, eta)
+i_y_obs <- which(FTs <  t_obs)
+i_y_rc <- which(FTs >  t_obs)
+y_obs <- FTs[i_y_obs] - install_times[i_y_obs]
+y_rc <- t_obs - install_times[i_y_rc]
+N_obs <- length(y_obs)
+N_rc <- length(y_rc)
+
+N_lt <- 500
+y_lt <- lapply(
+  1:N_lt,
+  function(i) {
+    samp <- rweibull(100, beta, eta)
+    FTs <- cumsum(samp)
+    first_obs_FT <- min(which(FTs > t_start))
+    return(FTs[first_obs_FT] - t_start)
+  }
+) %>%
+  unlist()
+
+test_stan_data <- list(
+  N_obs = N_obs,
+  N_rc = N_rc,
+  N_lt = N_lt,
+  y_obs = array(y_obs),
+  y_rc = array(y_rc),
+  y_lt = array(y_lt),
+  t_start = t_start
+)
+
+stan_fit_test <- sampling(
+  stan_model_test,
+  test_stan_data,
+  chains = 4,
+  iter = 1000,
+  warmup = 500
+)
+
+stan_fit_test %>%
+  mcmc_scatter(pars = c("beta", "eta")) +
+  geom_point(x = beta, y = eta, colour = "red") +
+  xlim(0, 5) +
+  ylim(0, 5)
+```
+
+```{r}
+PlotPostCDF(stan_fit_test)
+```
+
+
+```{r}
+stan_model_test2 <- stan_model(
+  model_code = "
+data {
+int N_obs;                             # N fully observed lives
+int N_rc;                              # N right censored only lives
+int N_lt;                              # N left truncated only lives
+int N_lt_rc;                           # N right cens and left trunc lives
+array[N_obs] real<lower=0> y_obs;      # Fully observed lifetimes
+array[N_rc] real<lower=0> y_rc;        # Right censored lifetimes
+array[N_lt] real<lower=0> y_lt;        # Left trunc lifetimes
+array[N_lt_rc] real<lower=0> y_lt_rc;  # right cens and left trunc lifetimes
+real<lower=0> t_start;                 # start of the observation window
+}
+transformed data{
+array[N_lt] real<lower=0> y_lt_upper;  # The upper bound of the left trunc lives
+
+for (m in 1:N_lt){
+  y_lt_upper[m] = y_lt[m] + t_start;   # Upper bound = lower bound + start of observation
+}
+
+}
+parameters {
+real<lower= 0> beta;     # weibull shape
+real<lower= 0> eta;      # weibull scale
+array[N_rc] real<lower=y_rc> y_rc_hat;   # imputed right censored values
+array[N_lt] real<lower=y_lt, upper=y_lt_upper> y_lt_hat;  # imputed left trunc values
+array[N_lt_rc] real<lower=y_lt_rc> y_lt_rc_hat;   # imputed left trunc and right cens values
+array[N_lt_rc] real<lower=0, upper=1> t_lt_rc_st; # imputed left truncation times for left trunc and right cens values (standardised)
+}
+transformed parameters{
+array[N_lt] real t_lt;  # imputed left trunc times for left trunc values
+array[N_lt_rc] real<lower=0, upper=t_start> t_lt_rc_upper;
+array[N_lt_rc] real<lower=0, upper=t_lt_rc_upper> t_lt_rc;  # imputed left trunc times for left trunc and right cens values
+
+for (i in 1:N_lt) {
+  t_lt[i] = y_lt_hat[i] - y_lt[i];
+}
+
+for (k in 1:N_lt_rc){
+  if ((y_lt_rc_hat[k] - y_lt_rc[k]) < t_start)
+    t_lt_rc_upper[k] = y_lt_rc_hat[k] - y_lt_rc[k];
+  else
+    t_lt_rc_upper[k] = t_start;
+
+  t_lt_rc[k] = t_lt_rc_st[k] * t_lt_rc_upper[k];
+}
+}
+model{
+// Data model
+// fully observed lifetimes
+y_obs ~ weibull(beta, eta);
+// right censored lifetimes
+y_rc_hat ~ weibull(beta, eta);
+// left truncated lifetimes
+for (i in 1:N_lt) {
+  y_lt_hat[i] ~ weibull(beta, eta) T[t_lt[i], ]; 
+}
+// left truncated and right censored lifetimes
+for (j in 1:N_lt_rc) {
+  y_lt_rc_hat[j] ~ weibull(beta, eta) T[t_lt_rc[j], ]; 
+}
+
+// Prior model
+eta ~ normal(1, 1);
+beta ~ normal(1.1, 1);
+t_lt_rc_st ~ uniform(0, 1);
+}
+
+"
+)
+```
+
+```{r}
+beta <- 1.1
+eta <- 1
+t_start <- 5
+t_obs <- 2
+N_or <- 1
+install_times <- runif(N_or, 0, t_obs)
+FTs <- install_times + rweibull(N_or, beta, eta)
+i_y_obs <- which(FTs <  t_obs)
+i_y_rc <- which(FTs >  t_obs)
+y_obs <- FTs[i_y_obs] - install_times[i_y_obs]
+y_rc <- t_obs - install_times[i_y_rc]
+N_obs <- length(y_obs)
+N_rc <- length(y_rc)
+
+N_lr <- 100
+y_lr <- lapply(
+  1:N_lr,
+  function(i) {
+    samp <- rweibull(100, beta, eta)
+    FTs <- cumsum(samp)
+    first_obs_FT <- min(which(FTs > t_start))
+    return(FTs[first_obs_FT] - t_start)
+  }
+) %>%
+  unlist()
+i_y_lt <- which(y_lr <  t_obs)
+i_y_lt_rc <- which(y_lr >  t_obs)
+y_lt <- y_lr[i_y_lt]
+y_lt_rc <- rep(t_obs, length(i_y_lt_rc))
+N_lt <- length(y_lt)
+N_lt_rc <- length(y_lt_rc)
+
+test_stan_data <- list(
+  N_obs = N_obs,
+  N_rc = N_rc,
+  N_lt = N_lt,
+  N_lt_rc = N_lt_rc,
+  y_obs = array(y_obs),
+  y_rc = array(y_rc),
+  y_lt = array(y_lt),
+  y_lt_rc = array(y_lt_rc),
+  t_start = t_start
+)
+
+stan_fit_test2 <- sampling(
+  stan_model_test2,
+  test_stan_data,
+  chains = 4,
+  iter = 1000,
+  warmup = 300
+)
+
+stan_fit_test2 %>%
+  mcmc_scatter(pars = c("beta", "eta")) +
+  geom_point(x = beta, y = eta, colour = "red") +
+  xlim(0, 5) +
+  ylim(0, 5)
+```
+
+
+```{r}
+stan_model_test3 <- stan_model(
+  model_code = "
+data {
+int N_obs;                             # N fully observed lives
+int N_rc;                              # N right censored only lives
+int N_lt;                              # N left truncated only lives
+int N_lt_rc;                           # N right cens and left trunc lives
+array[N_obs] real<lower=0> y_obs;      # Fully observed lifetimes
+array[N_rc] real<lower=0> y_rc;        # Right censored lifetimes
+array[N_lt] real<lower=0> y_lt;        # Left trunc lifetimes
+array[N_lt_rc] real<lower=0> y_lt_rc;  # right cens and left trunc lifetimes
+real<lower=0> t_start;                 # start of the observation window
+int C;
+int<lower = 1, upper = C> CHAIN_ID;
+array[C, N_lt_rc] real<lower=0, upper = 1> A;
+}
+transformed data{
+array[N_lt] real<lower=0> y_lt_upper;  # The upper bound of the left trunc lives
+array[N_lt_rc] real<lower=0, upper=1> t_lt_rc_st;
+
+for (m in 1:N_lt){
+  y_lt_upper[m] = y_lt[m] + t_start;   # Upper bound = lower bound + start of observation
+}
+
+print(\"Now running: \", CHAIN_ID, \" with \", A[CHAIN_ID, 1:N_lt_rc]);
+
+t_lt_rc_st = A[CHAIN_ID, 1:N_lt_rc];
+}
+parameters {
+real<lower= 0> beta;     # weibull shape
+real<lower= 0> eta;      # weibull scale
+array[N_rc] real<lower=y_rc> y_rc_hat;   # imputed right censored values
+array[N_lt] real<lower=y_lt, upper=y_lt_upper> y_lt_hat;  # imputed left trunc values
+array[N_lt_rc] real<lower=y_lt_rc> y_lt_rc_hat;   # imputed left trunc and right cens values
+}
+transformed parameters{
+array[N_lt] real t_lt;  # imputed left trunc times for left trunc values
+array[N_lt_rc] real<lower=0, upper=t_start> t_lt_rc_upper;
+array[N_lt_rc] real<lower=0, upper=t_lt_rc_upper> t_lt_rc;  # imputed left trunc times for left trunc and right cens values
+
+for (i in 1:N_lt) {
+  t_lt[i] = y_lt_hat[i] - y_lt[i];
+}
+
+for (k in 1:N_lt_rc){
+  if ((y_lt_rc_hat[k] - y_lt_rc[k]) < t_start)
+    t_lt_rc_upper[k] = y_lt_rc_hat[k] - y_lt_rc[k];
+  else
+    t_lt_rc_upper[k] = t_start;
+
+  t_lt_rc[k] = t_lt_rc_st[k] * t_lt_rc_upper[k];
+}
+}
+model{
+// Data model
+// fully observed lifetimes
+y_obs ~ weibull(beta, eta);
+// right censored lifetimes
+y_rc_hat ~ weibull(beta, eta);
+// left truncated lifetimes
+for (i in 1:N_lt) {
+  y_lt_hat[i] ~ weibull(beta, eta) T[t_lt[i], ]; 
+}
+// left truncated and right censored lifetimes
+for (j in 1:N_lt_rc) {
+  y_lt_rc_hat[j] ~ weibull(beta, eta) T[t_lt_rc[j], ]; 
+}
+
+// Prior model
+eta ~ normal(1, 1);
+beta ~ normal(1.1, 1);
+}
+
+"
+)
+```
+
+
+```{r}
+chains <- 30
+
+test_stan_data3 <- c(
+  test_stan_data,
+  list(
+    C = chains,
+    A = array(runif(N_lt_rc * chains), dim = c(chains, N_lt_rc))
+  )
+)
+stan_fit_test3 <- sampling(
+  stan_model_test3,
+  test_stan_data3,
+  chains = chains,
+  iter = 1000,
+  warmup = 200,
+  chain_id = 1L
+)
+
+stan_fit_test3 %>%
+  mcmc_scatter(pars = c("beta", "eta")) +
+  geom_point(x = beta, y = eta, colour = "red") +
+  xlim(0, 5) +
+  ylim(0, 5)
+```
+
+
+```{r}
+stan_fit_test3 %>%
+  as_draws_df() %>%
+  spread_draws(t_lt_rc_upper[i], t_lt_rc[i]) %>%
+  mutate(t_lt_rc_st = round(t_lt_rc / t_lt_rc_upper, 4)) %>%
+  group_by(.chain, i) %>%
+  summarise(unique(t_lt_rc_st))
+```
+
+
+```{r}
+stan_fit_test3 %>%
+  mcmc_dens_chains(regex_pars = c("y_lt_rc_hat", "t_lt_rc_upper"))
+```
