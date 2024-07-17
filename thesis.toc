@@ -7,7 +7,7 @@
 \contentsline {section}{\numberline {1.4}Bayesian reliability modelling}{13}{section.1.4}%
 \contentsline {section}{\numberline {1.5}Structure of this thesis}{23}{section.1.5}%
 \contentsline {part}{I\hspace {1em}Part one: lifetime analysis}{25}{part.1}%
-\contentsline {chapter}{\numberline {2}Heavily censored lifetime data}{29}{chapter.2}%
+\contentsline {chapter}{\numberline {2}Weibull analysis of partially observed lifetime data}{29}{chapter.2}%
 \contentsline {section}{\numberline {2.1}Background}{32}{section.2.1}%
 \contentsline {subsection}{\numberline {2.1.1}Lifetime distribution}{32}{subsection.2.1.1}%
 \contentsline {subsection}{\numberline {2.1.2}The Weibull distribution}{33}{subsection.2.1.2}%
