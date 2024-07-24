@@ -22,7 +22,7 @@ The lifetimes of the units are modelled as a random variable defined in terms of
 \end{itemize}
 For example, the CDF quantifies the risk of unplanned failures given a chosen preventative maintenance interval, and the Hazard function identifies if a unit's risk of failure increases as it ages and, therefore, if a preventative maintenance strategy is even suitable at all.
 
-\subsection{The Weibull distribution}
+\subsection{The Weibull distribution} \label{subsec:weibull-dist}
 
 In the analysis that follows, I use the Weibull distribution to model the idler frame lifetimes, that is
 \begin{equation}
@@ -49,7 +49,7 @@ The shape parameter $\beta$ dictates whether the hazard increases, $\beta > 1$, 
     \label{fig:hazard_function_demo}
 \end{figure}
 
-\subsection{Censoring}
+\subsection{Censoring} \label{subsec:censoring-treatments}
 
 It is very common for lifetime data to be censored. Censoring occurs when we only partly observe the lifetime of a unit, or in other words, we only observe upper and lower bounds for the lifetime. There are three types of censoring: left, interval, and right censoring, but all are treated in much the same way. Figure~\ref{fig:cense_examp} demonstrates these three types of censoring. In the figure, three units are installed at time $t_0$, and then two follow-up inspections are performed at times $t_1$ and $t_2$. The true---partially observed---failure times of each unit are shown as crosses in the figure. Left censoring occurs when we only observe an upper bound of the lifetime. An example is if we know the install time of a unit and observe it as failed at $t_1$, and so we only know that the true value of the lifetime must be less than $t_1$. Interval censoring occurs if we only know an upper and lower bound for the lifetime, i.e. if a unit fails between inspection times, then we know that the lifetime must be greater than $t_1$ but less than $t_2$. Right censoring occurs when we only know a lower bound for the lifetime. For example, if a unit is still in operation when we perform our analysis, e.g. it has lasted longer than $t_2$, then we only know that the true value of the lifetime must be greater than $t_2$. Right and left censoring are special cases of interval censoring where the upper or lower bound of the lifetime is infinity or zero, respectively. Left censoring is fairly uncommon, so in the discussions that follow, I focus on right and interval censoring. However, all of the methods can be easily extended to accommodate left-censored data as well.
 

@@ -11,6 +11,7 @@ message: false
 ---
 
 ```{r}
+#| label: set-up-chunk
 library(dplyr)
 library(ggplot2)
 library(ggdist)
@@ -20,70 +21,271 @@ library(posterior)
 library(tidybayes)
 library(bayesplot)
 library(kableExtra)
+library(lubridate)
 
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 
+fig_path <- file.path(
+  "..",
+  "..",
+  "figures",
+  "ch-3"
+)
+tbl_path <- file.path(
+  "..",
+  "..",
+  "tables",
+  "ch-3"
+)
+```
+
+The idler frame failure time data from an overland iron ore conveyor.
+
+```{r}
+#| label: load-data
 idler_data <- readRDS(
   file.path("..", "..", "data", "idler_frame_life_example.RDS")
+)
+# add missing lifetime
+idler_data <- rbind(
+  idler_data,
+  data.frame(
+    start = ymd("2020-11-15"),
+    end = ymd("2021-01-11"),
+    censored_at_start = FALSE,
+    censored_at_end = TRUE,
+    lifetime = ymd("2021-01-11") - ymd("2020-11-15"),
+    frame_number = "78"
+  )
 )
 head(idler_data)
 ```
 
-Say plant has been in opperation for 20 years.
+The plant (conveyor) has been in opperation for 20 years.
 
 Some descriptives for the dataset. The largest observed lifetime is 2167 days, just under six years.
 
 ```{r}
-range(idler_data$lifetime)
+#| label: tbl-load-data
+summary_df <- data.frame(
+  `Maximum lifetime` = max(idler_data$lifetime),
+  `Minimum lifetime` = min(idler_data$lifetime),
+  `Maximum fully observed lifetime` = idler_data %>%
+    filter(!(censored_at_start | censored_at_end)) %>%
+    pull(lifetime) %>%
+    max(),
+  `Beginning of observation` = min(idler_data$start),
+  `End of observation` = max(idler_data$start),
+  `Number of observations` = idler_data %>%
+    nrow(),
+  `Number of unique frames` = idler_data %>%
+    pull(frame_number) %>%
+    unique() %>%
+    length(),
+  `Number of left truncated observations` = idler_data %>%
+    filter(censored_at_start) %>%
+    nrow(),
+  `Number of right censored observations` = idler_data %>%
+    filter(censored_at_end) %>%
+    nrow(),
+  `Number of left truncated and right censored observations` = idler_data %>%
+    filter((censored_at_end & censored_at_start)) %>%
+    nrow(),
+  check.names = FALSE
+) %>%
+t()
+
+summary_df %>%
+  kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 
 ```{r}
-min(idler_data$start)
-max(idler_data$end)
+#| label: save-tbl-load-data
+#| echo: false
+#| output: false
+summary_df %>%
+  kbl(
+    booktabs = T,
+    format = "latex",
+    caption = "Summary of the idler frame data set.",
+    escape = FALSE,
+    label = "idler-frame-summary"
+  ) %>%
+  kable_styling(latex_options = "striped") %>%
+  save_kable(
+    file = file.path(
+      tbl_path,
+      "data_summary.tex"
+    ),
+    keep_tex = TRUE
+  )
 ```
 
 ```{r}
+#| label: fig-frame-lifetimes
+#| fig-cap: The idler frame lifetimes. The frame number that the lifetime belongs to is on the horizontal axes and the log lifetime is plotted on the virtical axis. Fully observed lifetimes are shown in red while the lifetimes that are only partialy observed are shown in blue. Those lifetimes that are also left-truncated are indicated by tryangles.
+p_idler_lifetimes <- idler_data %>%
+  mutate(
+    frame_number = as.numeric(frame_number),
+    censored = ((censored_at_start + censored_at_end) > 0),
+    log_lifetime = log(as.numeric(lifetime))
+  ) %>%
+  ggplot(
+    aes(
+      x = frame_number,
+      y = log_lifetime,
+      col = censored,
+    shape = censored_at_start)
+  ) +
+  geom_point() +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    plot.margin = margin(1, 1, 1, 1, "cm")
+  ) +
+  xlab("frame number") +
+  ylab("lifetime (log(days))")
+p_idler_lifetimes
+```
+
+```{r}
+#| label: save-fig-frame-lifetimes
+#| echo: false
+#| output: false
+pdf(
+  file.path(fig_path, "idler-frame-data.pdf"),
+  height = 6,
+  width = 12
+)
+p_idler_lifetimes
+dev.off()
+```
+
+If we were to discard the left truncated samples, then we would be throwing away 35.7% of the data.
+
+There are a few fully observed lifetimes that are very short;
+
+```{r}
+#| label: early-failures
 idler_data %>%
-  filter(end == max(idler_data$end)) %>%
-  nrow()
+  filter(
+    !(censored_at_start | censored_at_end),
+    lifetime < (7 * 3)
+  )
 ```
 
-There is one idler that is 
+These 24 failures may be a result of manufactureing defects or incorrect installation, which is not the failure mode that we want to analyse here. Therefore, following the approach of @hong2009, I treat these observations as a case of right censoring (i.e. their failure due to wear was right censored by their failure from another cause).
+
+# Constructing an informative prior
+
+We know that the average lifetime is around five years, and that almost all idlers should have failed by seven (0.95). I encode this information into a joint prior using the method I describe in chapter 2, by specifying the elicitation times at five and seven years and the expectation(standard deviation) of the CDF at these times as 0.5(sd 0.10) and 0.95(sd 0.05) respectively. The resulting informative prior is shown in @fig-informative-prior.
 
 ```{r}
-idler_data %>%
-  filter(censored_at_start & censored_at_end)
+#| label: fig-informative-prior
+#| fig-cap: "The informative joint prior that results from encoding x, y, and z."
+#| fig-subcap: 
+#|   - "The joint draws of the shape and scale."
+#|   - "The resulting uncertainty in the CDF."
+#| layout-ncol: 2
+set.seed(956)
+# specify prior information
+t_1 <- 5 * 365
+f_1 <- 0.50
+sd_1 <- 0.15
+t_2 <- (5 + 3) * 365
+f_2 <- 0.99
+sd_2 <- 0.05
+# parameters related to plotting
+n_draws <- 3000
+x_range <- c(0, 10 * 365)
+res <- 10
+# sample values of cdf
+samp_t1 <- rTruncNorm(
+  n = n_draws,
+  mean = f_1, sd = sd_1,
+  lb = 0, ub = 1
+)
+samp_t2 <- rTruncNorm(
+  n = n_draws,
+  mean = f_2, sd = sd_2,
+  lb = samp_t1, ub = 1
+)
+# calculate Weibull parameters
+beta_sample <- (fn(samp_t2) - fn(samp_t1)) / log(t_2 / t_1)
+eta_sample <- exp(log(t_1) - (fn(samp_t1) / beta_sample))
+# create plot of joint dist
+cdf_grid <- seq(x_range[1], x_range[2], by = res)
+p_joint <- data.frame(
+  beta = beta_sample,
+  eta = eta_sample
+) %>%
+  ggplot() +
+  geom_point(
+    aes(x = beta_sample, y = eta_sample)
+  ) +
+  xlim(0, 10) +
+  ylim(0, 3000) +
+  xlab(expression(beta)) +
+  ylab(expression(eta)) +
+  theme_minimal()
+# create plot of cdf
+p_cdf <- data.frame(
+  draw = rep(1:n_draws, each = length(cdf_grid)),
+  t = rep(cdf_grid, n_draws)
+) %>%
+  mutate(
+    cdf = pweibull(t, beta_sample[draw], eta_sample[draw])
+  ) %>%
+  ggplot() +
+  stat_lineribbon(
+    aes(x = t, y = cdf),
+    .width = c(0.5, 0.9)
+  ) +
+  scale_fill_brewer() +
+  theme_minimal() +
+  theme(legend.position = "none")
+# plot
+p_joint
+p_cdf
 ```
 
 ```{r}
-idler_data$frame_number %>% unique() %>% length()
+#| label: save-fig-frame-lifetimes
+#| echo: false
+#| output: false
+pdf(
+  file.path(fig_path, "idler-frame-prior.pdf"),
+  height = 5,
+  width = 10
+)
+plot_grid(
+  p_joint,
+  p_cdf,
+  nrow = 1,
+  ncol = 2,
+  labels = c(
+    "(a)", "(b)"
+  ),
+  label_fontfamily = "Times",
+  label_face = "plain"
+)
+dev.off()
 ```
 
+# Fitting the model in Stan
+
+t_start is fifteen years.
 
 ```{r}
-idler_data %>%
-  nrow()
-
-idler_data %>%
-  filter(censored_at_start) %>%
-  nrow()
-
-idler_data %>%
-  filter(!censored_at_start) %>%
-  nrow()
-```
-
-If we were to discard the left truncated samples, then we would be throwing away 35.7% of the data. This data is also less informative than the experiments from ch2 because the past bulk replacement stratergies mean that there is more right censored lifetimes.
-
-
-```{r}
+#| label: prepare-stan-data
 df_obs <- idler_data %>%
-  filter(lifetime > 14) %>%
+  filter(lifetime > (3 * 7)) %>%
   filter(!(censored_at_start | censored_at_end))
 df_rc <- idler_data %>%
   filter((!censored_at_start & censored_at_end) | 
-    ((lifetime < 14) & !(censored_at_start | censored_at_end)))
+    ((lifetime < (3 * 7)) & !(censored_at_start | censored_at_end)))
 df_lt <- idler_data %>%
   filter((censored_at_start & !censored_at_end))
 df_lt_rc <- idler_data %>%
@@ -102,6 +304,7 @@ idler_frame_stan_data <- list(
 ```
 
 ```{r}
+#| label: define-stan-model
 stan_model_unknown_lt_rc_inf <- stan_model(
   model_code = "
 functions {
@@ -194,83 +397,461 @@ t_lt_rc_st ~ uniform(0, 1);
 )
 ```
 
+Four chains each 2000 draws long and with a burn in of 500 iterations and no thinning.
+
 ```{r}
+#| label: sample-from-posterior
 idler_stan_fit <- sampling(
   stan_model_unknown_lt_rc_inf,
   c(
     idler_frame_stan_data,
     t_1 = 5 * 365,
-    t_2 = 8 * 365,
+    t_2 = (5 + 3) * 365,
     t1_mean = 0.5,
-    t1_var = 0.1,
+    t1_var = 0.15,
     t2_mean = 0.99,
     t2_var = 0.05
   ),
   chains = 4,
   cores = 4,
   iter = 2000,
-  warmup = 500
+  warmup = 500,
+  seed = 246
 )
 ```
 
 ```{r}
-idler_stan_fit %>%
+#| label: save-stan-summary
+#| echo: false
+#| output: false
+stan_summary <- rownames_to_column(
+  as.data.frame(
+    summary(
+      idler_stan_fit,
+      pars = c("beta", "eta"),
+      probs = c(0.025, 0.5, 0.975)
+    )$summary
+  ),
+  var = "Parameter"
+) %>%
+  select(!c(se_mean, sd)) %>%
+  mutate(
+    Parameter = c("$\\beta$", "$\\eta$"),
+    across(c('mean':'97.5%'), ~ round(.x, 2)),
+    n_eff = round(n_eff, 0),
+    Rhat = round(Rhat, 4)
+  ) %>%
+  rename(
+    Mean = mean,
+    `2.5\\%` = `2.5%`,
+    `50\\%` = `50%`,
+    `97.5\\%` = `97.5%`,
+    `$n_{\\small{\\mbox{eff}}}$` = n_eff,
+    `$\\hat{R}$` = Rhat
+  )
+  
+stan_summary %>%
+  kbl(
+    booktabs = T,
+    format = "latex",
+    caption = "Summary of sampling for $\\beta$ and $\\eta$.",
+    escape = FALSE,
+    label = "idler-frame-posterior-summary"
+  ) %>%
+  kable_styling(latex_options = "striped") %>%
+  save_kable(
+    file = file.path(
+      tbl_path,
+      "stan-summary.tex"
+    ),
+    keep_tex = TRUE
+  )
+```
+
+# The posterior distribution
+
+```{r}
+PlotPostCDF <- function(stan_fit, x_range = c(0, 5), res = 0.05) {
+  grid <- seq(x_range[1], x_range[2], res)
+  p_cdf <- stan_fit %>%
+    as_draws_df() %>%
+    select(beta, eta) %>%
+    split(., seq(nrow(.))) %>%
+    lapply(
+      function(draw) {
+        df_CDF <- data.frame(
+          q = grid,
+          p = pweibull(grid, draw$beta, draw$eta)
+        )
+        return(df_CDF)
+      }
+    ) %>%
+    bind_rows() %>%
+    ggplot() +
+    stat_lineribbon(
+      aes(x = q, y = p),
+      .width = c(0.5, 0.9)
+    ) +
+    scale_fill_brewer() +
+    xlab("t") +
+    ylab("cdf") +
+    theme_minimal() +
+    theme(legend.position = "none")
+    return(p_cdf)
+}
+```
+
+```{r}
+#| label: fig-posterior-joint
+#| fig-cap: "The joint draws of the shape and scale from the posterior."
+#| fig-subcap: 
+#|   - "Plotted with the same axis scales as @fig-informative-prior."
+#|   - "Zoomed in."
+#| layout-ncol: 2
+# create plot of joint dist
+p_joint_post <- idler_stan_fit %>%
   mcmc_scatter(pars = c("beta", "eta")) +
+  xlim(0, 2) +
+  ylim(0, 2000) +
   xlab(expression(beta)) +
   ylab(expression(eta)) +
-  xlim(0, 5) + 
-  ylim(0, 5000)+
   theme_minimal()
+# create plot of prior post comparison
+t_1 <- 5 * 365
+f_1 <- 0.50
+sd_1 <- 0.15
+t_2 <- (5 + 3) * 365
+f_2 <- 0.99
+sd_2 <- 0.05
+# parameters related to plotting
+n_draws <- 50000
+# sample values of cdf
+samp_t1 <- rTruncNorm(
+  n = n_draws,
+  mean = f_1, sd = sd_1,
+  lb = 0, ub = 1
+)
+samp_t2 <- rTruncNorm(
+  n = n_draws,
+  mean = f_2, sd = sd_2,
+  lb = samp_t1, ub = 1
+)
+# calculate Weibull parameters
+beta_sample <- (fn(samp_t2) - fn(samp_t1)) / log(t_2 / t_1)
+eta_sample <- exp(log(t_1) - (fn(samp_t1) / beta_sample))
+
+p_joint_prior_post_comp <- idler_stan_fit %>%
+  mcmc_scatter(pars = c("beta", "eta")) +
+  geom_density_2d(
+    data = data.frame(
+      beta = beta_sample,
+      eta = eta_sample
+    ),
+    aes(x = beta, y = eta),
+    bins = 25
+  ) +
+  xlim(0, 10) +
+  ylim(0, 3000) +
+  xlab(expression(beta)) +
+  ylab(expression(eta)) +
+  theme_minimal()
+# plot
+p_joint_post
+p_joint_prior_post_comp
+```
+
+```{r}
+#| label: save-fig-posterior
+#| echo: false
+#| output: false
+pdf(
+  file.path(fig_path, "idler-frame-post.pdf"),
+  height = 5,
+  width = 10
+)
+plot_grid(
+  p_joint_post,
+  p_joint_prior_post_comp,
+  nrow = 1,
+  ncol = 2,
+  labels = c(
+    "(a)", "(b)"
+  ),
+  label_fontfamily = "Times",
+  label_face = "plain"
+)
+dev.off()
+```
+
+```{r}
+#| label: fig-posterior-cdf
+#| fig-cap: "The posterior uncertainty about the CDF."
+# create plot of cdf
+p_cdf_post <- PlotPostCDF(
+  idler_stan_fit,
+  x_range = x_range, res = 100
+)
+p_cdf_post
+```
+
+```{r}
+#| label: fig-posterior-cdf
+#| echo: false
+#| output: false
+pdf(
+  file.path(fig_path, "idler-frame-post-CDF.pdf"),
+  height = 5,
+  width = 8
+)
+p_cdf_post
+dev.off()
 ```
 
 # Expected failure times
 
 ```{r}
+#| label: fig-expected-FTs
+#| fig-cap: "The expected failure times of the units still under test at the end of the observation period."
+# get the posterior draws of the imputed lifetimes
 rc_post <- idler_stan_fit %>%
   as_draws_rvars() %>%
-  gather_rvars(y_rc_hat[i])
-
+  spread_rvars(y_rc_hat[i])
 rc_post <- cbind(
   rc_post,
   df_rc
-)
-
-rc_post %>%
+) %>%
   filter(
     end == lubridate::ymd("2021-01-11")
   ) %>%
   mutate(
-    f_days = .value - as.numeric(lifetime),
-    f_days_mean = median(f_days)
+    f_days = y_rc_hat - as.numeric(lifetime)
+  )
+lt_rc_post <- idler_stan_fit %>%
+  as_draws_rvars() %>%
+  spread_rvars(y_lt_rc_hat[i], t_lt_rc[i])
+lt_rc_post <- cbind(
+  lt_rc_post,
+  df_lt_rc
+) %>%
+  filter(
+    end == lubridate::ymd("2021-01-11")
   ) %>%
-  arrange(f_days_mean) %>%
-  mutate(j = 1:n()) %>%
+  mutate(
+    f_days = y_lt_rc_hat - (t_lt_rc + as.numeric(lifetime))
+  )
+ft_units_under_test <- rbind(
+  rc_post %>%
+    select(start, end, lifetime, frame_number, f_days),
+  lt_rc_post %>%
+    select(start, end, lifetime, frame_number, f_days)
+)
+p_post_fts <- ft_units_under_test %>%
+  mutate(
+    frame_number = as.numeric(frame_number)
+  ) %>%
+  arrange(frame_number) %>%
   ggplot() +
-  stat_pointinterval(aes(xdist = f_days, y = j))
+  stat_pointinterval(aes(xdist = f_days, y = frame_number)) +
+  ylab("Frame number") +
+  xlab("Days until failure") +
+  theme_minimal()
+
+p_post_fts
+```
+
+```{r}
+pdf(
+  file.path(fig_path, "posterior-FTs.pdf"),
+  height = 15,
+  width = 12
+)
+p1 <- ft_units_under_test %>%
+  filter(frame_number %in% as.character(1:round(143 / 2))) %>%
+  mutate(
+    frame_number = factor(
+      frame_number,
+      levels = as.character(1:round(143 / 2))
+    )
+  ) %>%
+  arrange(frame_number) %>%
+  ggplot(aes(y = frame_number, xdist = f_days)) +
+  stat_slab(height = 2, color = "black") +
+  theme_minimal() +
+  ylab("frame number") +
+  xlab("RUL (days)")
+p2 <- ft_units_under_test %>%
+  filter(frame_number %in% as.character((round(143 / 2) + 1):143)) %>%
+  mutate(
+    frame_number = factor(
+      frame_number,
+      levels = as.character((round(143 / 2) + 1):143)
+    )
+  ) %>%
+  arrange(frame_number) %>%
+  ggplot(aes(y = frame_number, xdist = f_days)) +
+  stat_slab(height = 2, color = "black") +
+  theme_minimal() +
+  ylab("frame number") +
+  xlab("RUL (days)")
+plot_grid(p1, p2, nrow = 1, ncol = 2)
+dev.off()
+```
+
+```{r}
+#| label: save-fig-expected-FTs
+#| echo: false
+#| output: false
+pdf(
+  file.path(fig_path, "posterior-FTs.pdf"),
+  height = 12,
+  width = 10
+)
+p_post_fts
+dev.off()
 ```
 
 # Expected number of failures
 
+Example of cunstructing a draw of the imputed cumulative failures.
+
 ```{r}
-idler_stan_fit %>%
+#| label: fig-E-n-failures-draws
+#| fig-cap: "Ten example draws of the cumulative failures in days following the end of observation."
+# extract draws of the right censored lifetimes and filter to only those still
+# under test
+set.seed(549)
+draws_rc_FTs <- idler_stan_fit %>%
   as_draws_df() %>%
-  gather_draws(y_rc_hat[i]) %>%
+  spread_draws(y_rc_hat[i]) %>%
   left_join(
     df_rc %>%
       mutate(i = 1:n()),
     by = "i"
   ) %>%
   filter(
-    end == lubridate::ymd("2021-01-11")
+    end == ymd("2021-01-11")
   ) %>%
   mutate(
-    f_days = .value - as.numeric(lifetime)
+    f_days = y_rc_hat - as.numeric(lifetime)
   ) %>%
+  select(-c("y_rc_hat"))
+draws_lt_rc_FTs <- idler_stan_fit %>%
+  as_draws_df() %>%
+  spread_draws(y_lt_rc_hat[i], t_lt_rc[i]) %>%
+  left_join(
+    df_lt_rc %>%
+      mutate(i = 1:n()),
+    by = "i"
+  ) %>%
+  filter(
+    end == ymd("2021-01-11")
+  ) %>%
+  mutate(
+    f_days = y_lt_rc_hat - (as.numeric(lifetime) + t_lt_rc)
+  ) %>%
+  select(-c("y_lt_rc_hat", "t_lt_rc"))
+draws_FTs <- rbind(draws_rc_FTs, draws_lt_rc_FTs)
+# choose a subset of draws for plot
+sampel_draws <- sample(unique(draws_FTs$.draw), size = 10)
+# plot the expected number of failures for each draw
+p_E_n_failures <- draws_FTs %>%
+  filter(.draw %in% sampel_draws) %>%
   group_by(.draw) %>%
   arrange(f_days) %>%
-  mutate(j = 1:n()) %>%
+  mutate(n_failures = 1:n()) %>%
   ggplot() +
-  geom_step(aes(x = f_days, y = j, group = .draw), colour = "gray", alpha = 0.5)
+  geom_step(
+    aes(x = f_days, y = n_failures, group = .draw),
+    colour = "gray",
+    alpha = 0.8
+  ) +
+  theme_minimal() +
+  xlab("days") +
+  ylab("number of failures")
+p_E_n_failures
+```
+
+```{r}
+#| label: save-fig-E-n-failures-draws
+#| echo: false
+#| output: false
+pdf(
+  file.path(fig_path, "E-n-failures-draws.pdf"),
+  height = 5,
+  width = 10
+)
+p_E_n_failures
+dev.off()
+```
+
+Distributions of expected number of failures within the next 1, 3, and 6 months.
+
+```{r}
+#| label: fig-E-n-failures-dists
+#| fig-cap: "The expected number of failures in the next one (a), three (b), and six (c) months after the end of the observation period."
+# calculate the number of failures within 1, 3, and 6 months for each draw
+E_failures <- draws_FTs %>%
+  group_by(.draw) %>%
+  summarise(
+    n_failures_3m = sum(f_days < (1 * 31)),
+    n_failures_6m = sum(f_days < (3 * 31)),
+    n_failures_12m = sum(f_days < (6 * 31))
+  )
+# plot densities
+p_E_n_failures_dens <- plot_grid(
+  E_failures %>%
+    ggplot() +
+    geom_density(
+      aes(n_failures_3m),
+      fill = alpha("lightblue", 0.5),
+      adjust = 2.5
+    ) +
+    xlim(0, 40) +
+    ylim(0, 0.35) +
+    xlab("number of failures") +
+    theme_minimal(),
+  E_failures %>%
+    ggplot() +
+    geom_density(
+      aes(n_failures_6m),
+      fill = alpha("lightblue", 0.5),
+      adjust = 1.5
+    ) +
+    xlim(0, 40) +
+    ylim(0, 0.35) +
+    xlab("number of failures") +
+    theme_minimal(),
+  E_failures %>%
+    ggplot() +
+    geom_density(
+      aes(n_failures_12m),
+      fill = alpha("lightblue", 0.5),
+      adjust = 1.5
+    ) +
+    xlim(0, 40) +
+    ylim(0, 0.35) +
+    xlab("number of failures") +
+    theme_minimal(),
+  nrow = 3, ncol = 1,
+  labels = c(
+    "(a)", "(b)", "(c)"
+  ),
+  label_fontfamily = "Times"
+)
+p_E_n_failures_dens
+```
+
+```{r}
+#| label: save-fig-E-n-failures-dists
+#| echo: false
+#| output: false
+pdf(
+  file.path(fig_path, "E-n-failures-densities.pdf"),
+  height = 10,
+  width = 10
+)
+p_E_n_failures_dens
+dev.off()
 ```
 
 # Cost functions
