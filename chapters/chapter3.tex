@@ -103,29 +103,70 @@ Using the resulting distribution of $F_K(t|\hbox{RUL}, \theta)$, we can calculat
 
 \subsection{Cost functions and preventative policy design} \label{subsec:idler-cost-function}
 
-Construct my own cost function around the ones presented in Jardine.
+Interlude for section\dots
 
-Assumptions
+To implement a preventative replacement strategy, a reliability practitioner must choose the fixed time interval that components are replaced at. This choice aims to minimize the expected cost of maintenance and lost production but must also align with what is practically possible. \citet{jardine2013} presents a rough structure for quantifying a particular preventative maintenance policy that balances the cost of planned replacements $C_p$ against the cost of unplanned (reactive) replacements $C_r$ in terms of cost per unit time; 
+\begin{equation*}
+  \text{Cost per unit time} = \frac{C_p N + C_r E[K|\Delta t_p,\theta]}{\Delta t_p}.
+\end{equation*}
+Here, $N$ is the number of units, $\Delta t_p$ is the proposed fixed time interval, and $E[K|\Delta t_p,\theta]$ is the expected number of failures in the interval given the parameters of the lifetime distribution.
+
+Lay out of my approach\dots
 \begin{itemize}
-  \item Shuts are every six weeks. $t_p$ is the replacement interval and therefore must be a multiple of six.
-  \item $N$ is the number of idler frames on the belt.
-  \item $C_p$ is the cost of a preventative replacement.
-  \item When an idler frame fails during operation, there is a $P = 0.1$ chance that it will damage the belt. $C_f$ is the cost of unexpectedly replacing the belt.
-  \item The expected number of failures, $E(N_f)$, in a time interval $t_p$ is $N \times F_{\theta|y}(t_p)$.
-  \item The probability that at least one unplanned idler failure damages the belt during the interval is $1 - (1 - P)^{N F_{\theta|y}(t_p)}$.
+  \item Viable $\Delta t_p$ are only when plant is shut down (six week shuts).
+  \item $C_p$ for an idler frame $\approx\$500$.
+  \item $C_r$ for the belt $\approx\$1,000,000$ (Cost of belt, lost production, cost of labour.).
+  \item $N = 143$ frames in this case. 
+\end{itemize}
+It is slightly more complicated to calculate $E[K|\Delta t_p,\theta]$ than in the examples provided in \citet{jardine2013}
+
+\paragraph*{Expected number of reactive maintenance events}
+
+What is the best way to calculate $E[K|\Delta t_p,\theta]$
+\begin{itemize}
+  \item Jardine talks about some methods for expected number of repeat failures in a time interval in section 2.4.3
+  \item 
 \end{itemize}
 
-\begin{equation}
-  \text{Cost per unit time} = \frac{C_p N + C_f (1 - (1 - P)^{N F_{\theta|y}(t_p)})}{t_p}
-\end{equation}
+The probability of a unit $n$ failing in an interval given its age is
+\begin{equation*}
+  P_{n}|\Delta t_p, t_n, \theta = \frac{F_{\text{Weibull}}(t_n + \Delta t_p|\theta) - F_{\text{Weibull}}(t_n|\theta)}{1 - F_{\text{Weibull}}(t_n|\theta)}.
+\end{equation*}
+Therefore the number of failures during the period between shuts is the sum of $N$ independant(an assumption) nonidentical bernoulli trials
+\begin{align*}
+  I_n|\Delta t_p, t_n, \theta \sim & \mbox{Bernoulli}(P_{n}) \\
+  K_{\text{UF}}                  = & \sum^N_{i = 1} I_i.
+\end{align*}
+However, in this case, the cost of unplanned maintenance is actually incoured when the belt is damaged and, therefore, there is an extra step. I calculate the belt failures in the interval as
+\begin{equation*}
+  K_{\text{BF}}|\Delta t_p, t_n, \theta \sim Binomial(K_{\text{UF}}, P_{\text{BD}})
+\end{equation*}
+where $P_{\text{BD}}$ is the probability that a failed frame damages the belt.
 
-$F_{\theta|y}(t_p)$ is the posterior CDF of the Weibull distribution (the failure time distribution). Hence, we can average over the uncertainty in the posterior draws to get the expected cost per unit time and uncertainty estimates by calculating the cost function for every posterior draw; $F_{\theta^s}(t_p)$.
+To calculate $K_{\text{BF}}$ for an interval between two shutdowns requires that we know the age of the idlers at these times. The renual process of the idlers---i.e. if a frame failes in a period between shuts then it is replaced in the next---means that $t_n$ is reset to zero everytime an idler-frame fails. Therefore, it is nontrivial to calculate $K_{\text{BF}}$ and hence, I use simulations.
 
-If we calculate this for the set of possible shut periods we can compare the choices with uncertainty.
+\begin{algorithm}
+	\caption{Numerical procedure for calculating the expected number of belt failures in an interval.}
+  \label{algo:K_BF}
+	\begin{algorithmic}[1]
+		\For {each posterior draw}
 
-In this example, I have not accounted for the possibility that the belt could be damages, replaced, and then damaged again in a single interval! Jardine talks about some methods for expected number of repeat failures in a time interval in section 2.4.3
+    \EndFor
+	\end{algorithmic} 
+\end{algorithm} 
 
-This is just a demonstration on how to use the full posterior in the decision making process.
+\paragraph*{Strategy cost with uncertainty}
+
+\begin{equation*}
+  \text{Cost per unit time}^s = \frac{C_p N + C_r E[K|\Delta t_p,\theta^s]}{t_p}.
+\end{equation*}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.8\textwidth, draft]{./figures/ch-3/prev-repl-choise.pdf}
+  \caption{}
+  \label{fig:preventative-repl-decision}
+\end{figure}
 
 \section{Discussion and conclusions} \label{sec:idler-frame-conclusions}
 
@@ -136,6 +177,7 @@ Typical results section.
   \item In an ideal world we would analyse the failure distribution of the idlers themselves, but unfortunately the data is not available at this level. The effect of modelling the frame lifetime (which is the shorter lifetime of the three idlers it contains) is that the shape parameter is close to one---shown in the prior-data conflict. The beta value close to one makes the cost function...
   \item I've demonstrate how imputing the censored observations in a Bayesian approach provides a very natural straightforward way of obtaining estimates and uncertainty intervals for the RUL of the frames still in operation and the predicted cumulative number of failures.
   \item expected RUL and expected failures are useful for short term decision making, for example inventory of replacement idlers kept at the mine (most of these mines are fly-in-fly-out).
+  \item There are may things that must be weighed into the decision; for example most mines are fly in fly out and so there is limited number of maintenance workers that can be acomodated and parts that can be kept on sight\dots 
   \item This model could include covariates, say if manufacturer type was available---which it is for the recent idler failures---or location on the belt---impact idlers, tail or head idlers, and typical carry idlers.
   \item The method could be explored to include a mixture of failure modes to include the idlers that fail at $t < 21$, which I threw out before analysis \citep{mittman2013}. However, this would require a better understanding of the imputation method, since truncation would make it less likely that we observe the early failure mode and right censoring the longer failure mode.
 \end{itemize}

@@ -1348,3 +1348,311 @@ stan_fit_test3 %>%
 stan_fit_test3 %>%
   mcmc_dens_chains(regex_pars = c("y_lt_rc_hat", "t_lt_rc_upper"))
 ```
+
+
+
+
+```{r}
+N_shuts <- 100
+N_frames <- 143        # number of units
+N_runs <- 10000         # number of sim runs
+beta <- 1.1            # Weibull shape
+eta <- 1300            # Weibull scale
+shut_freq <- (6 * 7)   # frequency of shuts
+P_bf <- 0.1            # probability of idler damaging the belt
+
+runs <- lapply(
+  1:N_runs,
+  function(run) {
+    unit_ages <- rep(0, N)
+    N_failures <- rep(NA, N_shuts)
+    N_belt_failurs <- rep(NA, N_shuts)
+    for (shut_int in 1:N_shuts) {
+      unit_ages <- unit_ages + shut_freq
+      failures <- rbinom(
+        n = 10,
+        size = 1,
+        prob = pweibull(unit_ages, beta, eta) -
+          pweibull((unit_ages - shut_freq), beta, eta)
+      )
+      N_failures[shut_int] <- sum(failures)
+      N_belt_failurs[shut_int] <- rbinom(
+        n = 1,
+        size = sum(failures),
+        prob = P_bf
+      )
+      if(sum(failures) > 0) {
+        unit_ages[as.logical(failures)] <- 0
+      } 
+    }
+    sim_df <- data.frame(
+      run = run,
+      shut = 1:N_shuts,
+      idler_failrues = N_failures,
+      belt_failures = N_belt_failurs
+    )
+    return(sim_df)
+  }
+)
+
+runs %>%
+  bind_rows() %>%
+  group_by(run) %>%
+  mutate(Cumsum_belt_failures = cumsum(belt_failures)) %>%
+  ungroup() %>%
+  group_by(shut) %>%
+  summarise(mean_bf = mean(Cumsum_belt_failures)) %>%
+  ggplot(aes(x = shut, y = mean_bf)) +
+  geom_line()
+
+runs %>%
+  bind_rows() %>%
+  group_by(shut) %>%
+  summarise(mean_if = mean(idler_failrues)) %>%
+  ggplot(aes(x = shut, y = mean_if)) +
+  geom_line()
+```
+
+
+```{r}
+# Weibull parameters
+beta <- 1.1
+eta <- 1300
+# Number of units and their ages
+N_units <- 143
+unit_ages_start <- rep(0, N_units)
+# Time between shutdowns
+delta <- (6 * 7)
+# Specify probability of unit damaging the belt
+P_bf <- 0.05
+# For the next 10 shudowns
+N_shuts <- 100
+K_uf <- rep(NA, N_shuts)
+K_bf <- rep(NA, N_shuts)
+for(shut in 1:N_shuts) {
+  # Calculate age at end of production period
+  unit_ages_end <- unit_ages_start + delta
+  # Calculate probability of unit failing given its age
+  P_uf <- (pweibull(unit_ages_end, beta, eta) -  pweibull(unit_ages_start, beta, eta)) /
+    (1 - pweibull(unit_ages_start, beta, eta))
+  # Simulate unit failurs
+  failures <-  rbinom(
+    n = N_units,
+    size = 1,
+    prob = P_uf 
+  )
+  K_uf[shut] <- failures %>%
+    sum()
+  # Simulate belt failures
+  K_bf[shut] <- rbinom(
+    n = 1,
+    size = K_uf[shut],
+    prob = P_bf
+  )
+  # Update unit ages
+  unit_ages_start <- unit_ages_end
+  if(any(failures == 1)) unit_ages_start[as.logical(failures)] <- 0
+}
+K_uf
+K_bf
+```
+
+
+```{r}
+N_runs <- 10000
+runs <- lapply(
+  1:N_runs,
+  function(run) {
+    unit_ages_start <- rep(0, N_units)
+    K_uf <- rep(NA, N_shuts)
+    K_bf <- rep(NA, N_shuts)
+    for (shut in 1:N_shuts) {
+      # Calculate age at end of production period
+      unit_ages_end <- unit_ages_start + delta
+      # Calculate probability of unit failing given its age
+      P_uf <- (pweibull(unit_ages_end, beta, eta) -  pweibull(unit_ages_start, beta, eta)) /
+        (1 - pweibull(unit_ages_start, beta, eta))
+      # Simulate unit failurs
+      failures <-  rbinom(
+        n = N_units,
+        size = 1,
+        prob = P_uf 
+      )
+      K_uf[shut] <- failures %>%
+        sum()
+      # Simulate belt failures
+      K_bf[shut] <- rbinom(
+        n = 1,
+        size = K_uf[shut],
+        prob = P_bf
+      )
+      # Update unit ages
+      unit_ages_start <- unit_ages_end
+      if(any(failures == 1)) unit_ages_start[as.logical(failures)] <- 0
+    }
+    sim_df <- data.frame(
+      run = run,
+      shut = 1:N_shuts,
+      idler_failrues = K_uf,
+      belt_failures = K_bf
+    )
+    return(sim_df)
+  }
+)
+
+runs %>%
+  bind_rows() %>%
+  group_by(shut) %>%
+  summarise(mean_if = mean(idler_failrues)) %>%
+  ggplot(aes(x = shut, y = mean_if)) +
+  geom_line()
+
+runs %>%
+  bind_rows() %>%
+  group_by(shut) %>%
+  summarise(mean_bf = mean(belt_failures)) %>%
+  ggplot(aes(x = shut, y = mean_bf)) +
+  geom_line()
+
+runs %>%
+  bind_rows() %>%
+  group_by(run) %>%
+  mutate(Cumsum_belt_failures = cumsum(belt_failures)) %>%
+  ungroup() %>%
+  group_by(shut) %>%
+  summarise(mean_bf = mean(Cumsum_belt_failures)) %>%
+  ggplot(aes(x = shut, y = mean_bf)) +
+  geom_line()
+```
+
+I can do many runs at the same time.
+
+```{r}
+N_runs <- 10000
+unit_ages_start <- rep(0, N_units * N_runs)
+K_uf <- array(rep(NA, N_shuts * N_runs), dim = c(N_shuts, N_runs))
+K_bf <- array(rep(NA, N_shuts * N_runs), dim = c(N_shuts, N_runs))
+for (shut in 1:N_shuts) {
+  # Calculate age at end of production period
+  unit_ages_end <- unit_ages_start + delta
+  # Calculate probability of unit failing given its age
+  P_uf <- (pweibull(unit_ages_end, beta, eta) -  pweibull(unit_ages_start, beta, eta)) /
+    (1 - pweibull(unit_ages_start, beta, eta))
+  # Simulate unit failurs
+  failures <-  rbinom(
+    n = N_units * N_runs,
+    size = 1,
+    prob = P_uf 
+  ) %>%
+  matrix(
+    nrow = N_units,
+    ncol = N_runs
+  )
+  # Put in matrix
+  # apply sum
+  K_uf[shut, ] <- failures %>%
+    apply(FUN = sum, MARGIN = 2)
+  # Simulate belt failures
+  K_bf[shut, ] <- rbinom(
+    n = N_runs,
+    size = K_uf[shut, ],
+    prob = P_bf
+  )
+  # Update unit ages
+  unit_ages_start <- unit_ages_end
+  if(any(failures == 1)) unit_ages_start[as.logical(failures)] <- 0
+}
+
+data.frame(
+  shut = rep(1:N_shuts, N_runs),
+  run = rep(1:N_runs, each = N_shuts),
+  unit_failures = K_uf %>%
+    as.numeric(),
+  belt_failures = K_bf %>%
+    as.numeric()
+) %>%
+  ggplot() +
+  stat_lineribbon(aes(x = shut, y = unit_failures)) +
+  scale_fill_brewer()
+
+data.frame(
+  shut = rep(1:N_shuts, N_runs),
+  run = rep(1:N_runs, each = N_shuts),
+  unit_failures = K_uf %>%
+    as.numeric(),
+  belt_failures = K_bf %>%
+    as.numeric()
+) %>%
+  group_by(run) %>%
+  mutate(
+    cumulative_BFs = cumsum(belt_failures)
+  ) %>%
+  ggplot() +
+  stat_lineribbon(aes(x = shut, y = cumulative_BFs)) +
+  scale_fill_brewer()
+```
+
+Fun this for each draw from the posterior.
+
+```{r}
+betas <- c(1.1, 1.5)
+etas <- c(1300, 1430)
+
+CumulativeBeltFailures <- function(
+  beta, eta,        # Weibull parameters
+  N_units = 143,    # number of frames
+  N_shuts = 100,    # the number of shutdowns to run sim for
+  delta = (6 * 7),  # operation time between shuts
+  N_runs = 1000,    # number of simulation runs
+  P_bf = 0.05       # the probability of a frame failure damaging the belt
+  ) {
+  unit_ages_start <- rep(0, N_units * N_runs)
+  K_uf <- array(rep(NA, N_shuts * N_runs), dim = c(N_shuts, N_runs))
+  K_bf <- array(rep(NA, N_shuts * N_runs), dim = c(N_shuts, N_runs))
+  for (shut in 1:N_shuts) {
+    # Calculate age at end of production period
+    unit_ages_end <- unit_ages_start + delta
+    # Calculate probability of unit failing given its age
+    P_uf <- (pweibull(unit_ages_end, beta, eta) -  pweibull(unit_ages_start, beta, eta)) /
+      (1 - pweibull(unit_ages_start, beta, eta))
+    # Simulate unit failurs
+    failures <-  rbinom(
+      n = N_units * N_runs,
+      size = 1,
+      prob = P_uf 
+    ) %>%
+    matrix(
+      nrow = N_units,
+      ncol = N_runs
+    )
+    # Put in matrix
+    # apply sum
+    K_uf[shut, ] <- failures %>%
+      apply(FUN = sum, MARGIN = 2)
+    # Simulate belt failures
+    K_bf[shut, ] <- rbinom(
+      n = N_runs,
+      size = K_uf[shut, ],
+      prob = P_bf
+    )
+    # Update unit ages
+    unit_ages_start <- unit_ages_end
+    if(any(failures == 1)) unit_ages_start[as.logical(failures)] <- 0
+  }
+  K_bf %>%
+    apply(FUN = cumsum, MARGIN = 2) %>%
+    apply(FUN = mean, MARGIN = 1) %>%
+    return()
+}
+
+joint_draws <- idler_stan_fit %>%
+  as_draws_df() %>%
+  spread_draws(beta, eta) %>%
+  head()
+
+junk <- mapply(
+  function(beta, eta) CumulativeBeltFailures(beta = beta, eta = eta),
+  joint_draws$beta,
+  joint_draws$eta
+)
+```

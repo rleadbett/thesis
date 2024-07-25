@@ -34,60 +34,61 @@
 \contentsline {subsection}{\numberline {3.4.1}Failure time of units in operation}{72}{subsection.3.4.1}%
 \contentsline {subsection}{\numberline {3.4.2}Expected number of failures}{73}{subsection.3.4.2}%
 \contentsline {subsection}{\numberline {3.4.3}Cost functions and preventative policy design}{75}{subsection.3.4.3}%
-\contentsline {section}{\numberline {3.5}Discussion and conclusions}{77}{section.3.5}%
-\contentsline {part}{II\hspace {1em}Part two: Degradation modelling}{79}{part.2}%
-\contentsline {chapter}{\numberline {4}A noisy gamma process for modelling degradation measurements with uncertainty}{83}{chapter.4}%
-\contentsline {section}{\numberline {4.1}The gamma process}{84}{section.4.1}%
-\contentsline {section}{\numberline {4.2}A noisy gamma process}{86}{section.4.2}%
-\contentsline {section}{\numberline {4.3}Reparametrisation}{88}{section.4.3}%
-\contentsline {section}{\numberline {4.4}Constructing the prior}{89}{section.4.4}%
-\contentsline {section}{\numberline {4.5}Fitting the noisy gamma process}{95}{section.4.5}%
-\contentsline {subsection}{\numberline {4.5.1}Data simulation}{96}{subsection.4.5.1}%
-\contentsline {subsection}{\numberline {4.5.2}Computation}{98}{subsection.4.5.2}%
-\contentsline {subsection}{\numberline {4.5.3}Results and diagnostics}{100}{subsection.4.5.3}%
-\contentsline {subsection}{\numberline {4.5.4}Solutions to computational issues}{106}{subsection.4.5.4}%
-\contentsline {section}{\numberline {4.6}Discussion}{109}{section.4.6}%
-\contentsline {chapter}{\numberline {5}Noisy gamma process with unit-to-unit variability}{115}{chapter.5}%
-\contentsline {section}{\numberline {5.1}Models for multiple units}{118}{section.5.1}%
-\contentsline {subsection}{\numberline {5.1.1}The complete pooling model}{120}{subsection.5.1.1}%
-\contentsline {subsection}{\numberline {5.1.2}Partial pooling models}{122}{subsection.5.1.2}%
-\contentsline {paragraph}{varying $\mu $ model}{123}{section*.67}%
-\contentsline {paragraph}{varying $\nu $ model}{123}{section*.68}%
-\contentsline {paragraph}{varying $\mu $ and $\nu $ model}{123}{section*.69}%
-\contentsline {section}{\numberline {5.2}Computation, posteriors, and predictive distributions}{124}{section.5.2}%
-\contentsline {paragraph}{Complete pooling}{125}{section*.71}%
-\contentsline {paragraph}{Varying $\mu $}{126}{section*.74}%
-\contentsline {paragraph}{Varying $\nu $}{129}{section*.80}%
-\contentsline {paragraph}{varying $\mu $ and $\nu $}{132}{section*.83}%
-\contentsline {paragraph}{Posterior predictive checks}{133}{section*.85}%
-\contentsline {subsection}{\numberline {5.2.1}Model comparison}{136}{subsection.5.2.1}%
-\contentsline {paragraph}{Leave-one-unit-out cross-validation}{136}{section*.88}%
-\contentsline {paragraph}{Step-ahead cross-validation}{137}{section*.89}%
-\contentsline {section}{\numberline {5.3}Failure time distributions}{139}{section.5.3}%
-\contentsline {section}{\numberline {5.4}Discussions}{141}{section.5.4}%
-\contentsline {chapter}{\numberline {6}Conveyor belt wear forecasting}{145}{chapter.6}%
-\contentsline {section}{\numberline {6.1}Functional data analysis (the data model)}{150}{section.6.1}%
-\contentsline {paragraph}{B-splines}{151}{section*.95}%
-\contentsline {paragraph}{Functional time series}{151}{section*.97}%
-\contentsline {section}{\numberline {6.2}Process models}{153}{section.6.2}%
-\contentsline {subsection}{\numberline {6.2.1}Noisy gamma process}{154}{subsection.6.2.1}%
-\contentsline {subsection}{\numberline {6.2.2}Linear model}{154}{subsection.6.2.2}%
-\contentsline {section}{\numberline {6.3}Parameter model}{155}{section.6.3}%
-\contentsline {section}{\numberline {6.4}Posterior sampling and inference}{159}{section.6.4}%
-\contentsline {paragraph}{Marginal posteriors of parameters}{160}{section*.103}%
-\contentsline {paragraph}{Intermediate quantities}{163}{section*.106}%
-\contentsline {paragraph}{Posterior predictive distributions}{164}{section*.108}%
-\contentsline {section}{\numberline {6.5}Forecasting degradation curves}{167}{section.6.5}%
-\contentsline {section}{\numberline {6.6}Comparison of methods}{168}{section.6.6}%
-\contentsline {section}{\numberline {6.7}Failure time distributions}{173}{section.6.7}%
-\contentsline {section}{\numberline {6.8}Discussions}{176}{section.6.8}%
-\contentsline {chapter}{\numberline {7}Discussions}{181}{chapter.7}%
-\contentsline {section}{\numberline {7.1}Overview and discussions}{181}{section.7.1}%
-\contentsline {section}{\numberline {7.2}Strengths and limitations}{181}{section.7.2}%
-\contentsline {section}{\numberline {7.3}Future directions}{181}{section.7.3}%
-\contentsline {section}{\numberline {7.4}Implications for industry practitioners}{181}{section.7.4}%
-\contentsline {chapter}{Appendices}{183}{section*.117}%
-\contentsline {chapter}{\numberline {A}Appendix Title}{185}{appendix.a.A}%
+\contentsline {section}{\numberline {3.5}Discussion and conclusions}{78}{section.3.5}%
+\contentsline {part}{II\hspace {1em}Part two: Degradation modelling}{81}{part.2}%
+\contentsline {chapter}{\numberline {4}A noisy gamma process for modelling degradation measurements with uncertainty}{85}{chapter.4}%
+\contentsline {section}{\numberline {4.1}The gamma process}{86}{section.4.1}%
+\contentsline {section}{\numberline {4.2}A noisy gamma process}{88}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Reparametrisation}{90}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Constructing the prior}{91}{section.4.4}%
+\contentsline {section}{\numberline {4.5}Fitting the noisy gamma process}{97}{section.4.5}%
+\contentsline {subsection}{\numberline {4.5.1}Data simulation}{98}{subsection.4.5.1}%
+\contentsline {subsection}{\numberline {4.5.2}Computation}{100}{subsection.4.5.2}%
+\contentsline {subsection}{\numberline {4.5.3}Results and diagnostics}{102}{subsection.4.5.3}%
+\contentsline {subsection}{\numberline {4.5.4}Solutions to computational issues}{108}{subsection.4.5.4}%
+\contentsline {section}{\numberline {4.6}Discussion}{111}{section.4.6}%
+\contentsline {chapter}{\numberline {5}Noisy gamma process with unit-to-unit variability}{117}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Models for multiple units}{120}{section.5.1}%
+\contentsline {subsection}{\numberline {5.1.1}The complete pooling model}{122}{subsection.5.1.1}%
+\contentsline {subsection}{\numberline {5.1.2}Partial pooling models}{124}{subsection.5.1.2}%
+\contentsline {paragraph}{varying $\mu $ model}{125}{section*.70}%
+\contentsline {paragraph}{varying $\nu $ model}{125}{section*.71}%
+\contentsline {paragraph}{varying $\mu $ and $\nu $ model}{125}{section*.72}%
+\contentsline {section}{\numberline {5.2}Computation, posteriors, and predictive distributions}{126}{section.5.2}%
+\contentsline {paragraph}{Complete pooling}{127}{section*.74}%
+\contentsline {paragraph}{Varying $\mu $}{128}{section*.77}%
+\contentsline {paragraph}{Varying $\nu $}{131}{section*.83}%
+\contentsline {paragraph}{varying $\mu $ and $\nu $}{134}{section*.86}%
+\contentsline {paragraph}{Posterior predictive checks}{135}{section*.88}%
+\contentsline {subsection}{\numberline {5.2.1}Model comparison}{138}{subsection.5.2.1}%
+\contentsline {paragraph}{Leave-one-unit-out cross-validation}{138}{section*.91}%
+\contentsline {paragraph}{Step-ahead cross-validation}{139}{section*.92}%
+\contentsline {section}{\numberline {5.3}Failure time distributions}{141}{section.5.3}%
+\contentsline {section}{\numberline {5.4}Discussions}{143}{section.5.4}%
+\contentsline {chapter}{\numberline {6}Conveyor belt wear forecasting}{147}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Functional data analysis (the data model)}{152}{section.6.1}%
+\contentsline {paragraph}{B-splines}{153}{section*.98}%
+\contentsline {paragraph}{Functional time series}{153}{section*.100}%
+\contentsline {section}{\numberline {6.2}Process models}{155}{section.6.2}%
+\contentsline {subsection}{\numberline {6.2.1}Noisy gamma process}{156}{subsection.6.2.1}%
+\contentsline {subsection}{\numberline {6.2.2}Linear model}{156}{subsection.6.2.2}%
+\contentsline {section}{\numberline {6.3}Parameter model}{157}{section.6.3}%
+\contentsline {section}{\numberline {6.4}Posterior sampling and inference}{161}{section.6.4}%
+\contentsline {paragraph}{Marginal posteriors of parameters}{162}{section*.106}%
+\contentsline {paragraph}{Intermediate quantities}{165}{section*.109}%
+\contentsline {paragraph}{Posterior predictive distributions}{166}{section*.111}%
+\contentsline {section}{\numberline {6.5}Forecasting degradation curves}{169}{section.6.5}%
+\contentsline {section}{\numberline {6.6}Comparison of methods}{170}{section.6.6}%
+\contentsline {section}{\numberline {6.7}Failure time distributions}{175}{section.6.7}%
+\contentsline {section}{\numberline {6.8}Discussions}{178}{section.6.8}%
+\contentsline {chapter}{\numberline {7}Thesis discussion}{183}{chapter.7}%
+\contentsline {section}{\numberline {7.1}Overview and main discussions}{183}{section.7.1}%
+\contentsline {section}{\numberline {7.2}Strengths and limitations}{184}{section.7.2}%
+\contentsline {section}{\numberline {7.3}Future directions}{184}{section.7.3}%
+\contentsline {section}{\numberline {7.4}Implications for industry practitioners}{184}{section.7.4}%
+\contentsline {section}{\numberline {7.5}Conclusions of the thesis}{184}{section.7.5}%
+\contentsline {chapter}{Appendices}{185}{section*.120}%
+\contentsline {chapter}{\numberline {A}Appendix Title}{187}{appendix.a.A}%
 \setcounter {tocdepth}{1}
-\contentsline {chapter}{\numberline {B}Copyright Information}{187}{appendix.a.B}%
-\contentsline {chapter}{References}{189}{appendix*.118}%
+\contentsline {chapter}{\numberline {B}Copyright Information}{189}{appendix.a.B}%
+\contentsline {chapter}{References}{191}{appendix*.121}%
