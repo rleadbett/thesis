@@ -1595,13 +1595,10 @@ data.frame(
 Fun this for each draw from the posterior.
 
 ```{r}
-betas <- c(1.1, 1.5)
-etas <- c(1300, 1430)
-
 CumulativeBeltFailures <- function(
   beta, eta,        # Weibull parameters
   N_units = 143,    # number of frames
-  N_shuts = 100,    # the number of shutdowns to run sim for
+  N_shuts = 50,     # the number of shutdowns to run sim for
   delta = (6 * 7),  # operation time between shuts
   N_runs = 1000,    # number of simulation runs
   P_bf = 0.05       # the probability of a frame failure damaging the belt
@@ -1647,12 +1644,81 @@ CumulativeBeltFailures <- function(
 
 joint_draws <- idler_stan_fit %>%
   as_draws_df() %>%
-  spread_draws(beta, eta) %>%
-  head()
+  spread_draws(beta, eta)
+
+subset_of_draws <- sample(1:nrow(joint_draws), 500)
 
 junk <- mapply(
   function(beta, eta) CumulativeBeltFailures(beta = beta, eta = eta),
-  joint_draws$beta,
-  joint_draws$eta
+  joint_draws$beta[subset_of_draws],
+  joint_draws$eta[subset_of_draws]
 )
 ```
+
+```{r}
+E_N_failures_df <- data.frame(
+  draw = rep(1:500, each = 100),
+  shut = rep(1:100, 500),
+  value = junk %>%
+    as.numeric()
+)
+E_N_failures_df %>%
+  ggplot() +
+  stat_lineribbon(aes(x = shut, y = value)) +
+  scale_fill_brewer()
+```
+
+```{r}
+CostFunction <- function(
+  t_p,
+  F_r,
+  N = 143,
+  C_p = (250 * 3),
+  C_r = (15000 * 2 * 100 + 2000)
+) {
+  preventative_cost <- C_p * N
+  reactive_cost <- C_r * F_r
+  cost_per_unit_t <- (preventative_cost + reactive_cost) / t_p
+}
+
+E_N_failures_df %>%
+  filter(shut <= 44) %>%
+  mutate(
+    t_p = shut * (6 * 7),
+    C = CostFunction(t_p = t_p, F_r = value),
+    shut_factor = factor(shut, levels = 1:44, ordered = TRUE)
+  ) %>%
+  ggplot() +
+  stat_halfeye(
+    aes(y = shut_factor, x = C),
+    .width = c(0.5, 0.9)
+  ) +
+  theme_minimal()
+```
+
+```{r}
+#| label: save-fig-cost-function
+#| echo: false
+#| output: false
+pdf(
+  file.path(fig_path, "cost-funciton.pdf"),
+  height = 10,
+  width = 8
+)
+E_N_failures_df %>%
+  filter(shut <= 44) %>%
+  mutate(
+    t_p = shut * (6 * 7),
+    C = CostFunction(t_p = t_p, F_r = value),
+    weeks = factor(shut * 6, levels = (1:44 * 6), ordered = TRUE)
+  ) %>%
+  ggplot() +
+  stat_halfeye(
+    aes(y = weeks, x = C),
+    .width = c(0.5, 0.9)
+  ) +
+  xlab("Cost per ($/day)") +
+  ylab("Interval (weeks)") +
+  theme_minimal()
+dev.off()
+``

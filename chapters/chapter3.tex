@@ -103,81 +103,106 @@ Using the resulting distribution of $F_K(t|\hbox{RUL}, \theta)$, we can calculat
 
 \subsection{Cost functions and preventative policy design} \label{subsec:idler-cost-function}
 
-Interlude for section\dots
+The posterior draws are not only useful for making short-term decisions, we can also use functions of the draws of the parameters to inform long-term planning. As an example, in this section, I incorporate the posterior uncertainty in the parameters into the choice of fixed time replacement interval for a preventative maintenance policy.
 
-To implement a preventative replacement strategy, a reliability practitioner must choose the fixed time interval that components are replaced at. This choice aims to minimize the expected cost of maintenance and lost production but must also align with what is practically possible. \citet{jardine2013} presents a rough structure for quantifying a particular preventative maintenance policy that balances the cost of planned replacements $C_p$ against the cost of unplanned (reactive) replacements $C_r$ in terms of cost per unit time; 
+To implement a preventative replacement strategy, a reliability practitioner must choose a fixed time interval at which components are replaced. This choice aims to minimise the expected cost of maintenance and lost production but must also align with what is practically possible. \citet{jardine2013} presents a rough structure for quantifying the cost of a particular preventative maintenance policy that balances the cost of planned replacements $C_p$ against the cost of unplanned (reactive) replacements $C_r$ in terms of cost per unit time; 
 \begin{equation*}
-  \text{Cost per unit time} = \frac{C_p N + C_r E[K|\Delta t_p,\theta]}{\Delta t_p}.
+ \text{Cost per unit time} = \frac{C_p N + C_r E[K|\Delta t_p,\theta]}{\Delta t_p}.
 \end{equation*}
-Here, $N$ is the number of units, $\Delta t_p$ is the proposed fixed time interval, and $E[K|\Delta t_p,\theta]$ is the expected number of failures in the interval given the parameters of the lifetime distribution.
+Here, $N$ is the number of units, $\Delta t_p$ is the proposed fixed time interval, and $E[K|\Delta t_p,\theta]$ is the expected number of failures in the interval given the parameters of the lifetime distribution. Since the cost due to reactive maintenance depends on the lifetime distribution, we should, therefore, incorporate uncertainty around the parameters of this distribution as well.
 
-Lay out of my approach\dots
-\begin{itemize}
-  \item Viable $\Delta t_p$ are only when plant is shut down (six week shuts).
-  \item $C_p$ for an idler frame $\approx\$500$.
-  \item $C_r$ for the belt $\approx\$1,000,000$ (Cost of belt, lost production, cost of labour.).
-  \item $N = 143$ frames in this case. 
-\end{itemize}
-It is slightly more complicated to calculate $E[K|\Delta t_p,\theta]$ than in the examples provided in \citet{jardine2013}
+Here, I give a general example of propagating posterior uncertainty through a cost function for the idler-frames bulk replacement. Let $\Delta t_p$ denote the time interval between bulk replacements of the idler-frames analysed in section~\ref{sec:idler-frame-posterior}. The cost to replace an idler in a bulk replacement during a shutdown period is $\approx\$250$ per idler, that is $\approx\$750$ per frame. However, if an idler needs to be replaced during a period of operation, this costs $\approx\$2000$ in parts and labour and typically takes around two hours. Critical conveyors in the circuit will transport around $15000$ tonnes/hour. At a conservative iron ore price of $\$100$ a tonne, a two-hour stoppage equates to $\$3000000$ in lost production. The cost function for the bulk replacements of the idlers is therefore
+\begin{equation*}
+ \text{Cost per unit time}(\Delta t_p|\beta, \eta) = \frac{\$750 \times 143 + (\$3000000 + \$2000) E[K|\Delta t_p,\beta,\eta]}{\Delta t_p}.
+\end{equation*}
+Here, $E[K|\Delta t_p,\beta,\eta]$ is the expected number of unplanned replacements in an interval $\Delta t_p$, which depends on the posterior values of the parameters and therefore behaves like a random variable, and as a result, so does the cost per unit time. We can obtain samples from a distribution for the cost per unit time by calculating $E[K|\Delta t_p,\beta^s,\eta^s]$, conditioning on the draws from the posterior. However, It is slightly more complicated to calculate this value for the idlers than in the examples provided in \citet{jardine2013}.
 
 \paragraph*{Expected number of reactive maintenance events}
 
-What is the best way to calculate $E[K|\Delta t_p,\theta]$
-\begin{itemize}
-  \item Jardine talks about some methods for expected number of repeat failures in a time interval in section 2.4.3
-  \item 
-\end{itemize}
+The expected number of unplanned replacements in an interval is non-trivial for two reasons. First, the idlers are repeatedly replaced when they fail, and secondly, not all idler-frame failures will need to be replaced immediately---only those that fail in a way that poses an immediate threat to the belt. The expected number of failures, therefore, needs to be approximated numerically. \citet[section~2.4.3 of ]{jardine2013} discusses some methods to determine the expected number of repeat failures in a time interval for more straightforward cases.
 
-The probability of a unit $n$ failing in an interval given its age is
-\begin{equation*}
-  P_{n}|\Delta t_p, t_n, \theta = \frac{F_{\text{Weibull}}(t_n + \Delta t_p|\theta) - F_{\text{Weibull}}(t_n|\theta)}{1 - F_{\text{Weibull}}(t_n|\theta)}.
-\end{equation*}
-Therefore the number of failures during the period between shuts is the sum of $N$ independant(an assumption) nonidentical bernoulli trials
+In the idler-frame problem, planned and non-urgent maintenance is only performed during shutdowns every six weeks. I therefore confine my simulations to discrete values of $\Delta t_p$, which are multiples of six weeks, ranging from one to forty-three shutdowns (five years). For each draw of $\beta$ and $\eta$ from the posterior, I run one thousand simulations, iteratively simulating the failures in the periods between shutdowns, going up to forty-three. This process is described in algorithm~\ref{algo:K_BF}. Each simulation run reflects the typical workflow on the mine; frames fail in the period between shuts and, unless they are an immediate threat to the belt, are flagged and maintained in the next shutdown. However, if an idler in the frame fails in a way that immediately threatens to damage the belt, then the conveyor is stopped and the idlers in that frame replaced, which is when the high reactive maintenance cost is incurred. Therefore, in the simulation runs, starting with an age of zero, I simulate the number of failures in the interval between shutdowns by summing $N$ independent Bernoulli trials
 \begin{align*}
-  I_n|\Delta t_p, t_n, \theta \sim & \mbox{Bernoulli}(P_{n}) \\
-  K_{\text{UF}}                  = & \sum^N_{i = 1} I_i.
+ I_n|\Delta t_p, t_n, \beta^s, \eta^s \sim & \mbox{Bernoulli}(P_{n}) \\
+ K_{\text{UF}}                           = & \sum^N_{i = 1} I_i.
 \end{align*}
-However, in this case, the cost of unplanned maintenance is actually incoured when the belt is damaged and, therefore, there is an extra step. I calculate the belt failures in the interval as
+$P_{\text{UF} n}$ is calculated according to the Weibull lifetime distribution
 \begin{equation*}
-  K_{\text{BF}}|\Delta t_p, t_n, \theta \sim Binomial(K_{\text{UF}}, P_{\text{BD}})
+ P_{\text{UF} n}|\Delta t_p, t_n, \beta^s, \eta^s = \frac{F_{\text{Weibull}}(t_n + \Delta t_p|\beta^s, \eta^s) - F_{\text{Weibull}}(t_n|\beta^s, \eta^s)}{1 - F_{\text{Weibull}}(t_n|\beta^s, \eta^s)}.
 \end{equation*}
-where $P_{\text{BD}}$ is the probability that a failed frame damages the belt.
-
-To calculate $K_{\text{BF}}$ for an interval between two shutdowns requires that we know the age of the idlers at these times. The renual process of the idlers---i.e. if a frame failes in a period between shuts then it is replaced in the next---means that $t_n$ is reset to zero everytime an idler-frame fails. Therefore, it is nontrivial to calculate $K_{\text{BF}}$ and hence, I use simulations.
+$t_n$ is the age of the frame in days at the beginning of the interval, and $\Delta t_p = 6 * 7 \text{days}$ is the period between shutdowns in days.
+During the operational periods, I assign a probability $P_{\text{BD}} = 0.05$ that an unplanned frame failure must be replaced immediately. The number of reactive maintenance events in a period between two shuts is, therefore, a binomial trial with sample size $K_{\text{UF}}$;
+\begin{equation*}
+ K_{\text{BF}}|\Delta t_p, t_n, \beta^s, \eta^s \sim Binomial(K_{\text{UF}}, P_{\text{BD}}).
+\end{equation*}
+At the end of each step (the period between shuts), I reset the age of any failed frames to zero and then repeat the same process.
 
 \begin{algorithm}
-	\caption{Numerical procedure for calculating the expected number of belt failures in an interval.}
+	\caption{Numerical procedure for calculating the expected cumulative number of belt failures. For each draw from the posterior, $1000$ simulations are run, each $100$ shuts long.}
   \label{algo:K_BF}
 	\begin{algorithmic}[1]
-		\For {each posterior draw}
-
+    \State Assign simulation parameters
+    \State $N_{\text{frames}} \gets 143$         \Comment{\small{Number of frames}}
+    \State $N_{\text{shuts}} \gets 100$          \Comment{\small{Number of shuts to run each simulation for}}
+    \State $N_{\text{runs}} \gets 1000$          \Comment{\small{Number of runs of the simulation}}
+    \State $\Delta t_{shuts} \gets (6 \times 7)$ \Comment{\small{Operating days between shutdowns}}
+    \State $P_{\text{BF}} \gets 0.05$            \Comment{\small{Operating days between shutdowns}}
+    \State
+		\For {each posterior draw $s$}
+      \For {$i = 1$ to $N_{\text{runs}}$}
+        \State $t_1, \dots, t_N \gets 0$         \Comment{\small{Set age of frames to zero}}
+        \For {$j = 1$ to $N_{\text{shuts}}$}
+          \State Calculate probability of frame failures in period between shuts.
+          \State $P_{\text{UF} n} \gets \frac{F_{\text{Weibull}}(t_n + \Delta t_{shuts} | \theta^s) - F_{\text{Weibull}}(t_n | \theta^s)}{1 - F_{\text{Weibull}}(t_n | \theta^s)}$
+          \State $I_n \sim \mbox{Bernoulli}(P_{\text{UF} n})$   \Comment{\small{Simulate frame failures}}
+          \State $K_{\text{UF}} \gets \sum^N_{n = 1} I_n$       \Comment{\small{Number of frame failures}}
+          \State $K_{\text{BF}|\Delta t_{shuts}}[j] \sim \mbox{Binom}(K_{\text{UF}}, P_{\text{BF}})$ \Comment{\small{Number of belt failures in interval}}
+          \For {$n = 1$ to $N$}
+            \If {$I_n = 1$}
+              \State $t_n \gets 0$   \Comment{\small{Reset age of failed frames to 0}}
+            \Else
+              \State $t_n \gets t_n + \Delta t_{shuts}$   \Comment{\small{Progress age of unfailed frames}}
+            \EndIf
+          \EndFor
+        \EndFor
+        \State Take Cumulative sum of the belt failures in shut intervals.
+        \State $K_{\text{BF}|t} \gets \text{cumulative sum of } K_{\text{BF}|\Delta t_{shuts}}$
+      \EndFor
+    \State Average across the simulation runs
+    \State $E[K_{\text{BF}|t}]$
     \EndFor
 	\end{algorithmic} 
 \end{algorithm} 
 
-\paragraph*{Strategy cost with uncertainty}
+In each run, at the end of the forty-four shutdowns, I calculate the cumulative number of reactive maintenance events, and at the end of the one-thousand repeat simulations for a draw, I calculate the average for each of the forty-four intervals across the simulations. The result is an estimate for the function for the average number of reactive replacements conditioned on the draw from the posterior at times $\Delta t_p = \{6, 12, \dots, 264\}$ weeks.
 
-\begin{equation*}
-  \text{Cost per unit time}^s = \frac{C_p N + C_r E[K|\Delta t_p,\theta^s]}{t_p}.
-\end{equation*}
+Algorithm~\ref{algo:K_BF} is computationally intensive, and so I thin the draws from the posterior, using only every fifth draw. The resulting distributions of $E[K_{\text{BF}}|\Delta t_p,\theta^s]$ can then be used to calculate the distribution of the average cost per unit time for the deferent choices of fixed time replacement intervals.
+
+\paragraph*{Choosing a fixed time replacement interval}
+
+Figure~\ref{fig:preventative-repl-decision} shows the median estimates and uncertainty around the cost per day for the different fixed time replacement interval choices. Importantly, the distributions provide the range from the `best case scenario' to the `worst case scenario' of the average cost for a chosen fixed time replacement interval. In the figure, any intervals greater than 150 weeks show little impact on the cost of maintenance according to the median of the distributions and according to the upper $90\%$ interval---i.e. the `worst case scenario'---bulk replacement has little impact on maintenance cost for intervals greater than eighteen. Short replacement intervals have the largest potential cost saving, for example, the lower $90\%$ interval of six, twelve, and eighteen-week intervals; however, these distributions are also the widest because there is a greater risk that the idlers are over-maintained (replaced too often). The best choice would be in the range from eighteen to forty-two weeks since these intervals are likely to have a reasonable impact on cost per day and are long enough that they could be planned around the maintenance of other assets---i.e. they would not take up too much of the collective labour resources.
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.8\textwidth, draft]{./figures/ch-3/prev-repl-choise.pdf}
-  \caption{}
+  \includegraphics[width=0.8\textwidth]{./figures/ch-3/cost-funciton.pdf}
+  \caption{The cost per unit time of preventative maintenance policies for idlers. On the horizontal axis is the cost per unit time, and on the vertical is the fixed time replacement interval. The point and intervals show the median and $0.5$ and $0.9$ intervals. The grey densities show the full distributions.}
   \label{fig:preventative-repl-decision}
 \end{figure}
 
+Note that these conclusions would differ for different conveyors since their reliability, the cost of maintaining them, and the impact on production may differ. We also still need to consider the larger context of maintenance; we need to assign shared resources to implement the maintenance strategies, and there may be some conveyors where the cost per unit time is higher (or there is a high chance that it could be) and so we may adjust work to either coincide or not depending on if we have spare resources.
+
+Seeing the uncertainty range in the estimated cost helps to interpret risk. For example, in Fig.~\ref{fig:preventative-repl-decision}, if only the median was available, then the second, third, and fourth shuts would seem the best choices, but when looking at the upper $50\%$ and $90\%$ intervals, the fifth, sixth and seventh intervals are very similar to the second and third. Hence, if it was desirable to choose a wider interval for some ulterior reason, we can see that there is a reasonable chance that maintaining the idler-frames every six shuts would have no impact on the cost per day over maintaining them every three shuts.
+
+Lastly, in my cost function, I have looked at the expectation of the number of reactive maintenance events; I don't include the variability. It may also be important to investigate the variability in the cost over a short period. For example, the cost of preventative maintenance over a short period should always be roughly the same, whereas the cost due to reactive maintenance may vary a lot. Therefore, it may be preferable to favour shorter fixed-time replacement intervals if it reduces the risk of large financial costs in a short period.
+
 \section{Discussion and conclusions} \label{sec:idler-frame-conclusions}
 
-Typical results section.
+In this chapter, I have demonstrated my proposed method for modelling lifetime data that are right censored and left truncated with unknown exposure time from Chapter~\ref{chap:chapter2} on an industry dataset of idler-frame failure times. From the output of the Bayesian model that imputes the partially observed lifetimes, I showed how it is easy to obtain predictive distributions (and therefore point estimates and uncertainty intervals) for the remaining useful life of the units still in operation at the end of the observation period as well as the cumulative number of failures going forward from the end of the observation period. I also showed how to pass the posterior draws of the Weibull parameters through a cost function to choose a fixed time replacement interval for a preventative maintenance policy in a way that accounts for the posterior uncertainty in the analysis. In this last section, I discuss the main conclusions and outcomes from the chapter and the potential for future work. 
 
-\begin{itemize}
-  \item Summarise main points and usefulness of chapter.
-  \item In an ideal world we would analyse the failure distribution of the idlers themselves, but unfortunately the data is not available at this level. The effect of modelling the frame lifetime (which is the shorter lifetime of the three idlers it contains) is that the shape parameter is close to one---shown in the prior-data conflict. The beta value close to one makes the cost function...
-  \item I've demonstrate how imputing the censored observations in a Bayesian approach provides a very natural straightforward way of obtaining estimates and uncertainty intervals for the RUL of the frames still in operation and the predicted cumulative number of failures.
-  \item expected RUL and expected failures are useful for short term decision making, for example inventory of replacement idlers kept at the mine (most of these mines are fly-in-fly-out).
-  \item There are may things that must be weighed into the decision; for example most mines are fly in fly out and so there is limited number of maintenance workers that can be acomodated and parts that can be kept on sight\dots 
-  \item This model could include covariates, say if manufacturer type was available---which it is for the recent idler failures---or location on the belt---impact idlers, tail or head idlers, and typical carry idlers.
-  \item The method could be explored to include a mixture of failure modes to include the idlers that fail at $t < 21$, which I threw out before analysis \citep{mittman2013}. However, this would require a better understanding of the imputation method, since truncation would make it less likely that we observe the early failure mode and right censoring the longer failure mode.
-\end{itemize}
+Analysis of the idler frame data found that the average lifetime of an idler-frame is $3.6$ years (with 90\% lower and upper bounds of 3.2 and 3.9 years). This estimate is quite a bit shorter than the prior belief about the expected lifetime of an idler provided by the manufacturer, which is a sign of conflict between the prior and the data. Possible reasons for this conflict are 1) because the analysis I perform is at the frame level since failures are not reliably reported at the idler-level, and 2) the analysis is performed with respect to calendar date. A better exposure would be throughput or travel of the belt since these more strongly indicate usage; however, only calendar time was available.
+
+I demonstrated, using the posterior draws, that imputing the partially observed lifetimes---particularly the right-censored lifetimes---in a Bayesian approach provides a very natural and straightforward way of obtaining estimates and uncertainty intervals for the RUL of the frames still in operation and the predicted cumulative number of failures. The Bayesian approach alleviates the analyst from choosing a suitable method for generating uncertainty intervals. The predictions for the RUL of the idlers, with uncertainty, can be used to prioritise replacements, and the predictive distribution of the cumulative number of failures can help with logistics; for example, many mines are remote, so they can only hold a particular amount of stock on site, knowing a range for the number of possible failures in the next month would help decide how many replacement idlers should be kept on site.
+
+I have shown that analysis of the partially observed idler-frame lifetimes is useful for short and long-term decisions. However, this could be improved further by including extra information. For example, there is extra information such as manufacturer type---which is available for the recent idler failures---or the location on the belt---idlers in the impact zone where ore is loaded onto the belt or idlers near the head or tail of the belt where were it transitions onto the pulleys. This information could be included through covariates or used to divide the population into groups of similar but different idler-frames, and these groups modelled hierarchically. Furthermore, in my analysis, I treated short lifetimes where $t < 21$ days as right censoring events. These early failures can still result in downtime of the belt. Methods could be explored to include these `infant mortalities' in the model, e.g. using a mixture distribution such as in \citep{mittman2013}. However, such an extension would need to investigate the impacts on the imputation of the partially observed lifetimes and missing truncation times.
+
+In this case study analysis of the idler-frame failures, I have emphasised how the posterior can inform decisions. This extension of the discussion of Bayesian analysis of lifetime data is useful for people applying these methods in practice. Rather than taking the point estimates of the quantities of interest and `plugging' them into some utility function, one of the biggest benefits of the Bayesian framework is how easy it is to propagate uncertainty through these types of functions. It is important to emphasise this in work that targets reliability practitioners.

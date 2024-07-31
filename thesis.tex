@@ -111,9 +111,17 @@
 
 \part{Part one: lifetime analysis}\label{part:one}
 
-A preamble about which chapters have been published and which chapters came from industry placements.
+In this first part of the thesis, I look at the problem of analysing the partially observed lifetime data of repeatedly replaced components. That is, when a component has been repeatedly replaced for many years, but the failure records are only available from a particular date up to the present. In these cases, the first observed failure of each component is the end of a lifetime with an unknown start time, and the most recent replacement marks the beginning of a lifetime, which we have not yet observed the end of.
 
-``Since the initial approach was published in Leadbetter et al. (2021), I have taken an alternative approach that does\ldots''
+The problem was motivated by an industry placement where I collated a dataset of idler failures for all of the conveyors at several of the industry partners' mines to inform the design of fixed-time replacement strategies for the idlers---that is, determine what the best time interval is to replace the idler so that the reliability of the conveyor is maximised and the cost of preventative maintenance is minimised. Constructing such a dataset required me to collate information from multiple systems (planned and unplanned replacement records and operation records). Understanding the process of idler replacements and wrangling and cleaning the dataset was a substantial piece of work. The idler-frame dataset that I present in this thesis is an example conveyor from this larger dataset.
+
+The importance of maintenance and the culture around it at the company has changed a lot over the decades that the mines have been operating. It has only been in recent years that replacement records have reliably been captured in the company's records. This gives rise to the problem of partially observed lifetime data, which I will address in this part of the thesis.
+
+My initial approach to modelling such data was published in the conference paper:
+\begin{itemize}
+  \item Leadbetter, R., Phatak, A., Polpo, A. \& Hodkiewicz, M. (2021) \textit{Informative Bayesian Survival Analysis to Handle Heavy Censoring in Lifetime Data}, International Conference on Maintenance and Intelligent Asset Management (ICMIAM), Ballarat, Australia, pp. 1-6,\\ doi: 10.1109/ICMIAM54662.2021.9715184.
+\end{itemize}
+I was the first author of this publication, performed all of the analysis (under the guidance of the co-authors), and produced the first version of the manuscript. All authors revised and edited the paper. However, since the initial approach was published, I have taken an alternative approach to the problem; this is the approach that I present in Chapter~\ref{chap:chapter2}.
 
 \include{chapters/chapter2}
 \include{chapters/chapter3}
@@ -139,11 +147,11 @@ The e-prints for the two papers have been uploaded to arXiv. The full references
 \include{chapters/chapter7}
 
 % start your appendices
-\begin{customappendix}{} % add \alphanumbering between brackets if you want to have alphabetic numbered appendices
-\include{chapters/appendixA}
-\include{chapters/copyright}
+%\begin{customappendix}{} % add \alphanumbering between brackets if you want to have alphabetic numbered appendices
+%\include{chapters/appendixA}
+%\include{chapters/copyright}
 
-\end{customappendix}
+%\end{customappendix}
 
 \backmatter{}
 

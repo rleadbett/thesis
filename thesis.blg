@@ -11,8 +11,6 @@ A level-1 auxiliary file: chapters/chapter4.aux
 A level-1 auxiliary file: chapters/chapter5.aux
 A level-1 auxiliary file: chapters/chapter6.aux
 A level-1 auxiliary file: chapters/chapter7.aux
-A level-1 auxiliary file: chapters/appendixA.aux
-A level-1 auxiliary file: chapters/copyright.aux
 Reallocated glb_str_ptr (elt_size=4) to 20 items from 10.
 Reallocated global_strs (elt_size=200001) to 20 items from 10.
 Reallocated glb_str_end (elt_size=4) to 20 items from 10.
@@ -26,7 +24,7 @@ Database file #1: references.bib
 apacite.bst [2013/07/21 v6.03 APA bibliography style]
 You've used 84 entries,
             6951 wiz_defined-function locations,
-            1820 strings with 27340 characters,
+            1818 strings with 27296 characters,
 and the built_in function-call counts, 168949 in all, are:
 = -- 20927
 > -- 1397
