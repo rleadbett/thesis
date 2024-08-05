@@ -68,14 +68,106 @@ annotate(
 dev.off()
 
 # Left-truncation example
-set.seed(111)
-y_obs <- rweibull(10, 1.1, 1)
+set.seed(112)
+
+left_trunc_df <- data.frame(
+  y = rweibull(10, 1.1, 1),
+  trunc_time = 0.5
+) %>%
+  mutate(
+    observed = y > trunc_time,
+    origin = 0,
+    partial_obs = ifelse(observed, trunc_time, y),
+    observed_start = ifelse(observed, trunc_time, NA),
+    observed_end = ifelse(observed, y, NA)
+  )
+
+p_left_cens <- left_trunc_df %>%
+mutate(n = factor(1:n(), levels = 1:10, ordered = T)) %>%
+ggplot() +
+geom_vline(xintercept = 0.5, colour = "red", linetype = "dashed") +
+geom_segment(
+  aes(x = observed_start, y = n, xend = observed_end, yend = n),
+  colour = "black",
+  linetype = 1
+) +
+geom_segment(
+  aes(x = origin, y = n, xend = partial_obs, yend = n),
+  colour = "grey",
+  linetype = 2
+) +
+geom_point(
+  data = left_trunc_df %>%
+    mutate(n = factor(1:n(), levels = 1:10, ordered = T)) %>%
+    filter(observed),
+  aes(x = y, y = n),
+  shape = 4
+) +
+geom_point(
+  data = left_trunc_df %>%
+    mutate(n = factor(1:n(), levels = 1:10, ordered = T)) %>%
+    filter(!observed),
+  aes(x = y, y = n),
+  shape = 4,
+  colour = "gray"
+) +
+geom_point(
+  aes(x = origin, y = n),
+  shape = 16,
+  colour = "gray"
+) +
+theme_minimal() +
+xlab("age") +
+ylab("")
+
+p_left_trunc <- left_trunc_df %>%
+filter(observed) %>%
+mutate(n = factor(1:n(), levels = 1:10, ordered = T)) %>%
+ggplot() +
+geom_vline(xintercept = 0.5, colour = "red", linetype = "dashed") +
+geom_segment(
+  aes(x = observed_start, y = n, xend = observed_end, yend = n),
+  colour = "black",
+  linetype = 1
+) +
+geom_segment(
+  aes(x = origin, y = n, xend = partial_obs, yend = n),
+  colour = "grey",
+  linetype = 2
+) +
+geom_point(
+  data = left_trunc_df %>%
+    filter(observed) %>%
+    mutate(n = factor(1:n(), levels = 1:10, ordered = T)),
+  aes(x = y, y = n),
+  shape = 4
+) +
+geom_point(
+  aes(x = origin, y = n),
+  shape = 16,
+  colour = "gray"
+) +
+theme_minimal() +
+xlab("age") +
+ylab("")
+
 
 pdf(
   file.path("..", "..", "figures", "left_truncation_example.pdf"),
   width = 10,
   height = 6
 )
+plot_grid(
+  p_left_cens,
+  p_left_trunc,
+  ncol = 2, nrow = 1,
+  labels = c(
+    "(a)", "(b)"
+  ),
+  label_fontfamily = "Times",
+  label_face = "plain"
+)
+dev.off()
 data.frame(
   y_obs = y_obs,
   install_times = runif(10, 0, 2),
@@ -119,8 +211,6 @@ annotate(
 ) +
 theme_minimal() +
 xlab("time")
-dev.off()
-
 # Left-truncation and right censoring plot
 
 set.seed(111)

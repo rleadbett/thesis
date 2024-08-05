@@ -1439,3 +1439,481 @@ geom_step(
 xlim(0, 5)
 plot_grid(p_a, p_b, nrow = 1)
 ```
+
+
+
+
+# Example case 1
+
+```{r}
+test_data <- data.frame(
+  y = rweibull(1000, 1.5, 1),
+  t_install = runif(1000, 0, 2)
+) %>%
+  mutate(
+    t_failure = t_install + y,
+    truncated = t_install < 1,
+    right_cens = t_failure > 3,
+    cens_time = ifelse(right_cens, (3 - t_install), NA),
+    trunc_time = ifelse(truncated, (1 - t_install), 0)
+  ) %>%
+  filter(
+    t_failure > 1
+  )
+
+test_stan_model<- stan_model(
+  model_code = "
+data {
+int N_o;
+int N_lt;
+int N_rc;
+int N_lt_rc;
+array[N_o] real<lower=0> y_o;
+array[N_lt] real<lower=0> y_lt;
+array[N_rc] real<lower=0> c_rc;
+array[N_lt_rc] real<lower=0> c_lt_rc;
+array[N_lt] real<lower=0> tau_lt;
+array[N_lt_rc] real<lower=0> tau_lt_rc;
+}
+parameters {
+real<lower = 0> beta;
+real<lower = 0> eta;
+array[N_rc] real<lower=c_rc> y_rc;
+array[N_lt_rc] real<lower=c_lt_rc> y_lt_rc;
+}
+model {
+beta ~ normal(1.1, 1);
+eta ~ normal(1, 1);
+
+target += weibull_lpdf(y_o|beta, eta);
+target += weibull_lpdf(y_lt|beta, eta) - weibull_lccdf(tau_lt|beta, eta);
+target += weibull_lpdf(y_rc|beta, eta);
+target += weibull_lpdf(y_lt_rc|beta, eta) - weibull_lccdf(tau_lt_rc|beta, eta);
+}
+"
+)
+
+test_data_o <- test_data %>%
+  filter(!right_cens & !truncated)
+test_data_lt <- test_data %>%
+  filter(!right_cens & truncated)
+test_data_rc <- test_data %>%
+  filter(right_cens & !truncated)
+test_data_lt_rc <- test_data %>%
+  filter(right_cens & truncated)
+
+test_stan_data <- list(
+  N_o = nrow(test_data_o),
+  N_lt = nrow(test_data_lt),
+  N_rc = nrow(test_data_rc),
+  N_lt_rc = nrow(test_data_lt_rc),
+  y_o = as.array(test_data_o$y),
+  y_lt = as.array(test_data_lt$y),
+  c_rc = as.array(test_data_rc$cens_time),
+  c_lt_rc = as.array(test_data_lt_rc$cens_time),
+  tau_lt = as.array(test_data_lt$trunc_time),
+  tau_lt_rc = as.array(test_data_lt_rc$trunc_time)
+)
+
+test_stan_fit <- sampling(
+  test_stan_model,
+  test_stan_data
+)
+
+print(test_stan_fit, pars = c("beta", "eta"))
+```
+
+```{r}
+test_stan_model2 <- stan_model(
+  model_code = "
+data {
+int N_o;
+int N_lt;
+int N_rc;
+int N_lt_rc;
+array[N_o] real<lower=0> y_o;
+array[N_lt] real<lower=0> y_lt;
+array[N_rc] real<lower=0> c_rc;
+array[N_lt_rc] real<lower=0> c_lt_rc;
+array[N_lt] real<lower=0> tau_lt;
+array[N_lt_rc] real<lower=0> tau_lt_rc;
+}
+parameters {
+real<lower = 0> beta;
+real<lower = 0> eta;
+array[N_rc] real<lower=c_rc> y_rc;
+array[N_lt_rc] real<lower=c_lt_rc> y_lt_rc;
+}
+model {
+beta ~ normal(1.1, 1);
+eta ~ normal(1, 1);
+
+y_o ~ weibull(beta, eta);
+y_rc ~ weibull(beta, eta);
+for(i in 1:N_lt)
+  y_lt[i] ~ weibull(beta, eta) T[tau_lt[i], ];
+for(j in 1:N_lt_rc)
+  y_lt_rc[j] ~ weibull(beta, eta) T[tau_lt_rc[j], ];
+}
+"
+)
+
+test_stan_fit2 <- sampling(
+  test_stan_model2,
+  test_stan_data
+)
+print(test_stan_fit, pars = c("beta", "eta"))
+print(test_stan_fit2, pars = c("beta", "eta"))
+```
+
+# Example case 2
+
+```{r}
+test_data <- data.frame(
+  y = rweibull(100, 1.1, 1),
+  t_install = runif(100, 0, 2)
+) %>%
+  mutate(
+    t_failure = t_install + y,
+    truncated = t_install < 1
+  ) %>%
+  filter(
+    t_failure > 1
+  ) %>%
+  mutate(
+    c_l = ifelse(truncated, (t_failure - 1), NA),
+    c_u = ifelse(truncated, t_failure, NA)
+  )
+
+test_stan_model<- stan_model(
+  model_code = "
+data {
+int N_o;
+int N_lt;
+array[N_o] real<lower=0> y_o;
+array[N_lt] real<lower=0> c_l_lt;
+array[N_lt] real<lower=0> c_u_lt;
+}
+parameters {
+real<lower = 0> beta;
+real<lower = 0> eta;
+array[N_lt] real<lower=c_l_lt, upper=c_u_lt> y_lt;
+}
+transformed parameters {
+array[N_lt] real<lower=0> tau_lt;
+for(i in 1:N_lt)
+  tau_lt[i] = y_lt[i] - c_l_lt[i];
+}
+model {
+beta ~ normal(1.1, 1);
+eta ~ normal(1, 1);
+
+y_o ~ weibull(beta, eta);
+for(j in 1:N_lt)
+  y_lt[j] ~ weibull(beta, eta) T[tau_lt[j], ];
+}
+"
+)
+
+test_data_o <- test_data %>%
+  filter(!truncated)
+test_data_lt <- test_data %>%
+  filter(truncated)
+
+test_stan_data <- list(
+  N_o = nrow(test_data_o),
+  N_lt = nrow(test_data_lt),
+  y_o = as.array(test_data_o$y),
+  c_l_lt = as.array(test_data_lt$c_l),
+  c_u_lt = as.array(test_data_lt$c_u)
+)
+
+test_stan_fit <- sampling(
+  test_stan_model,
+  test_stan_data
+)
+```
+
+
+```{r}
+test_stan_model2<- stan_model(
+  model_code = "
+data {
+int N_o;
+int N_lt;
+array[N_o] real<lower=0> y_o;
+array[N_lt] real<lower=0> c_l_lt;
+array[N_lt] real<lower=0> c_u_lt;
+}
+parameters {
+real<lower = 0> beta;
+real<lower = 0> eta;
+array[N_lt] real<lower=c_l_lt, upper=c_u_lt> y_lt;
+}
+transformed parameters {
+array[N_lt] real<lower=0> tau_lt;
+for(i in 1:N_lt)
+  tau_lt[i] = y_lt[i] - c_l_lt[i];
+}
+model {
+beta ~ normal(1.1, 1);
+eta ~ normal(1, 1);
+
+target += weibull_lpdf(y_o|beta, eta);
+target += weibull_lpdf(y_lt|beta, eta) - weibull_lccdf(tau_lt|beta, eta);
+}
+"
+)
+
+test_stan_fit2 <- sampling(
+  test_stan_model2,
+  test_stan_data
+)
+```
+
+
+```{r}
+print(test_stan_fit, pars = c("beta", "eta"))
+print(test_stan_fit2, pars = c("beta", "eta"))
+
+print(test_stan_fit, pars = stringr::str_c("y_lt[", 1:10, "]"))
+print(test_stan_fit2, pars = stringr::str_c("y_lt[", 1:10, "]"))
+```
+
+# Example case 3
+
+
+```{r}
+test_data <- data.frame(
+  y = rweibull(1000, 1.5, 1),
+  t_install = runif(100, 0, 2)
+) %>%
+  mutate(
+    t_failure = t_install + y,
+    truncated = t_install < 1,
+    right_cens = t_failure > 2
+  ) %>%
+  filter(
+    t_failure > 1    # left truncate the data
+  ) %>%
+  mutate(
+    c_l = ifelse((truncated & !right_cens), (t_failure - 1), NA),
+    c_u = ifelse((truncated & !right_cens), t_failure, NA),
+    c_l = ifelse((truncated & right_cens), (2 - 1), c_l),
+    c_l = ifelse((!truncated & right_cens), (2 - t_install), c_l)
+  )
+
+test_data_o <- test_data %>%
+  filter(!right_cens & !truncated)
+test_data_lt <- test_data %>%
+  filter(!right_cens & truncated)
+test_data_rc <- test_data %>%
+  filter(right_cens & !truncated)
+test_data_lt_rc <- test_data %>%
+  filter(right_cens & truncated)
+
+test_stan_data <- list(
+  N_o = nrow(test_data_o),
+  N_lt = nrow(test_data_lt),
+  N_rc = nrow(test_data_rc),
+  N_lt_rc = nrow(test_data_lt_rc),
+  y_o = as.array(test_data_o$y),
+  c_l_lt = as.array(test_data_lt$c_l),
+  c_u_lt = as.array(test_data_lt$c_u),
+  c_l_rc = as.array(test_data_rc$c_l),
+  c_l_lt_rc = as.array(test_data_lt_rc$c_l)
+)
+
+test_stan_model <- stan_model(
+  model_code = "
+data {
+int N_o;
+int N_lt;
+int N_rc;
+int N_lt_rc;
+array[N_o] real<lower=0> y_o;
+array[N_lt] real<lower=0> c_l_lt;
+array[N_lt] real<lower=0> c_u_lt;
+array[N_rc] real<lower=0> c_l_rc;
+array[N_lt_rc] real<lower=0> c_l_lt_rc;
+}
+parameters {
+real<lower = 0> beta;
+real<lower = 0> eta;
+array[N_lt] real<lower=c_l_lt, upper=c_u_lt> y_lt;
+array[N_rc] real<lower=c_l_rc> y_rc;
+array[N_lt_rc] real<lower=c_l_lt_rc> y_lt_rc;
+array[N_lt_rc] real<lower=0, upper=1> std_tau_lt_rc;
+}
+transformed parameters {
+array[N_lt] real<lower=0> tau_lt;
+array[N_lt_rc] real<lower=0, upper=1> tau_lt_rc;
+
+for(i in 1:N_lt)
+  tau_lt[i] = y_lt[i] - c_l_lt[i];
+
+for(j in 1:N_lt_rc)
+  if ((y_lt_rc[j] - c_l_lt[j]) < 1)
+    tau_lt_rc[j] = std_tau_lt_rc[j] * (y_lt_rc[j] - c_l_lt[j]);
+  else
+    tau_lt_rc[j] = std_tau_lt_rc[j] * 1;
+}
+model {
+beta ~ normal(1.5, 1);
+eta ~ normal(1, 1);
+std_tau_lt_rc ~ uniform(0, 1);
+
+y_o ~ weibull(beta, eta);
+y_rc ~ weibull(beta, eta);
+for(k in 1:N_lt)
+  y_lt[k] ~ weibull(beta, eta) T[tau_lt[k], ];
+for(m in 1:N_lt_rc)
+  y_lt_rc[m] ~ weibull(beta, eta) T[tau_lt_rc[m], ];
+}
+"
+)
+
+test_stan_fit <- sampling(
+  test_stan_model,
+  test_stan_data
+)
+```
+
+```{r}
+test_stan_model2 <- stan_model(
+  model_code = "
+data {
+int N_o;
+int N_lt;
+int N_rc;
+int N_lt_rc;
+array[N_o] real<lower=0> y_o;
+array[N_lt] real<lower=0> c_l_lt;
+array[N_lt] real<lower=0> c_u_lt;
+array[N_rc] real<lower=0> c_l_rc;
+array[N_lt_rc] real<lower=0> c_l_lt_rc;
+}
+parameters {
+real<lower = 0> beta;
+real<lower = 0> eta;
+array[N_lt] real<lower=c_l_lt, upper=c_u_lt> y_lt;
+array[N_rc] real<lower=c_l_rc> y_rc;
+array[N_lt_rc] real<lower=c_l_lt_rc> y_lt_rc;
+array[N_lt_rc] real<lower=0, upper=1> std_tau_lt_rc;
+}
+transformed parameters {
+array[N_lt] real<lower=0> tau_lt;
+array[N_lt_rc] real<lower=0, upper=1> tau_lt_rc;
+
+for(i in 1:N_lt)
+  tau_lt[i] = y_lt[i] - c_l_lt[i];
+
+for(j in 1:N_lt_rc)
+  if ((y_lt_rc[j] - c_l_lt[j]) < 1)
+    tau_lt_rc[j] = std_tau_lt_rc[j] * (y_lt_rc[j] - c_l_lt[j]);
+  else
+    tau_lt_rc[j] = std_tau_lt_rc[j] * 1;
+}
+model {
+beta ~ normal(1.5, 1);
+eta ~ normal(1, 1);
+
+target += weibull_lpdf(y_o|beta, eta);
+target += weibull_lpdf(y_lt|beta, eta) - weibull_lccdf(tau_lt|beta, eta);
+target += weibull_lpdf(y_rc|beta, eta);
+target += weibull_lpdf(y_lt_rc|beta, eta) - weibull_lccdf(tau_lt_rc|beta, eta);
+}
+"
+)
+
+test_stan_fit2 <- sampling(
+  test_stan_model2,
+  test_stan_data
+)
+```
+
+```{r}
+print(test_stan_fit, pars = c("beta", "eta"))
+print(test_stan_fit2, pars = c("beta", "eta"))
+
+print(test_stan_fit, pars = stringr::str_c("y_lt_rc[", 1:5, "]"))
+print(test_stan_fit2, pars = stringr::str_c("y_lt_rc[", 1:5, "]"))
+
+mcmc_dens(test_stan_fit, pars = stringr::str_c("y_lt_rc[", 1:5, "]"))
+mcmc_dens(test_stan_fit2, pars = stringr::str_c("y_lt_rc[", 1:5, "]"))
+```
+
+
+```{r}
+BetaConditional <- function(beta, eta, y_obs, y_cens) {
+  l <- 2 * log(beta) + (beta - 1)*(log(y_obs) + log(y_cens) - 2*log(eta)) - (y_obs / eta)^beta - (y_cens / eta)^beta - 0.5 * ((beta - 1.1) / 0.1) ^ 2
+  return(l)
+}
+curve(BetaConditional(x, eta = 1, y_obs = 0.9, y_cens = 1.2), from = 0, to = 3)
+
+EtaConditional <- function(eta, beta, y_obs, y_cens) {
+  l <- 2 * log(eta) + (beta - 1)*2*log(eta) - (y_obs / eta)^beta - (y_cens / eta)^beta - 0.5 * ((eta - 1) / 0.1) ^ 2
+  return(l)
+}
+curve(EtaConditional(x, beta = 1.1, y_obs = 0.9, y_cens = 1.2), from = 0, to = 3)
+
+YcConditional <- function(y_cens, eta, beta) {
+  l <- (beta - 1) * log(y_cens) - (y_cens / eta) ^ beta
+  return(l)
+}
+curve(YcConditional(x, beta = 1.1, eta = 1), from = 0, to = 3)
+```
+
+
+```{r}
+data <- rweibull(50, 2, 3)
+itrs <- 50000
+pars <- as.list(rep(NA, itrs))
+pars[[1]] <- list(beta = 1, eta = 1.1, y_cens = 1.5)
+for (i in 2:itrs) {
+  current_pars <- pars[[i - 1]]
+  new_pars <- list(
+    beta = runif(1, 0, 5),
+    eta = runif(1, 0, 5),
+    y_cens = runif(1, 1, 5)
+  )
+  current_target <- sum(log(dweibull(data, current_pars$beta, current_pars$eta))) +
+    log(dweibull(current_pars$y_cens, current_pars$beta, current_pars$eta)) +
+    log(dnorm(current_pars$beta, 1.1, 0.2)) +
+    log(dnorm(current_pars$eta, 1, 0.2))
+  new_target <- sum(log(dweibull(data, new_pars$beta, new_pars$eta))) +
+    log(dweibull(new_pars$y_cens, new_pars$beta, new_pars$eta)) +
+    log(dnorm(new_pars$beta, 1.1, 0.2)) +
+    log(dnorm(new_pars$eta, 1, 0.2))
+  
+  if (new_target > current_target) {
+    pars[[i]] <- new_pars
+  } else {
+    A <- exp(new_target - current_target)
+    if (runif(1) < A) {
+      pars[[i]] <- new_pars
+    } else {
+      pars[[i]] <- current_pars
+    }
+  }
+}
+
+lapply(
+  pars,
+  function(x) {
+    data.frame(
+      beta = x$beta,
+      eta = x$eta,
+      y_cens = x$y_cens
+    )
+  }
+) %>%
+  bind_rows() %>%
+  unique() %>%
+  mutate(draw = 1:n()) %>%
+  ggplot() +
+  geom_line(aes(x = draw, y = beta), colour = "red") +
+  geom_line(aes(x = draw, y = eta), colour = "green") +
+  geom_line(aes(x = draw, y = y_cens), colour = "blue")
+
+```
