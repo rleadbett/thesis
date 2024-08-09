@@ -1,12 +1,49 @@
 library(dplyr)
 library(ggplot2)
 
+# Hazard example figure
+
+hweibull <- function(x, shape, scale) {
+  h <- (shape / scale) * ((x / scale) ^ (shape - 1))
+  return(h)
+}
+
+pdf(
+  file.path("..", "..", "figures", "ch-2", "hazard_func_demo.pdf"),
+  height = 3.5, width = 7 
+)
+ggplot() +
+  xlim(0.1, 5) +
+  geom_function(
+    fun = hweibull,
+    args = list(shape = 0.9, scale = 2),
+    aes(colour = "shape = 0.9")
+  ) +
+  geom_function(
+    fun = hweibull,
+    args = list(shape = 1, scale = 2),
+    aes(colour = "shape = 1")
+  ) +
+  geom_function(
+    fun = hweibull,
+    args = list(shape = 1.1, scale = 2),
+    aes(colour = "shape = 1.1")
+  ) +
+  scale_colour_manual(
+    values = c("shape = 0.9" = "green", "shape = 1" = "blue", "shape = 1.1" = "red"),
+    name = "Shape Parameter",
+    guide = guide_legend(override.aes = list(linetype = "solid"))
+  ) +
+  theme_minimal() +
+  labs(y = "Hazard", x = "Exposure")
+dev.off()
+
 # Censoring example figure
 set.seed(123)
 y_obs <- rweibull(3, 1.1, 1)
 
 pdf(
-  file.path("..", "..", "figures", "censoring_example.pdf"),
+  file.path("..", "..", "figures", "ch-2", "censoring_example.pdf"),
   width = 10,
   height = 6
 )
@@ -151,9 +188,8 @@ theme_minimal() +
 xlab("age") +
 ylab("")
 
-
 pdf(
-  file.path("..", "..", "figures", "left_truncation_example.pdf"),
+  file.path("..", "..", "figures", "ch-2", "left_truncation_example.pdf"),
   width = 10,
   height = 6
 )
@@ -168,51 +204,8 @@ plot_grid(
   label_face = "plain"
 )
 dev.off()
-data.frame(
-  y_obs = y_obs,
-  install_times = runif(10, 0, 2),
-  unit = factor(
-    as.character(1:10), levels = as.character(1:10), ordered = TRUE
-  ),
-  trunc_time = 0.5
-) %>%
-mutate(
-  failure_times = install_times + y_obs,
-  trunc_time = ifelse(install_times > trunc_time, install_times, trunc_time),
-  trunc_time = ifelse(failure_times < trunc_time, failure_times, trunc_time)
-) %>%
-ggplot() +
-geom_vline(xintercept = 0.5, colour = "red", linetype = "dashed") +
-geom_segment(
-  aes(x = trunc_time, y = unit, xend = failure_times, yend = unit),
-  colour = "black",
-  linetype = 1
-) +
-geom_segment(
-  aes(x = install_times, y = unit, xend = trunc_time, yend = unit),
-  colour = "grey",
-  linetype = 2
-) +
-geom_point(
-  aes(x = failure_times, y = unit),
-  shape = 4
-) +
-geom_point(
-  aes(x = install_times, y = unit),
-  shape = 16
-) +
-annotate(
-  "text",
-  x = 0.51, y = 0.5,
-  label = "t_start",
-  hjust = -0.01,
-  size = 2.5,
-  colour = "red"
-) +
-theme_minimal() +
-xlab("time")
-# Left-truncation and right censoring plot
 
+# Left-truncation and right censoring plot
 set.seed(111)
 y_obs <- rweibull(3 * 10, 1.1, 1)
 t_start <- 2
@@ -236,7 +229,7 @@ mutate(
 filter(install_times < t_end)
 
 pdf(
-  file.path("..", "..", "figures", "left_truncation_w_right_censoring_example.pdf"),
+  file.path("..", "..", "figures", "ch-2", "left_truncation_w_right_censoring_example.pdf"),
   width = 10,
   height = 6
 )

@@ -118,9 +118,29 @@ Berliner, L\BPBI M.%
 \PrintBackRefs{\CurrentBib}
 
 \bibitem [\protect \citeauthoryear {%
-M.~Betancourt%
+Betancourt%
 }{%
-M.~Betancourt%
+Betancourt%
+}{%
+{\protect \APACyear {2015}}%
+}]{%
+betancourt_2015}
+\APACinsertmetastar {%
+betancourt_2015}%
+\begin{APACrefauthors}%
+Betancourt, M.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2015}{}{}.
+\newblock
+\APACrefbtitle {Adiabatic Monte Carlo.} {Adiabatic monte carlo.}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Betancourt%
+}{%
+Betancourt%
 }{%
 {\protect \APACyear {2017}}%
 }]{%
@@ -146,9 +166,9 @@ Betancourt, M.%
 \PrintBackRefs{\CurrentBib}
 
 \bibitem [\protect \citeauthoryear {%
-M.~Betancourt%
+Betancourt%
 }{%
-M.~Betancourt%
+Betancourt%
 }{%
 {\protect \APACyear {2020}}%
 }]{%
@@ -172,10 +192,10 @@ Betancourt, M.%
 \PrintBackRefs{\CurrentBib}
 
 \bibitem [\protect \citeauthoryear {%
-M.~Betancourt%
+Betancourt%
 \ \BBA {} Girolami%
 }{%
-M.~Betancourt%
+Betancourt%
 \ \BBA {} Girolami%
 }{%
 {\protect \APACyear {2015}}%
@@ -202,26 +222,6 @@ Betancourt, M.%
 \APACaddressPublisher{}{Chapman and Hall/CRC}.
 \newblock
 \begin{APACrefDOI} \doi{10.1201/b18502} \end{APACrefDOI}
-\PrintBackRefs{\CurrentBib}
-
-\bibitem [\protect \citeauthoryear {%
-M\BPBI J.~Betancourt%
-}{%
-M\BPBI J.~Betancourt%
-}{%
-{\protect \APACyear {2015}}%
-}]{%
-betancourt_2015}
-\APACinsertmetastar {%
-betancourt_2015}%
-\begin{APACrefauthors}%
-Betancourt, M\BPBI J.%
-\end{APACrefauthors}%
-\unskip\
-\newblock
-\APACrefYearMonthDay{2015}{}{}.
-\newblock
-\APACrefbtitle {Adiabatic Monte Carlo.} {Adiabatic monte carlo.}
 \PrintBackRefs{\CurrentBib}
 
 \bibitem [\protect \citeauthoryear {%
@@ -337,6 +337,41 @@ Cressie, N\BPBI A\BPBI C.%
   {S}patio-{T}emporal {D}ata}.
 \newblock
 \APACaddressPublisher{Hoboken, N.J}{Wiley}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Emura%
+\ \BBA {} Michimae%
+}{%
+Emura%
+\ \BBA {} Michimae%
+}{%
+{\protect \APACyear {2022}}%
+}]{%
+Emura2022}
+\APACinsertmetastar {%
+Emura2022}%
+\begin{APACrefauthors}%
+Emura, T.%
+\BCBT {}\ \BBA {} Michimae, H.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2022}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Left-truncated and right-censored field failure data:
+  Review of parametric analysis for reliability} {Left-truncated and
+  right-censored field failure data: Review of parametric analysis for
+  reliability}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Quality and Reliability Engineering
+  International}{38}{7}{3919-3934}.
+\newblock
+\begin{APACrefURL}
+  \url{https://onlinelibrary.wiley.com/doi/abs/10.1002/qre.3161}
+  \end{APACrefURL}
+\newblock
+\begin{APACrefDOI} \doi{https://doi.org/10.1002/qre.3161} \end{APACrefDOI}
 \PrintBackRefs{\CurrentBib}
 
 \bibitem [\protect \citeauthoryear {%

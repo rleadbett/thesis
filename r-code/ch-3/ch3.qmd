@@ -12,6 +12,8 @@ message: false
 
 ```{r}
 #| label: set-up-chunk
+#| code-fold: true
+#| code-summary: "Show setup chunk"
 library(dplyr)
 library(ggplot2)
 library(ggdist)
@@ -22,6 +24,7 @@ library(tidybayes)
 library(bayesplot)
 library(kableExtra)
 library(lubridate)
+library(tidyverse)
 
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
@@ -40,10 +43,41 @@ tbl_path <- file.path(
 )
 ```
 
-The idler frame failure time data from an overland iron ore conveyor.
+```{r}
+#| label: define-functions
+#| code-fold: true
+#| code-summary: "Show runctions chunk"
+# Function to sample from a truncated normal distribution
+rTruncNorm <- function(n, mean, sd, lb = NULL, ub = NULL) {
+  # Check if lower bound is supplied & 
+  # calculate lower bound of uniform dist
+  if (!is.null(lb)) {
+    lb_unif <- pnorm((lb - mean) / sd)
+  } else {
+    lb_unif <- 0
+  }
+  if (!is.null(ub)) {
+    ub_unif <- pnorm((ub - mean) / sd)
+  } else {
+    ub_unif <- 1
+  }
+  # Sample from uniform distribution
+  unif_rv <- runif(n, lb_unif, ub_unif)
+  # Probability integral transformation
+  norm_rv <- (qnorm(unif_rv) * sd) + mean
+  
+  return(norm_rv)
+}
+# function used to calculate weibull draws in joint prior
+fn <- function(x) {
+  log(-log(1 - x))
+}
+```
+
+Here I analyse the idler-frame failure time data from an overland iron ore conveyor.
 
 ```{r}
-#| label: load-data
+#| label: tbl-load-data
 idler_data <- readRDS(
   file.path("..", "..", "data", "idler_frame_life_example.RDS")
 )
@@ -59,15 +93,16 @@ idler_data <- rbind(
     frame_number = "78"
   )
 )
-head(idler_data)
+head(idler_data) %>%
+  kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 
-The plant (conveyor) has been in opperation for 20 years.
-
-Some descriptives for the dataset. The largest observed lifetime is 2167 days, just under six years.
+The dataset contains the replacemens records of idlers-frames on an iron ore conveyor over the past six years. The plant (conveyor) has been in opperation for twenty years but replacements have only been reliably recorded at the frame level for the past six. @tbl-data gives a description of the dataset. @fig-frame-lifetimes plots the lifetimes of each frame along the length of the conveyor. The frames number is on the horizontal axis and the value of the lifetimes is on the vertical.
 
 ```{r}
-#| label: tbl-load-data
+#| label: tbl-data
+#| tbl-cap: Summary of the idler-frame dataset.
 summary_df <- data.frame(
   `Maximum lifetime` = max(idler_data$lifetime),
   `Minimum lifetime` = min(idler_data$lifetime),
@@ -102,7 +137,7 @@ summary_df %>%
 ```
 
 ```{r}
-#| label: save-tbl-load-data
+#| label: save-tbl-data
 #| echo: false
 #| output: false
 summary_df %>%
@@ -163,9 +198,9 @@ p_idler_lifetimes
 dev.off()
 ```
 
-If we were to discard the left truncated samples, then we would be throwing away 35.7% of the data.
+In @fig-frame-lifetimes, the red points are fully observed lifetimes (i.e. where we observed the instalation and failure of the idlers in the frame), whereas blue points are partialy observed lifetimes (where either the instalation, failure time, or both are unknown). The triangular blue points are points where the isntalation of the frame is unknown. As discussed in the main chapter, a conventional way of dealing with these left-truncated lifetimes with unknown exposure history is to simply discard them. If we were to discard the left-truncated samples in this dataset then we would be throwing away 35.7% of the data.
 
-There are a few fully observed lifetimes that are very short;
+There are a few fully observed lifetimes that are very short (less than three weeks);
 
 ```{r}
 #| label: early-failures
@@ -176,11 +211,11 @@ idler_data %>%
   )
 ```
 
-These 24 failures may be a result of manufactureing defects or incorrect installation, which is not the failure mode that we want to analyse here. Therefore, following the approach of @hong2009, I treat these observations as a case of right censoring (i.e. their failure due to wear was right censored by their failure from another cause).
+These 25 failures may be a result of manufactureing defects or incorrect installation, which is not the failure mode that I want to analyse here. Therefore, following the approach of @hong2009, I treat these observations as a case of right censoring (i.e. their failure due to wear was right censored by their failure from another cause).
 
 # Constructing an informative prior
 
-We know that the average lifetime is around five years, and that almost all idlers should have failed by seven (0.95). I encode this information into a joint prior using the method I describe in chapter 2, by specifying the elicitation times at five and seven years and the expectation(standard deviation) of the CDF at these times as 0.5(sd 0.10) and 0.95(sd 0.05) respectively. The resulting informative prior is shown in @fig-informative-prior.
+We know that the average lifetime is around five years, and that almost all idlers should have failed by eight (0.99). I encode this information into a joint prior--using the method I describe in Chapter 2--by specifying the elicitation times at five and eight years and the expectation(standard deviation) of the CDF at these times as 0.5(sd 0.15) and 0.99(sd 0.05) respectively. The resulting informative prior is shown in @fig-informative-prior.
 
 ```{r}
 #| label: fig-informative-prior
@@ -252,7 +287,7 @@ p_cdf
 ```
 
 ```{r}
-#| label: save-fig-frame-lifetimes
+#| label: save-fig-informative-prior
 #| echo: false
 #| output: false
 pdf(
@@ -276,32 +311,8 @@ dev.off()
 
 # Fitting the model in Stan
 
-t_start is fifteen years.
-
-```{r}
-#| label: prepare-stan-data
-df_obs <- idler_data %>%
-  filter(lifetime > (3 * 7)) %>%
-  filter(!(censored_at_start | censored_at_end))
-df_rc <- idler_data %>%
-  filter((!censored_at_start & censored_at_end) | 
-    ((lifetime < (3 * 7)) & !(censored_at_start | censored_at_end)))
-df_lt <- idler_data %>%
-  filter((censored_at_start & !censored_at_end))
-df_lt_rc <- idler_data %>%
-  filter((censored_at_start & censored_at_end))
-idler_frame_stan_data <- list(
-  N_obs = nrow(df_obs),
-  N_rc = nrow(df_rc),
-  N_lt = nrow(df_lt),
-  N_lt_rc = nrow(df_lt_rc),
-  y_obs = array(df_obs$lifetime),
-  y_rc = array(df_rc$lifetime),
-  y_lt = array(df_lt$lifetime),
-  y_lt_rc = array(df_lt_rc$lifetime),
-  t_start = 15 * 365
-)
-```
+In this section I fit the Stan model for imputing partialy observed lifetimes and missing truncation times from Chapter 2 to the idler-frame data. I define the model and then prepare the data for stan. Since the conveyor has been in operation for 21 years I set t_start to 15.
+Given that the t_start is fifteen years.
 
 ```{r}
 #| label: define-stan-model
@@ -397,7 +408,32 @@ t_lt_rc_st ~ uniform(0, 1);
 )
 ```
 
-Four chains each 2000 draws long and with a burn in of 500 iterations and no thinning.
+```{r}
+#| label: prepare-stan-data
+df_obs <- idler_data %>%
+  filter(lifetime > (3 * 7)) %>%
+  filter(!(censored_at_start | censored_at_end))
+df_rc <- idler_data %>%
+  filter((!censored_at_start & censored_at_end) | 
+    ((lifetime < (3 * 7)) & !(censored_at_start | censored_at_end)))
+df_lt <- idler_data %>%
+  filter((censored_at_start & !censored_at_end))
+df_lt_rc <- idler_data %>%
+  filter((censored_at_start & censored_at_end))
+idler_frame_stan_data <- list(
+  N_obs = nrow(df_obs),
+  N_rc = nrow(df_rc),
+  N_lt = nrow(df_lt),
+  N_lt_rc = nrow(df_lt_rc),
+  y_obs = array(df_obs$lifetime),
+  y_rc = array(df_rc$lifetime),
+  y_lt = array(df_lt$lifetime),
+  y_lt_rc = array(df_lt_rc$lifetime),
+  t_start = 15 * 365
+)
+```
+
+To sample draws from the posterior I use four chains each 2000 draws long and with a burn in of 500 iterations and no thinning.
 
 ```{r}
 #| label: sample-from-posterior
@@ -418,6 +454,24 @@ idler_stan_fit <- sampling(
   warmup = 500,
   seed = 246
 )
+```
+
+@tbl-stan-summary summarises the draws of the parameters from the posterior. The chain diagnostics appear reasonable since there were no divergencies flagged during sampling and in @tbl-stan-summary the $\hat{R}$ values are close to $\approx 1$ and $n_{\text{eff}}$ is large for both parameters.
+
+```{r}
+#| label: tbl-stan-summary
+rownames_to_column(
+  as.data.frame(
+    summary(
+      idler_stan_fit,
+      pars = c("beta", "eta"),
+      probs = c(0.025, 0.5, 0.975)
+    )$summary
+  ),
+  var = "Parameter"
+) %>%
+  kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 
 ```{r}
@@ -470,7 +524,12 @@ stan_summary %>%
 
 # The posterior distribution
 
+In @fig-posterior-joint, I plot the posterior draws of the parameters. The left plot shows the posterior draws on their own while the right compares them with the contours of the prior. The posterior sits in the tails of the prior, indicating that there is a slight prior-data conflict.
+
 ```{r}
+#| label: function-plot-cdf-post
+#| code-fold: true
+#| code-summary: "Show the code"
 PlotPostCDF <- function(stan_fit, x_range = c(0, 5), res = 0.05) {
   grid <- seq(x_range[1], x_range[2], res)
   p_cdf <- stan_fit %>%
@@ -583,6 +642,8 @@ plot_grid(
 dev.off()
 ```
 
+@fig-posterior-cdf shows the coresponding posterior uncertainty in the CDF of the Weibull lifetime distribution. The uncertainty surounding the CDF is now much more precise than the prior in @fig-informative-prior.
+
 ```{r}
 #| label: fig-posterior-cdf
 #| fig-cap: "The posterior uncertainty about the CDF."
@@ -595,7 +656,7 @@ p_cdf_post
 ```
 
 ```{r}
-#| label: fig-posterior-cdf
+#| label: save-fig-posterior-cdf
 #| echo: false
 #| output: false
 pdf(
@@ -609,9 +670,14 @@ dev.off()
 
 # Expected failure times
 
+The posterior samples also provide draws of the imputed values of the censored lifetimes. Using these draws, I can obtain predictive draws for the remaining useful life (RUL) of the frames still in operation acording to $RUL_i = \tilde{y}_i - C_i$ where $C_i$ is the censoring time of the lifetime (or the current age of the frame). @fig-expected-FTs shows the predictive RUL distributions for each frame.
+
 ```{r}
 #| label: fig-expected-FTs
-#| fig-cap: "The expected failure times of the units still under test at the end of the observation period."
+#| fig-cap: "The RUL predictive distributions for the idler-framce still curently in opperation."
+#| fig-subcap: 
+#|   - "Frames 1-72."
+#|   - "Frames 73-143."
 # get the posterior draws of the imputed lifetimes
 rc_post <- idler_stan_fit %>%
   as_draws_rvars() %>%
@@ -645,26 +711,6 @@ ft_units_under_test <- rbind(
   lt_rc_post %>%
     select(start, end, lifetime, frame_number, f_days)
 )
-p_post_fts <- ft_units_under_test %>%
-  mutate(
-    frame_number = as.numeric(frame_number)
-  ) %>%
-  arrange(frame_number) %>%
-  ggplot() +
-  stat_pointinterval(aes(xdist = f_days, y = frame_number)) +
-  ylab("Frame number") +
-  xlab("Days until failure") +
-  theme_minimal()
-
-p_post_fts
-```
-
-```{r}
-pdf(
-  file.path(fig_path, "posterior-FTs.pdf"),
-  height = 15,
-  width = 12
-)
 p1 <- ft_units_under_test %>%
   filter(frame_number %in% as.character(1:round(143 / 2))) %>%
   mutate(
@@ -693,8 +739,8 @@ p2 <- ft_units_under_test %>%
   theme_minimal() +
   ylab("frame number") +
   xlab("RUL (days)")
-plot_grid(p1, p2, nrow = 1, ncol = 2)
-dev.off()
+p1
+p2
 ```
 
 ```{r}
@@ -706,13 +752,13 @@ pdf(
   height = 12,
   width = 10
 )
-p_post_fts
+plot_grid(p1, p2, nrow = 1, ncol = 2)
 dev.off()
 ```
 
 # Expected number of failures
 
-Example of cunstructing a draw of the imputed cumulative failures.
+Using the predictive draws of the RUL for each of the frames, I also construct a distribution for the cumulative failures going forward from the end of the observation period. I do this by ordering the predictive values of the frames for each draw and then creating a step function for the cumulative number of failures. Ten of these draws are shown in @fig-E-n-failures-draws.
 
 ```{r}
 #| label: fig-E-n-failures-draws
@@ -784,7 +830,7 @@ p_E_n_failures
 dev.off()
 ```
 
-Distributions of expected number of failures within the next 1, 3, and 6 months.
+From the distribution of step functions, I can calculate predictive distributions for the number of failures within the next 1, 3, and 6 months. @fig-E-n-failures-dists shows these predictive distributions.
 
 ```{r}
 #| label: fig-E-n-failures-dists
@@ -856,756 +902,23 @@ dev.off()
 
 # Cost functions
 
+The posterior draws can also be used to propogate the uncertainty in the analysis through utility functions, such as cost functions, that inform long term management decisions. Here I show an example of choosing a suitable fixed time interval to preventatively replace the idlers to avoid large unplanned maintenance costs and downtime. The details of the cost function are provided in Sec. 3.4.3 of the main thesis chapter and an explanation of the code is provided in Alg. 1 in the section.
+Here I calculate the predictive distributions for fixed time replacement intervals every 1-44 shutdowns of the mine, these distributions are shown in @fig-cost-function.
 ```{r}
+#| label: sim-expected-K-rm
 rvar_pweibull <- rfun(pweibull)
 
-N <- 143
-C_p <- 500
-C_f <- 1000000
-p_bd <- 0.20
-
-weibull_params <- idler_stan_fit %>%
-  as_draws_rvars() %>%
-  spread_rvars(beta, eta)
-
-data.frame(
-  interval_weeks = 1:53
-) %>%
-  mutate(
-    interval_days = interval_weeks * 7,
-    fixed_cost = C_p * N,
-    F_t = rvar_pweibull(interval_days, weibull_params$beta, weibull_params$eta),
-    reactive_cost = C_f * (p_bd * (N * F_t)),
-    cost = (fixed_cost + reactive_cost) / interval_days,
-    median_cost = median(cost),
-    quant90_cost = as.numeric(quantile(cost, prob = 0.9))
-  ) %>%
-  ggplot() +
-  stat_halfeye(aes(xdist = cost, y = interval_weeks)) +
-  geom_point(aes(x = quant90_cost, y = interval_weeks), col = "red")
-```
-
-```{r}
-N <- 143
-C_p <- 500
-C_f <- 1000000
-p_bd <- 0.20
-
-data.frame(
-  interval_weeks = 1:53
-) %>%
-  mutate(
-    interval_days = interval_weeks * 7,
-    fixed_cost = C_p * N,
-    F_t = pweibull(interval_days, 1.5, 1300),
-    reactive_cost = C_f * (p_bd * (N * F_t)),
-    cost = (fixed_cost + reactive_cost) / interval_days
-  ) %>%
-  ggplot() +
-  geom_halfeye(aes(x = cost, y = interval_weeks))
-```
-
-
-```{r}
-SimulateBeltFailure <- function(beta, eta, p) {
-  N <- 143
-  samp <- rweibull(N, beta, eta)
-  samp <- samp[order(samp)]
-  belt_damage <- sample(c(0, 1), N, c((1 - p), p), replace = TRUE)
-  if (sum(belt_damage) == 0) {
-    ft <- NA
-  } else {
-    ft <- samp[min(which(belt_damage == 1))]
-  }
-  return(ft)
-}
-SimulateNinTBeltFailures <- function(t, ...) {
-  belt_lives <- lapply(
-    1:10,
-    function(i) SimulateBeltFailure(...)
-  ) %>%
-    unlist() %>%
-    cumsum()
-  n_failures <- sum(belt_lives < t)
-  return(n_failures)
-}
-ExpectedNBeltFailures <- function(t, ...) {
-  n_failures_sim <- lapply(
-    1:1000000,
-    function(i) SimulateNinTBeltFailures(t, ...)
-  ) %>%
-    unlist()
-  return(mean(n_failures_sim, na.rm = TRUE))
-}
-```
-
-
-```{r}
-N <- 143
-C_p <- 500
-C_f <- 1000000
-
-SimulateNinTBeltFailures(t = (10 * 6 * 8), beta = 1.1, eta = 1300, p = 0.1)
-for (i in 1:10) {
-  ExpectedNBeltFailures(t = (10 * 6 * 7), beta = 1.1, eta = 1300, p = 0.1) %>%
-  print()
-}
-ExpectedNBeltFailures(t = (10 * 6 * 7), beta = 1.1, eta = 1300, p = 0.1)
-
-n_fs <- lapply(
-  6 * (1:20) * 7,
-  function(t) ExpectedNBeltFailures(t = t, beta = 1.1, eta = 1300, p = 0.1)
-) %>%
-  unlist()
-
-plot(x = 6 * (1:20) * 7, y = ((C_p * N) + (C_f * n_fs)) / (6 * (1:20)))
-
-plot(x = 6 * (1:20) * 7, y = ((C_p * N) + (C_f * n_fs)) / (6 * (1:20) * 7))
-
-junk_df <- data.frame(
-  interval_weeks = 6 * (10:20)
-) %>%
-  mutate(
-    interval_days = interval_weeks * 7,
-    fixed_cost = C_p * N,
-    n_belt_failrus = lapply(
-      interval_days,
-      function(t) ExpectedNBeltFailures(t = t, beta = 1.1, eta = 1300, p = 0.1)
-    ) %>%
-      unlist(),
-    reactive_cost = C_f * n_belt_failrus,
-    cost = (fixed_cost + reactive_cost) / interval_weeks
-  )
-junk_df %>%
-  ggplot() +
-  geom_point(aes(x = cost, y = interval_weeks))
-```
-
-
-
-
-```{r}
-stan_model_test <- stan_model(
-  model_code = "
-data {
-int N_obs;                             # N fully observed lives
-int N_rc;                              # N right censored only lives
-int N_lt;                              # N left truncated only lives
-array[N_obs] real<lower=0> y_obs;      # Fully observed lifetimes
-array[N_rc] real<lower=0> y_rc;        # Right censored lifetimes
-array[N_lt] real<lower=0> y_lt;        # Left trunc lifetimes
-real<lower=0> t_start;                 # start of the observation window
-}
-transformed data{
-array[N_lt] real<lower=0> y_lt_upper;  # The upper bound of the left trunc lives
-
-for (m in 1:N_lt){
-  y_lt_upper[m] = y_lt[m] + t_start;   # Upper bound = lower bound + start of observation
-}
-
-}
-parameters {
-real<lower= 0> beta;     # weibull shape
-real<lower= 0> eta;      # weibull scale
-array[N_rc] real<lower=y_rc> y_rc_hat;   # imputed right censored values
-array[N_lt] real<lower=y_lt, upper=y_lt_upper> y_lt_hat;  # imputed left trunc values
-}
-transformed parameters{
-array[N_lt] real t_lt;  # imputed left trunc times for left trunc values
-
-for (i in 1:N_lt) {
-  t_lt[i] = y_lt_hat[i] - y_lt[i];
-}
-}
-model{
-// Data model
-// fully observed lifetimes
-y_obs ~ weibull(beta, eta);
-// right censored lifetimes
-y_rc_hat ~ weibull(beta, eta);
-// left truncated lifetimes
-for (i in 1:N_lt) {
-  y_lt_hat[i] ~ weibull(beta, eta) T[t_lt[i], ]; 
-}
-
-// Prior model
-eta ~ normal(1, 1);
-beta ~ normal(1.1, 1);
-}
-
-"
-)
-```
-
-```{r}
-beta <- 1.1
-eta <- 1
-t_start <- 5
-t_obs <- 0.5
-N_or <- 1
-install_times <- runif(N_or, 0, t_obs)
-FTs <- install_times + rweibull(N_or, beta, eta)
-i_y_obs <- which(FTs <  t_obs)
-i_y_rc <- which(FTs >  t_obs)
-y_obs <- FTs[i_y_obs] - install_times[i_y_obs]
-y_rc <- t_obs - install_times[i_y_rc]
-N_obs <- length(y_obs)
-N_rc <- length(y_rc)
-
-N_lt <- 500
-y_lt <- lapply(
-  1:N_lt,
-  function(i) {
-    samp <- rweibull(100, beta, eta)
-    FTs <- cumsum(samp)
-    first_obs_FT <- min(which(FTs > t_start))
-    return(FTs[first_obs_FT] - t_start)
-  }
-) %>%
-  unlist()
-
-test_stan_data <- list(
-  N_obs = N_obs,
-  N_rc = N_rc,
-  N_lt = N_lt,
-  y_obs = array(y_obs),
-  y_rc = array(y_rc),
-  y_lt = array(y_lt),
-  t_start = t_start
-)
-
-stan_fit_test <- sampling(
-  stan_model_test,
-  test_stan_data,
-  chains = 4,
-  iter = 1000,
-  warmup = 500
-)
-
-stan_fit_test %>%
-  mcmc_scatter(pars = c("beta", "eta")) +
-  geom_point(x = beta, y = eta, colour = "red") +
-  xlim(0, 5) +
-  ylim(0, 5)
-```
-
-```{r}
-PlotPostCDF(stan_fit_test)
-```
-
-
-```{r}
-stan_model_test2 <- stan_model(
-  model_code = "
-data {
-int N_obs;                             # N fully observed lives
-int N_rc;                              # N right censored only lives
-int N_lt;                              # N left truncated only lives
-int N_lt_rc;                           # N right cens and left trunc lives
-array[N_obs] real<lower=0> y_obs;      # Fully observed lifetimes
-array[N_rc] real<lower=0> y_rc;        # Right censored lifetimes
-array[N_lt] real<lower=0> y_lt;        # Left trunc lifetimes
-array[N_lt_rc] real<lower=0> y_lt_rc;  # right cens and left trunc lifetimes
-real<lower=0> t_start;                 # start of the observation window
-}
-transformed data{
-array[N_lt] real<lower=0> y_lt_upper;  # The upper bound of the left trunc lives
-
-for (m in 1:N_lt){
-  y_lt_upper[m] = y_lt[m] + t_start;   # Upper bound = lower bound + start of observation
-}
-
-}
-parameters {
-real<lower= 0> beta;     # weibull shape
-real<lower= 0> eta;      # weibull scale
-array[N_rc] real<lower=y_rc> y_rc_hat;   # imputed right censored values
-array[N_lt] real<lower=y_lt, upper=y_lt_upper> y_lt_hat;  # imputed left trunc values
-array[N_lt_rc] real<lower=y_lt_rc> y_lt_rc_hat;   # imputed left trunc and right cens values
-array[N_lt_rc] real<lower=0, upper=1> t_lt_rc_st; # imputed left truncation times for left trunc and right cens values (standardised)
-}
-transformed parameters{
-array[N_lt] real t_lt;  # imputed left trunc times for left trunc values
-array[N_lt_rc] real<lower=0, upper=t_start> t_lt_rc_upper;
-array[N_lt_rc] real<lower=0, upper=t_lt_rc_upper> t_lt_rc;  # imputed left trunc times for left trunc and right cens values
-
-for (i in 1:N_lt) {
-  t_lt[i] = y_lt_hat[i] - y_lt[i];
-}
-
-for (k in 1:N_lt_rc){
-  if ((y_lt_rc_hat[k] - y_lt_rc[k]) < t_start)
-    t_lt_rc_upper[k] = y_lt_rc_hat[k] - y_lt_rc[k];
-  else
-    t_lt_rc_upper[k] = t_start;
-
-  t_lt_rc[k] = t_lt_rc_st[k] * t_lt_rc_upper[k];
-}
-}
-model{
-// Data model
-// fully observed lifetimes
-y_obs ~ weibull(beta, eta);
-// right censored lifetimes
-y_rc_hat ~ weibull(beta, eta);
-// left truncated lifetimes
-for (i in 1:N_lt) {
-  y_lt_hat[i] ~ weibull(beta, eta) T[t_lt[i], ]; 
-}
-// left truncated and right censored lifetimes
-for (j in 1:N_lt_rc) {
-  y_lt_rc_hat[j] ~ weibull(beta, eta) T[t_lt_rc[j], ]; 
-}
-
-// Prior model
-eta ~ normal(1, 1);
-beta ~ normal(1.1, 1);
-t_lt_rc_st ~ uniform(0, 1);
-}
-
-"
-)
-```
-
-```{r}
-beta <- 1.1
-eta <- 1
-t_start <- 5
-t_obs <- 2
-N_or <- 1
-install_times <- runif(N_or, 0, t_obs)
-FTs <- install_times + rweibull(N_or, beta, eta)
-i_y_obs <- which(FTs <  t_obs)
-i_y_rc <- which(FTs >  t_obs)
-y_obs <- FTs[i_y_obs] - install_times[i_y_obs]
-y_rc <- t_obs - install_times[i_y_rc]
-N_obs <- length(y_obs)
-N_rc <- length(y_rc)
-
-N_lr <- 100
-y_lr <- lapply(
-  1:N_lr,
-  function(i) {
-    samp <- rweibull(100, beta, eta)
-    FTs <- cumsum(samp)
-    first_obs_FT <- min(which(FTs > t_start))
-    return(FTs[first_obs_FT] - t_start)
-  }
-) %>%
-  unlist()
-i_y_lt <- which(y_lr <  t_obs)
-i_y_lt_rc <- which(y_lr >  t_obs)
-y_lt <- y_lr[i_y_lt]
-y_lt_rc <- rep(t_obs, length(i_y_lt_rc))
-N_lt <- length(y_lt)
-N_lt_rc <- length(y_lt_rc)
-
-test_stan_data <- list(
-  N_obs = N_obs,
-  N_rc = N_rc,
-  N_lt = N_lt,
-  N_lt_rc = N_lt_rc,
-  y_obs = array(y_obs),
-  y_rc = array(y_rc),
-  y_lt = array(y_lt),
-  y_lt_rc = array(y_lt_rc),
-  t_start = t_start
-)
-
-stan_fit_test2 <- sampling(
-  stan_model_test2,
-  test_stan_data,
-  chains = 4,
-  iter = 1000,
-  warmup = 300
-)
-
-stan_fit_test2 %>%
-  mcmc_scatter(pars = c("beta", "eta")) +
-  geom_point(x = beta, y = eta, colour = "red") +
-  xlim(0, 5) +
-  ylim(0, 5)
-```
-
-
-```{r}
-stan_model_test3 <- stan_model(
-  model_code = "
-data {
-int N_obs;                             # N fully observed lives
-int N_rc;                              # N right censored only lives
-int N_lt;                              # N left truncated only lives
-int N_lt_rc;                           # N right cens and left trunc lives
-array[N_obs] real<lower=0> y_obs;      # Fully observed lifetimes
-array[N_rc] real<lower=0> y_rc;        # Right censored lifetimes
-array[N_lt] real<lower=0> y_lt;        # Left trunc lifetimes
-array[N_lt_rc] real<lower=0> y_lt_rc;  # right cens and left trunc lifetimes
-real<lower=0> t_start;                 # start of the observation window
-int C;
-int<lower = 1, upper = C> CHAIN_ID;
-array[C, N_lt_rc] real<lower=0, upper = 1> A;
-}
-transformed data{
-array[N_lt] real<lower=0> y_lt_upper;  # The upper bound of the left trunc lives
-array[N_lt_rc] real<lower=0, upper=1> t_lt_rc_st;
-
-for (m in 1:N_lt){
-  y_lt_upper[m] = y_lt[m] + t_start;   # Upper bound = lower bound + start of observation
-}
-
-print(\"Now running: \", CHAIN_ID, \" with \", A[CHAIN_ID, 1:N_lt_rc]);
-
-t_lt_rc_st = A[CHAIN_ID, 1:N_lt_rc];
-}
-parameters {
-real<lower= 0> beta;     # weibull shape
-real<lower= 0> eta;      # weibull scale
-array[N_rc] real<lower=y_rc> y_rc_hat;   # imputed right censored values
-array[N_lt] real<lower=y_lt, upper=y_lt_upper> y_lt_hat;  # imputed left trunc values
-array[N_lt_rc] real<lower=y_lt_rc> y_lt_rc_hat;   # imputed left trunc and right cens values
-}
-transformed parameters{
-array[N_lt] real t_lt;  # imputed left trunc times for left trunc values
-array[N_lt_rc] real<lower=0, upper=t_start> t_lt_rc_upper;
-array[N_lt_rc] real<lower=0, upper=t_lt_rc_upper> t_lt_rc;  # imputed left trunc times for left trunc and right cens values
-
-for (i in 1:N_lt) {
-  t_lt[i] = y_lt_hat[i] - y_lt[i];
-}
-
-for (k in 1:N_lt_rc){
-  if ((y_lt_rc_hat[k] - y_lt_rc[k]) < t_start)
-    t_lt_rc_upper[k] = y_lt_rc_hat[k] - y_lt_rc[k];
-  else
-    t_lt_rc_upper[k] = t_start;
-
-  t_lt_rc[k] = t_lt_rc_st[k] * t_lt_rc_upper[k];
-}
-}
-model{
-// Data model
-// fully observed lifetimes
-y_obs ~ weibull(beta, eta);
-// right censored lifetimes
-y_rc_hat ~ weibull(beta, eta);
-// left truncated lifetimes
-for (i in 1:N_lt) {
-  y_lt_hat[i] ~ weibull(beta, eta) T[t_lt[i], ]; 
-}
-// left truncated and right censored lifetimes
-for (j in 1:N_lt_rc) {
-  y_lt_rc_hat[j] ~ weibull(beta, eta) T[t_lt_rc[j], ]; 
-}
-
-// Prior model
-eta ~ normal(1, 1);
-beta ~ normal(1.1, 1);
-}
-
-"
-)
-```
-
-
-```{r}
-chains <- 30
-
-test_stan_data3 <- c(
-  test_stan_data,
-  list(
-    C = chains,
-    A = array(runif(N_lt_rc * chains), dim = c(chains, N_lt_rc))
-  )
-)
-stan_fit_test3 <- sampling(
-  stan_model_test3,
-  test_stan_data3,
-  chains = chains,
-  iter = 1000,
-  warmup = 200,
-  chain_id = 1L
-)
-
-stan_fit_test3 %>%
-  mcmc_scatter(pars = c("beta", "eta")) +
-  geom_point(x = beta, y = eta, colour = "red") +
-  xlim(0, 5) +
-  ylim(0, 5)
-```
-
-
-```{r}
-stan_fit_test3 %>%
-  as_draws_df() %>%
-  spread_draws(t_lt_rc_upper[i], t_lt_rc[i]) %>%
-  mutate(t_lt_rc_st = round(t_lt_rc / t_lt_rc_upper, 4)) %>%
-  group_by(.chain, i) %>%
-  summarise(unique(t_lt_rc_st))
-```
-
-
-```{r}
-stan_fit_test3 %>%
-  mcmc_dens_chains(regex_pars = c("y_lt_rc_hat", "t_lt_rc_upper"))
-```
-
-
-
-
-```{r}
-N_shuts <- 100
-N_frames <- 143        # number of units
-N_runs <- 10000         # number of sim runs
-beta <- 1.1            # Weibull shape
-eta <- 1300            # Weibull scale
-shut_freq <- (6 * 7)   # frequency of shuts
-P_bf <- 0.1            # probability of idler damaging the belt
-
-runs <- lapply(
-  1:N_runs,
-  function(run) {
-    unit_ages <- rep(0, N)
-    N_failures <- rep(NA, N_shuts)
-    N_belt_failurs <- rep(NA, N_shuts)
-    for (shut_int in 1:N_shuts) {
-      unit_ages <- unit_ages + shut_freq
-      failures <- rbinom(
-        n = 10,
-        size = 1,
-        prob = pweibull(unit_ages, beta, eta) -
-          pweibull((unit_ages - shut_freq), beta, eta)
-      )
-      N_failures[shut_int] <- sum(failures)
-      N_belt_failurs[shut_int] <- rbinom(
-        n = 1,
-        size = sum(failures),
-        prob = P_bf
-      )
-      if(sum(failures) > 0) {
-        unit_ages[as.logical(failures)] <- 0
-      } 
-    }
-    sim_df <- data.frame(
-      run = run,
-      shut = 1:N_shuts,
-      idler_failrues = N_failures,
-      belt_failures = N_belt_failurs
-    )
-    return(sim_df)
-  }
-)
-
-runs %>%
-  bind_rows() %>%
-  group_by(run) %>%
-  mutate(Cumsum_belt_failures = cumsum(belt_failures)) %>%
-  ungroup() %>%
-  group_by(shut) %>%
-  summarise(mean_bf = mean(Cumsum_belt_failures)) %>%
-  ggplot(aes(x = shut, y = mean_bf)) +
-  geom_line()
-
-runs %>%
-  bind_rows() %>%
-  group_by(shut) %>%
-  summarise(mean_if = mean(idler_failrues)) %>%
-  ggplot(aes(x = shut, y = mean_if)) +
-  geom_line()
-```
-
-
-```{r}
-# Weibull parameters
-beta <- 1.1
-eta <- 1300
-# Number of units and their ages
-N_units <- 143
-unit_ages_start <- rep(0, N_units)
-# Time between shutdowns
-delta <- (6 * 7)
-# Specify probability of unit damaging the belt
-P_bf <- 0.05
-# For the next 10 shudowns
-N_shuts <- 100
-K_uf <- rep(NA, N_shuts)
-K_bf <- rep(NA, N_shuts)
-for(shut in 1:N_shuts) {
-  # Calculate age at end of production period
-  unit_ages_end <- unit_ages_start + delta
-  # Calculate probability of unit failing given its age
-  P_uf <- (pweibull(unit_ages_end, beta, eta) -  pweibull(unit_ages_start, beta, eta)) /
-    (1 - pweibull(unit_ages_start, beta, eta))
-  # Simulate unit failurs
-  failures <-  rbinom(
-    n = N_units,
-    size = 1,
-    prob = P_uf 
-  )
-  K_uf[shut] <- failures %>%
-    sum()
-  # Simulate belt failures
-  K_bf[shut] <- rbinom(
-    n = 1,
-    size = K_uf[shut],
-    prob = P_bf
-  )
-  # Update unit ages
-  unit_ages_start <- unit_ages_end
-  if(any(failures == 1)) unit_ages_start[as.logical(failures)] <- 0
-}
-K_uf
-K_bf
-```
-
-
-```{r}
-N_runs <- 10000
-runs <- lapply(
-  1:N_runs,
-  function(run) {
-    unit_ages_start <- rep(0, N_units)
-    K_uf <- rep(NA, N_shuts)
-    K_bf <- rep(NA, N_shuts)
-    for (shut in 1:N_shuts) {
-      # Calculate age at end of production period
-      unit_ages_end <- unit_ages_start + delta
-      # Calculate probability of unit failing given its age
-      P_uf <- (pweibull(unit_ages_end, beta, eta) -  pweibull(unit_ages_start, beta, eta)) /
-        (1 - pweibull(unit_ages_start, beta, eta))
-      # Simulate unit failurs
-      failures <-  rbinom(
-        n = N_units,
-        size = 1,
-        prob = P_uf 
-      )
-      K_uf[shut] <- failures %>%
-        sum()
-      # Simulate belt failures
-      K_bf[shut] <- rbinom(
-        n = 1,
-        size = K_uf[shut],
-        prob = P_bf
-      )
-      # Update unit ages
-      unit_ages_start <- unit_ages_end
-      if(any(failures == 1)) unit_ages_start[as.logical(failures)] <- 0
-    }
-    sim_df <- data.frame(
-      run = run,
-      shut = 1:N_shuts,
-      idler_failrues = K_uf,
-      belt_failures = K_bf
-    )
-    return(sim_df)
-  }
-)
-
-runs %>%
-  bind_rows() %>%
-  group_by(shut) %>%
-  summarise(mean_if = mean(idler_failrues)) %>%
-  ggplot(aes(x = shut, y = mean_if)) +
-  geom_line()
-
-runs %>%
-  bind_rows() %>%
-  group_by(shut) %>%
-  summarise(mean_bf = mean(belt_failures)) %>%
-  ggplot(aes(x = shut, y = mean_bf)) +
-  geom_line()
-
-runs %>%
-  bind_rows() %>%
-  group_by(run) %>%
-  mutate(Cumsum_belt_failures = cumsum(belt_failures)) %>%
-  ungroup() %>%
-  group_by(shut) %>%
-  summarise(mean_bf = mean(Cumsum_belt_failures)) %>%
-  ggplot(aes(x = shut, y = mean_bf)) +
-  geom_line()
-```
-
-I can do many runs at the same time.
-
-```{r}
-N_runs <- 10000
-unit_ages_start <- rep(0, N_units * N_runs)
-K_uf <- array(rep(NA, N_shuts * N_runs), dim = c(N_shuts, N_runs))
-K_bf <- array(rep(NA, N_shuts * N_runs), dim = c(N_shuts, N_runs))
-for (shut in 1:N_shuts) {
-  # Calculate age at end of production period
-  unit_ages_end <- unit_ages_start + delta
-  # Calculate probability of unit failing given its age
-  P_uf <- (pweibull(unit_ages_end, beta, eta) -  pweibull(unit_ages_start, beta, eta)) /
-    (1 - pweibull(unit_ages_start, beta, eta))
-  # Simulate unit failurs
-  failures <-  rbinom(
-    n = N_units * N_runs,
-    size = 1,
-    prob = P_uf 
-  ) %>%
-  matrix(
-    nrow = N_units,
-    ncol = N_runs
-  )
-  # Put in matrix
-  # apply sum
-  K_uf[shut, ] <- failures %>%
-    apply(FUN = sum, MARGIN = 2)
-  # Simulate belt failures
-  K_bf[shut, ] <- rbinom(
-    n = N_runs,
-    size = K_uf[shut, ],
-    prob = P_bf
-  )
-  # Update unit ages
-  unit_ages_start <- unit_ages_end
-  if(any(failures == 1)) unit_ages_start[as.logical(failures)] <- 0
-}
-
-data.frame(
-  shut = rep(1:N_shuts, N_runs),
-  run = rep(1:N_runs, each = N_shuts),
-  unit_failures = K_uf %>%
-    as.numeric(),
-  belt_failures = K_bf %>%
-    as.numeric()
-) %>%
-  ggplot() +
-  stat_lineribbon(aes(x = shut, y = unit_failures)) +
-  scale_fill_brewer()
-
-data.frame(
-  shut = rep(1:N_shuts, N_runs),
-  run = rep(1:N_runs, each = N_shuts),
-  unit_failures = K_uf %>%
-    as.numeric(),
-  belt_failures = K_bf %>%
-    as.numeric()
-) %>%
-  group_by(run) %>%
-  mutate(
-    cumulative_BFs = cumsum(belt_failures)
-  ) %>%
-  ggplot() +
-  stat_lineribbon(aes(x = shut, y = cumulative_BFs)) +
-  scale_fill_brewer()
-```
-
-Fun this for each draw from the posterior.
-
-```{r}
 CumulativeBeltFailures <- function(
   beta, eta,        # Weibull parameters
   N_units = 143,    # number of frames
-  N_shuts = 50,     # the number of shutdowns to run sim for
+  N_shuts = 44,     # the number of shutdowns to run sim for
   delta = (6 * 7),  # operation time between shuts
   N_runs = 1000,    # number of simulation runs
-  P_bf = 0.05       # the probability of a frame failure damaging the belt
+  P_rm = 0.05       # Probability of frame failure needing reactive maintenance
   ) {
   unit_ages_start <- rep(0, N_units * N_runs)
   K_uf <- array(rep(NA, N_shuts * N_runs), dim = c(N_shuts, N_runs))
-  K_bf <- array(rep(NA, N_shuts * N_runs), dim = c(N_shuts, N_runs))
+  K_rm <- array(rep(NA, N_shuts * N_runs), dim = c(N_shuts, N_runs))
   for (shut in 1:N_shuts) {
     # Calculate age at end of production period
     unit_ages_end <- unit_ages_start + delta
@@ -1626,29 +939,29 @@ CumulativeBeltFailures <- function(
     # apply sum
     K_uf[shut, ] <- failures %>%
       apply(FUN = sum, MARGIN = 2)
-    # Simulate belt failures
-    K_bf[shut, ] <- rbinom(
+    # Simulate reactive maintenance
+    K_rm[shut, ] <- rbinom(
       n = N_runs,
       size = K_uf[shut, ],
-      prob = P_bf
+      prob = P_rm
     )
     # Update unit ages
     unit_ages_start <- unit_ages_end
     if(any(failures == 1)) unit_ages_start[as.logical(failures)] <- 0
   }
-  K_bf %>%
-    apply(FUN = cumsum, MARGIN = 2) %>%
-    apply(FUN = mean, MARGIN = 1) %>%
+  K_rm %>%
+    apply(FUN = cumsum, MARGIN = 2) %>%   # Take cumulative sum
+    apply(FUN = mean, MARGIN = 1) %>%     # Calculate expected values
     return()
 }
-
+# extract draws for parameters from posterior
 joint_draws <- idler_stan_fit %>%
   as_draws_df() %>%
   spread_draws(beta, eta)
-
-subset_of_draws <- sample(1:nrow(joint_draws), 500)
-
-junk <- mapply(
+# thin draws
+subset_of_draws <- seq(1, nrow(joint_draws), 5)
+# apply sim over draws of parameters
+E_N_reactive_maintenance <- mapply(
   function(beta, eta) CumulativeBeltFailures(beta = beta, eta = eta),
   joint_draws$beta[subset_of_draws],
   joint_draws$eta[subset_of_draws]
@@ -1656,43 +969,44 @@ junk <- mapply(
 ```
 
 ```{r}
-E_N_failures_df <- data.frame(
-  draw = rep(1:500, each = 100),
-  shut = rep(1:100, 500),
-  value = junk %>%
-    as.numeric()
-)
-E_N_failures_df %>%
-  ggplot() +
-  stat_lineribbon(aes(x = shut, y = value)) +
-  scale_fill_brewer()
-```
-
-```{r}
+#| label: fig-cost-function
+#| fig-cap: "The predictive distribution of cost per unit time for the diferent choices of fixed time replacement interval."
 CostFunction <- function(
-  t_p,
-  F_r,
-  N = 143,
+  t_p,        # fixed time preplacement interval
+  K_rm,        # expected reactive replacement in t_p
+  N = 143,    # number of frames
+  # (cost of replaceing planned idler replacement x number of idlers in frame)
   C_p = (250 * 3),
-  C_r = (15000 * 2 * 100 + 2000)
+  # (tonnes/hour x hours X $/tonne + cost of reactive replacement)
+  C_r = (15000 * 2 * 100 + 2000)  
 ) {
   preventative_cost <- C_p * N
-  reactive_cost <- C_r * F_r
+  reactive_cost <- C_r * K_rm
   cost_per_unit_t <- (preventative_cost + reactive_cost) / t_p
+  return(cost_per_unit_t)
 }
-
+# calculate draws of cost per unit time
+E_N_failures_df <- data.frame(
+  draw = rep(subset_of_draws, each = 44),
+  shut = rep(1:44, length(subset_of_draws)),
+  value = E_N_reactive_maintenance %>%
+    as.numeric()
+)
+# plot predictive distributions
 E_N_failures_df %>%
   filter(shut <= 44) %>%
   mutate(
     t_p = shut * (6 * 7),
-    C = CostFunction(t_p = t_p, F_r = value),
-    shut_factor = factor(shut, levels = 1:44, ordered = TRUE)
+    C = CostFunction(t_p = t_p, K_rm = value),
+    weeks = factor(shut * 6, levels = (1:44 * 6), ordered = TRUE)
   ) %>%
   ggplot() +
   stat_halfeye(
-    aes(y = shut_factor, x = C),
+    aes(y = weeks, x = C),
     .width = c(0.5, 0.9)
   ) +
+  xlab("Cost per ($/day)") +
+  ylab("Interval (weeks)") +
   theme_minimal()
 ```
 
@@ -1709,7 +1023,7 @@ E_N_failures_df %>%
   filter(shut <= 44) %>%
   mutate(
     t_p = shut * (6 * 7),
-    C = CostFunction(t_p = t_p, F_r = value),
+    C = CostFunction(t_p = t_p, K_rm = value),
     weeks = factor(shut * 6, levels = (1:44 * 6), ordered = TRUE)
   ) %>%
   ggplot() +
@@ -1721,4 +1035,47 @@ E_N_failures_df %>%
   ylab("Interval (weeks)") +
   theme_minimal()
 dev.off()
-``
+```
+
+
+```{r}
+#| label: tbl-cost-function
+
+E_N_failures_df %>%
+  filter(shut <= 10) %>%
+  mutate(
+    t_p = shut * (6 * 7),
+    C = CostFunction(t_p = t_p, K_rm = value),
+    weeks = shut * 6
+  ) %>%
+  group_by(weeks) %>%
+  summarise(
+    "Mean" = mean(C),
+    "5\\%" = quantile(C, 0.05),
+    "25\\%" = quantile(C, 0.25),
+    "50\\%" = quantile(C, 0.50),
+    "75\\%" = quantile(C, 0.75),
+    "95\\%" = quantile(C, 0.95)
+  ) %>%
+  mutate(
+    across(everything(), ~ round(.x, 0))
+  ) %>%
+  rename(
+    "Interval (weeks)" = weeks
+  ) %>%
+  kbl(
+    booktabs = T,
+    format = "latex",
+    caption = "Summary of predictive distributions of cost per unit time (in \\$/day).",
+    escape = FALSE,
+    label = "cost-per-unit-time"
+  ) %>%
+  kable_styling(latex_options = "striped") %>%
+  save_kable(
+    file = file.path(
+      tbl_path,
+      "cost-function-summary.tex"
+    ),
+    keep_tex = TRUE
+  )
+```
