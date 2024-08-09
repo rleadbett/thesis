@@ -41,3 +41,4 @@ M3/*
 thesis.pdf
 *.aux
 *.rds
+.DS_Store
