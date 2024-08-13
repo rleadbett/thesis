@@ -1,16 +1,36 @@
 ---
-title: "Main analysis ch2"
+title: "Main analysis of chapter two"
+author: 
+  - name: Ryan Leadbetter
+    affiliation: 
+      - ref: CTMTDS
+affiliations:
+    - id: CTMTDS
+      name: Centre for Transforming Maintenance through Data Science, Curtin University
+date: "`r Sys.Date()`"
+number-sections: true
+bibliography: ../../references.bib
 format:
   html:
     embed-resources: true
-    self-contained-math: true
-editor: source
-cache: false
-warning: false
-message: false
+    toc: true
+    theme: 
+      light: flatly
+      dark: darkly
+editor: visual
+execute: 
+  cache: true
+  message: false 
+  warning: false
+  error: false
+  fig-width: 10
+  fig-height: 10
+css: styles.css
+title-block-banner: "#FFFFFF"
+title-block-banner-color: "#000000"
 ---
 
-This markdown contains the code to reproduce the main analysis in chapter 2. The 
+This markdown contains the code to reproduce the main analysis in chapter 2. In it I first show my developement on @kaminskiy2005 method for constructing a joint prior for the two Weibull parameters. I then simulate a dataset that emulates the observation process of the idler-frames and demonstrate the method for imputing the partialy observed lifetimes and missing truncation times acording the the method described in Sec. 2.2 of the Thesis. Lastly, I summarise the results of experiments that explore the method under different values of the simulation parameters, these experiments were run of a virtual machine do to the amount of memory and compute needed.
 
 ```{r}
 #| label: set-up-chunk
@@ -231,7 +251,9 @@ p_joint_priors
 dev.off()
 ```
 
-# Simulating data
+# Simulated data
+
+I simulate data in a way that emulates the repeated replacement of set of units (say idler-frames) where the replacement time records are only available for a recent window of time. To do this, I sample many lifetimes (the exact number depends on the values of the simulation parameters) from a known Weibull distribution with shape $\beta = 1.1$ and scale $\eta = 1$ and assign them equaly to ten units. I then take the cumulative value of the lifetimes of each unit so that the values are now the replacement times, rather than lifetimes. I then impose some window of observaiton with begining `t_start` and end `t_end` and any replacement records that are not at least partialy observed in this window are discarded. @tbl-sim-data shows the simulated dataset when `t_start = 5` and `t_end = 6` and @fig-sim-data plots the data.
 
 ```{r}
 #| label: define-sim-params
@@ -240,7 +262,6 @@ t_start <- 5
 t_window <- 1
 t_end <- t_start + t_window
 ```
-
 
 ```{r}
 #| label: function-SimData
@@ -389,6 +410,8 @@ p_sim_data
 dev.off()
 ```
 
+Before moving on, I prepare the data to be parsed to `Stan`.
+
 ```{r}
 #| label: prep-stan-data
 sim_df_obs <- sim_df %>%
@@ -434,6 +457,16 @@ stan_data_unkown_lt <- list(
 ```
 
 ## Stan models (weakly informative)
+
+Here I fit three models to the data. The first is a model where the left-truncated lifetimes (see thesis chapter for details) are fully observed---the best case scenario. The second is model simply discareds the left-truncated lifetimes---this is the best option in the literature if the exposure history of the left-truncated samples is unknown. The third and last model is my proposed method to impute the partialy observed left-truncated samples with unkown exposure history. I fit all three models with the vaigue prior
+$$
+\begin{align*}
+\beta & \sim N^{+}(1.1, 1) \\
+\eta & \sim N^{+}(1, 1). \\
+\end{align*}
+$$
+
+Bellow I define the models in `Stan`.
 
 ::: panel-tabset
 ### Known truncation times
@@ -593,7 +626,7 @@ t_lt_rc_st ~ uniform(0, 1);
 
 ### Sampling
 
-I draw $2000$ sample from the posteriors of each model, using four chains with a burn in of $500$ samples and no thinning.
+I draw $2000$ sample from the posteriors of each model, using four chains with a burn in of $500$ samples and no thinning. @fig-join-posts shows the posteiror draws of the parameters from the three models as well as the coresponding uncertainty in the Weibull CDF.
 
 ::: panel-tabset
 #### Known truncation times
@@ -695,15 +728,15 @@ dev.off()
 
 ## Stan models (informative)
 
-Now I fit the models with an informative joint prior, eliciting information at $t_1 = p_{0.80} = 1.54$ and $t_2 = p_{0.95} = 2.71$. The prior is 
+Now I fit the same three models but with an informative joint prior, eliciting information at $t_1 = p_{0.80} = 1.54$ and $t_2 = p_{0.95} = 2.71$. The prior is 
 $$
 \begin{align*}
     \hat{F}_{t_1} \sim & \hbox{N}^{1}_{0}\left(0.8, 0.1\right)    \\
-    \hat{F}_{t_2} \sim & \hbox{N}^{1}_{0}\left(0.95, 0.05\right).
+    \hat{F}_{t_2} \sim & \hbox{N}^{1}_{\hat{F}_{t_1}}\left(0.95, 0.05\right).
 \end{align*}
 $$
 
-The prior is specified around the true model used to simulate the data.
+The prior is specified around the true model used to simulate the data. Now, I redefine the models with the informative joint prior.
 
 ::: panel-tabset
 ### Known truncation times
@@ -927,6 +960,8 @@ t_lt_rc_st ~ uniform(0, 1);
 
 ### Sampling
 
+I once agian draw $2000$ sample from the posteriors, using four chains with a burn in of $500$ samples and no thinning. @fig-join-posts-inf shows the new posteiror draws of the parameters from the three models as well as the coresponding uncertainty in the Weibull CDF.
+
 ::: panel-tabset
 #### Known truncation times
 ```{r}
@@ -1052,6 +1087,8 @@ p_joint_posts_inf
 dev.off()
 ```
 
+To demonstrate that my implementation of the method proposed by @kaminskiy2005 properly filters the prior through the likelihood, @fig-prior-post-comparison compares the prior and posterior of the CDF at the two elicitation times $t_1$ and $t_2$. In all three models, the prior belief about the CDF at both times has been updated in the posterior after conditioning on the data. This is not the case in the original method proposed by @kaminskiy2005, as I show in Appendix-A of this document.
+
 ```{r}
 #| label: fig-prior-post-comparison
 #| fig-cap: "Comparison of the marginal prior and posterior for F_t1 and F_t2 when left-truncated lifetimes are fully observed (a), discarded (b), or imputed (c) to show how both the elicited distributions have been updated in the posterior."
@@ -1156,18 +1193,14 @@ dev.off()
 
 # Sim study
 
-The simulation study was run on a vertual machine on the [Nimbus](https://pawsey.org.au/systems/nimbus-cloud-service/) cloud server with _____ provided by [Pawsey](https://pawsey.org.au/). The Rscripts for the simulation studies for $\beta = 0.8$, $1.1$, and $2$ are [left-trunc-sim-study-0.8.R](./left-trunc-sim-study-0.8.R), [left-trunc-sim-study-1.1.R](./left-trunc-sim-study-1.1.R), and [left-trunc-sim-study-2.R](./left-trunc-sim-study-2.R), respectively. A detailed description of the simulation study is provided in Sec. 2.5 of the Thesis.
+The simulation study was run on a vertual machine on the [Nimbus](https://pawsey.org.au/systems/nimbus-cloud-service/) cloud server provided by [Pawsey](https://pawsey.org.au/). The Rscripts for the simulation studies for $\beta = 0.8$, $1.1$, and $2$ are [left-trunc-sim-study-0.8.R](./left-trunc-sim-study-0.8.R), [left-trunc-sim-study-1.1.R](./left-trunc-sim-study-1.1.R), and [left-trunc-sim-study-2.R](./left-trunc-sim-study-2.R), respectively. A detailed description of the simulation study is provided in Sec. 2.5 of the Thesis.
 
 ::: panel-tabset
 #### $\beta = 1.1$
 ```{r}
 #| label: load-sim-results
 experiment_results_df <- readRDS("LT_experiment_results_df.rds")
-```
 
-```{r}
-#| label: fig-sim-result-factor-plots
-#| fig-cap: "..."
 GetFactorValue <- function(x) as.numeric(as.character(x))
 ModelLabeller <- function(name_string) {
   if (stringr::str_detect(name_string, "stan_fit_imp_lt")) {
@@ -1187,7 +1220,13 @@ PriorLabeller <- function(name_string) {
   }
   return(prior_name)
 }
+```
 
+```{r}
+#| label: fig-sim-result-factor-plots
+#| fig-cap: "..."
+#| eval: false
+#| include: false
 experiment_results_df %>%
   mutate(
     model_name = lapply(
@@ -1410,7 +1449,375 @@ dev.off()
 
 #### $\beta = 0.8$
 
+```{r}
+#| label: load-sim-results-0.8
+experiment_results_df_0.8 <- readRDS("LT_experiment_results_df_0.8.rds")
+```
+
+```{r}
+#| label: fig-sim-result-factor-plots-means-0.8
+#| fig-cap: "..."
+p_sim_result_plot_0.8 <- experiment_results_df_0.8 %>%
+  mutate(
+    model = lapply(
+      experiment_results_df_0.8$model,
+      ModelLabeller
+    ) %>% unlist(),
+    prior = lapply(
+      experiment_results_df_0.8$model,
+      PriorLabeller
+    ) %>% unlist()
+  ) %>%
+  filter(!is.infinite(E_log_score)) %>%
+  group_by(
+    N, t_start, t_window, model, prior
+  ) %>%
+  summarise(
+    p_value_beta = mean(p_value_beta, na.rm = TRUE),
+    p_value_eta = mean(p_value_eta, na.rm = TRUE),
+    elppd = mean(E_log_score, na.rm = TRUE)
+  ) %>%
+  ggplot(
+    aes(
+      x = p_value_beta, y = p_value_eta,
+      size = elppd, colour = model,
+      shape = prior
+    )
+  ) +
+  geom_point(alpha = 0.5) +
+  xlim(0, 1) +
+  ylim(0, 1) +
+  facet_grid(rows = vars(N, t_start), cols = vars(t_window)) +
+  xlab(expression(P[beta])) +
+  ylab(expression(P[eta])) +
+  theme(
+    panel.background = element_rect(
+      fill = "white", colour = "white"
+    ),
+    panel.grid.major = element_line(
+      size = 0.5,
+      colour = alpha("lightgrey", 0.5)
+    ),
+    panel.grid.minor =  element_line(
+      size = 0.25,
+      colour = alpha("lightgrey", 0.5)
+    ),
+    axis.ticks.x = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+
+p_sim_result_plot_0.8
+```
+
+```{r}
+#| label: save-fig-sim-result-factor-plots-means-0.8
+#| echo: false
+#| output: false
+pdf(
+  file.path(fig_path, "sim-results-pvalues-0.8.pdf"),
+  height = 15,
+  width = 10
+)
+p_sim_result_plot_0.8
+dev.off()
+```
+
+```{r}
+#| label: fig-sim-result-elppd-plot-0.8
+#| fig-cap: "..."
+experiment_results_df_0.8 %>%
+  mutate(
+    model_name = lapply(
+      experiment_results_df_0.8$model,
+      ModelLabeller
+    ) %>% unlist(),
+    prior_name = lapply(
+      experiment_results_df_0.8$model,
+      PriorLabeller
+    ) %>% unlist(),
+    N = factor(N)
+  ) %>%
+  ggplot(
+    aes(
+      x = N, y = E_log_score,
+      colour = model_name,
+      shape = prior_name
+    )
+  ) +
+  geom_jitter(
+    alpha = 0.5,
+    width = 0.25
+  ) +
+  facet_grid(rows = vars(t_start), cols = vars(t_window)) +
+  theme(
+    panel.background = element_rect(
+      fill = "white", colour = "white"
+    ),
+    panel.grid.major = element_line(
+      size = 0.5,
+      colour = alpha("lightgrey", 0.5)
+    ),
+    panel.grid.minor =  element_line(
+      size = 0.25,
+      colour = alpha("lightgrey", 0.5)
+    ),
+    axis.ticks.x = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+```
+
+```{r}
+#| label: fig-sim-result-elppd-plots-means-0.8
+#| fig-cap: "..."
+p_sim_res_elppd <- experiment_results_df_0.8 %>%
+  mutate(
+    model = lapply(
+      experiment_results_df_0.8$model,
+      ModelLabeller
+    ) %>% unlist(),
+    prior = lapply(
+      experiment_results_df_0.8$model,
+      PriorLabeller
+    ) %>% unlist()
+  ) %>%
+  filter(!is.infinite(E_log_score)) %>%
+  group_by(
+    N, t_start, t_window, model, prior
+  ) %>%
+  summarise(
+    p_value_beta = mean(p_value_beta, na.rm = TRUE),
+    p_value_eta = mean(p_value_eta, na.rm = TRUE),
+    elppd = mean(E_log_score, na.rm = TRUE)
+  ) %>%
+  ggplot(
+    aes(
+      x = N, y = elppd,
+      colour = model,
+      shape = prior
+    )
+  ) +
+  geom_jitter(
+    alpha = 0.5,
+    width = 0.25
+  ) +
+  facet_grid(rows = vars(t_window), cols = vars(t_start))+
+  theme(
+    panel.background = element_rect(
+      fill = "white", colour = "white"
+    ),
+    panel.grid.major = element_line(
+      size = 0.5,
+      colour = alpha("lightgrey", 0.5)
+    ),
+    panel.grid.minor =  element_line(
+      size = 0.25,
+      colour = alpha("lightgrey", 0.5)
+    ),
+    axis.ticks.x = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+
+p_sim_res_elppd_0.8
+```
+
+```{r}
+#| label: save-fig-sim-result-elppd-plots-means-0.8
+#| echo: false
+#| output: false
+pdf(
+  file.path(fig_path, "sim-results-elppd-0.8.pdf"),
+  height = 8.,
+  width = 8
+)
+p_sim_res_elppd_0.8
+dev.off()
+```
+
 #### $\beta = 2.0$
+
+```{r}
+#| label: load-sim-results-2.0
+experiment_results_df_2.0 <- readRDS("LT_experiment_results_df_2.rds")
+```
+
+```{r}
+#| label: fig-sim-result-factor-plots-means-2.0
+#| fig-cap: "..."
+p_sim_result_plot_2.0 <- experiment_results_df_2.0 %>%
+  mutate(
+    model = lapply(
+      experiment_results_df_2.0$model,
+      ModelLabeller
+    ) %>% unlist(),
+    prior = lapply(
+      experiment_results_df_2.0$model,
+      PriorLabeller
+    ) %>% unlist()
+  ) %>%
+  filter(!is.infinite(E_log_score)) %>%
+  group_by(
+    N, t_start, t_window, model, prior
+  ) %>%
+  summarise(
+    p_value_beta = mean(p_value_beta, na.rm = TRUE),
+    p_value_eta = mean(p_value_eta, na.rm = TRUE),
+    elppd = mean(E_log_score, na.rm = TRUE)
+  ) %>%
+  ggplot(
+    aes(
+      x = p_value_beta, y = p_value_eta,
+      size = elppd, colour = model,
+      shape = prior
+    )
+  ) +
+  geom_point(alpha = 0.5) +
+  xlim(0, 1) +
+  ylim(0, 1) +
+  facet_grid(rows = vars(N, t_start), cols = vars(t_window)) +
+  xlab(expression(P[beta])) +
+  ylab(expression(P[eta])) +
+  theme(
+    panel.background = element_rect(
+      fill = "white", colour = "white"
+    ),
+    panel.grid.major = element_line(
+      size = 0.5,
+      colour = alpha("lightgrey", 0.5)
+    ),
+    panel.grid.minor =  element_line(
+      size = 0.25,
+      colour = alpha("lightgrey", 0.5)
+    ),
+    axis.ticks.x = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+
+p_sim_result_plot_2.0
+```
+
+```{r}
+#| label: save-fig-sim-result-factor-plots-means-2.0
+#| echo: false
+#| output: false
+pdf(
+  file.path(fig_path, "sim-results-pvalues-2.0.pdf"),
+  height = 15,
+  width = 10
+)
+p_sim_result_plot_2.0
+dev.off()
+```
+
+```{r}
+#| label: fig-sim-result-elppd-plot-2.0
+#| fig-cap: "..."
+experiment_results_df_2.0 %>%
+  mutate(
+    model_name = lapply(
+      experiment_results_df_2.0$model,
+      ModelLabeller
+    ) %>% unlist(),
+    prior_name = lapply(
+      experiment_results_df_2.0$model,
+      PriorLabeller
+    ) %>% unlist(),
+    N = factor(N)
+  ) %>%
+  ggplot(
+    aes(
+      x = N, y = E_log_score,
+      colour = model_name,
+      shape = prior_name
+    )
+  ) +
+  geom_jitter(
+    alpha = 0.5,
+    width = 0.25
+  ) +
+  facet_grid(rows = vars(t_start), cols = vars(t_window)) +
+  theme(
+    panel.background = element_rect(
+      fill = "white", colour = "white"
+    ),
+    panel.grid.major = element_line(
+      size = 0.5,
+      colour = alpha("lightgrey", 0.5)
+    ),
+    panel.grid.minor =  element_line(
+      size = 0.25,
+      colour = alpha("lightgrey", 0.5)
+    ),
+    axis.ticks.x = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+```
+
+```{r}
+#| label: fig-sim-result-elppd-plots-means-2.0
+#| fig-cap: "..."
+p_sim_res_elppd <- experiment_results_df_2.0 %>%
+  mutate(
+    model = lapply(
+      experiment_results_df_2.0$model,
+      ModelLabeller
+    ) %>% unlist(),
+    prior = lapply(
+      experiment_results_df_2.0$model,
+      PriorLabeller
+    ) %>% unlist()
+  ) %>%
+  filter(!is.infinite(E_log_score)) %>%
+  group_by(
+    N, t_start, t_window, model, prior
+  ) %>%
+  summarise(
+    p_value_beta = mean(p_value_beta, na.rm = TRUE),
+    p_value_eta = mean(p_value_eta, na.rm = TRUE),
+    elppd = mean(E_log_score, na.rm = TRUE)
+  ) %>%
+  ggplot(
+    aes(
+      x = N, y = elppd,
+      colour = model,
+      shape = prior
+    )
+  ) +
+  geom_jitter(
+    alpha = 0.5,
+    width = 0.25
+  ) +
+  facet_grid(rows = vars(t_window), cols = vars(t_start))+
+  theme(
+    panel.background = element_rect(
+      fill = "white", colour = "white"
+    ),
+    panel.grid.major = element_line(
+      size = 0.5,
+      colour = alpha("lightgrey", 0.5)
+    ),
+    panel.grid.minor =  element_line(
+      size = 0.25,
+      colour = alpha("lightgrey", 0.5)
+    ),
+    axis.ticks.x = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+
+p_sim_res_elppd_2.0
+```
+
+```{r}
+#| label: save-fig-sim-result-elppd-plots-means-2.0
+#| echo: false
+#| output: false
+pdf(
+  file.path(fig_path, "sim-results-elppd-2.0.pdf"),
+  height = 8.,
+  width = 8
+)
+p_sim_res_elppd_2.0
+dev.off()
+```
 
 :::
 

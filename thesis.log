@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.8.12)  9 AUG 2024 11:31
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.8.12)  13 AUG 2024 19:30
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -550,7 +550,7 @@ Package hyperref Info: Option `colorlinks' set `true' on input line 91.
 File: l3backend-pdftex.def 2022-08-05 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count334
 \l__pdf_internal_box=\box108
-) (./thesis.aux (./chapters/acknowledgements.aux) (./chapters/abstract.aux) (./chapters/chapter1.aux) (./chapters/chapter2.aux) (./chapters/chapter3.aux) (./chapters/chapter4.aux) (./chapters/chapter5.aux) (./chapters/chapter6.aux) (./chapters/chapter7.aux))
+) (./thesis.aux (./chapters/publications.aux) (./chapters/contributors.aux) (./chapters/acknowledgements.aux) (./chapters/abstract.aux) (./chapters/chapter1.aux) (./chapters/chapter2.aux) (./chapters/chapter3.aux) (./chapters/chapter4.aux) (./chapters/chapter5.aux) (./chapters/chapter6.aux) (./chapters/chapter7.aux) (./chapters/appendixA.aux))
 \openout1 = `thesis.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 93.
@@ -618,44 +618,63 @@ Package caption Info: End \AtBeginDocument code.
 ] [3] [4
 
 ] [5]
-\openout2 = `chapters/acknowledgements.aux'.
+\openout2 = `chapters/publications.aux'.
 
- (./chapters/acknowledgements.tex [6
+ (./chapters/publications.tex [6
 
 
 ]) [7]
-\openout2 = `chapters/abstract.aux'.
+\openout2 = `chapters/contributors.aux'.
 
- (./chapters/abstract.tex [8
+ (./chapters/contributors.tex [8
 
 
 
 
 ]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [9]) [10] (./thesis.toc
-LaTeX Font Info:    Trying to load font information for U+msa on input line 4.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 7.
  (c:/texlive/2022/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 4.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 7.
  (c:/texlive/2022/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-) [11
+)) [9]
+\openout2 = `chapters/acknowledgements.aux'.
+
+ (./chapters/acknowledgements.tex [10
 
 
 
-] [12] [13])
+
+]) [11]
+\openout2 = `chapters/abstract.aux'.
+
+ (./chapters/abstract.tex [12
+
+
+
+
+]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [13]) [14] (./thesis.toc [15
+
+
+
+]
+Underfull \vbox (badness 1845) has occurred while \output is active []
+
+ [16] [17] [18])
 \tf@toc=\write4
 \openout4 = `thesis.toc'.
 
- [14] (./thesis.lof
+ [19] [20
+
+] (./thesis.lof
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [15
-
-]
+ [21]
 Overfull \hbox (8.21129pt too wide) in paragraph at lines 10--10
  [][] []\OT1/cmr/m/n/12 Three dif-fer-ent in-for-ma-tive joint pri-ors con-structed us-ing the method 
  []
@@ -663,16 +682,13 @@ Overfull \hbox (8.21129pt too wide) in paragraph at lines 10--10
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [16]
+ [22]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [17] [18]
+ [23] [24]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [19]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [20]
+ [25] [26]
 Overfull \hbox (0.86554pt too wide) in paragraph at lines 42--42
  [][] []\OT1/cmr/m/n/12 Four non-noisy prior pre-dic-tive sim-u-la-tions from the com-plete pool- 
  []
@@ -680,20 +696,20 @@ Overfull \hbox (0.86554pt too wide) in paragraph at lines 42--42
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [21]
+ [27]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [22]
+ [28]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [23])
+ [29])
 \tf@lof=\write5
 \openout5 = `thesis.lof'.
 
 
 Underfull \vbox (badness 5787) has occurred while \output is active []
 
- [24] [25] [26
+ [30] [31] [32
 
 ]
 \openout2 = `chapters/chapter1.aux'.
@@ -709,52 +725,58 @@ Underfull \vbox (badness 5203) has occurred while \output is active []
 ]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [2] [3] [4] [5] [6] [7]
-<./figures/cvr_example_edit_annotation.jpg, id=850, 722.7pt x 542.025pt>
+ [2]
+Underfull \vbox (badness 2269) has occurred while \output is active []
+
+ [3]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [4]
+Underfull \vbox (badness 5345) has occurred while \output is active []
+
+ [5]
+Underfull \vbox (badness 1270) has occurred while \output is active []
+
+ [6] [7] [8]
+<./figures/cvr_example_edit_annotation.jpg, id=791, 722.7pt x 542.025pt>
 File: ./figures/cvr_example_edit_annotation.jpg Graphic file (type jpg)
 <use ./figures/cvr_example_edit_annotation.jpg>
-Package pdftex.def Info: ./figures/cvr_example_edit_annotation.jpg  used on input line 52.
+Package pdftex.def Info: ./figures/cvr_example_edit_annotation.jpg  used on input line 57.
 (pdftex.def)             Requested size: 412.56496pt x 309.42061pt.
- [8] [9 <./figures/cvr_example_edit_annotation.jpg>]
-<./figures/idler_data_desc.pdf, id=869, 505.89pt x 578.16pt>
+ [9 <./figures/cvr_example_edit_annotation.jpg>]
+<./figures/idler_data_desc.pdf, id=802, 505.89pt x 578.16pt>
 File: ./figures/idler_data_desc.pdf Graphic file (type pdf)
 <use ./figures/idler_data_desc.pdf>
-Package pdftex.def Info: ./figures/idler_data_desc.pdf  used on input line 63.
+Package pdftex.def Info: ./figures/idler_data_desc.pdf  used on input line 68.
 (pdftex.def)             Requested size: 412.56496pt x 471.50941pt.
  [10] [11 <./figures/idler_data_desc.pdf>]
-<./figures/belt_wear_ut.pdf, id=891, 578.16pt x 433.62pt>
+<./figures/belt_wear_ut.pdf, id=824, 578.16pt x 433.62pt>
 File: ./figures/belt_wear_ut.pdf Graphic file (type pdf)
 <use ./figures/belt_wear_ut.pdf>
-Package pdftex.def Info: ./figures/belt_wear_ut.pdf  used on input line 78.
+Package pdftex.def Info: ./figures/belt_wear_ut.pdf  used on input line 83.
 (pdftex.def)             Requested size: 412.56496pt x 309.42061pt.
+ [12 <./figures/belt_wear_ut.pdf>]
+Underfull \vbox (badness 1424) has occurred while \output is active []
 
+ [13] [14] [15] [16]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [12 <./figures/belt_wear_ut.pdf>] [13] [14] [15]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [16] [17]
-Underfull \vbox (badness 3815) has occurred while \output is active []
-
- [18]
+ [17] [18]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [19]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [20]
-Overfull \hbox (5.95293pt too wide) in paragraph at lines 178--179
+Overfull \hbox (5.95293pt too wide) in paragraph at lines 183--184
 []\OT1/cmr/m/n/12 Although this would be the best mea-sure of pre-dic-tive ac-cu-racy for our Bayesian
  []
 
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [21]
+ [21] [22]
 Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [22]
-Underfull \vbox (badness 1394) has occurred while \output is active []
 
  [23]) [24] [25
 
@@ -783,7 +805,7 @@ Overfull \hbox (2.03708pt too wide) in paragraph at lines 56--57
  []
 
 [34]
-<./figures/ch-2/hazard_func_demo.pdf, id=1162, 505.89pt x 252.945pt>
+<./figures/ch-2/hazard_func_demo.pdf, id=1095, 505.89pt x 252.945pt>
 File: ./figures/ch-2/hazard_func_demo.pdf Graphic file (type pdf)
 <use ./figures/ch-2/hazard_func_demo.pdf>
 Package pdftex.def Info: ./figures/ch-2/hazard_func_demo.pdf  used on input line 82.
@@ -793,7 +815,7 @@ Package pdftex.def Info: ./figures/ch-2/hazard_func_demo.pdf  used on input line
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 [35]
-<./figures/ch-2/censoring_example.pdf, id=1179, 722.7pt x 433.62pt>
+<./figures/ch-2/censoring_example.pdf, id=1111, 722.7pt x 433.62pt>
 File: ./figures/ch-2/censoring_example.pdf Graphic file (type pdf)
 <use ./figures/ch-2/censoring_example.pdf>
 Package pdftex.def Info: ./figures/ch-2/censoring_example.pdf  used on input line 93.
@@ -812,7 +834,7 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [38]
-<./figures/ch-2/left_truncation_example.pdf, id=1241, 722.7pt x 433.62pt>
+<./figures/ch-2/left_truncation_example.pdf, id=1174, 722.7pt x 433.62pt>
 File: ./figures/ch-2/left_truncation_example.pdf Graphic file (type pdf)
 <use ./figures/ch-2/left_truncation_example.pdf>
 Package pdftex.def Info: ./figures/ch-2/left_truncation_example.pdf  used on input line 126.
@@ -835,7 +857,7 @@ Overfull \hbox (4.05525pt too wide) in paragraph at lines 147--148
  []
 
 [40 <./figures/ch-2/left_truncation_example.pdf>]
-<./figures/ch-2/left_truncation_w_right_censoring_example.pdf, id=1271, 722.7pt x 433.62pt>
+<./figures/ch-2/left_truncation_w_right_censoring_example.pdf, id=1204, 722.7pt x 433.62pt>
 File: ./figures/ch-2/left_truncation_w_right_censoring_example.pdf Graphic file (type pdf)
 <use ./figures/ch-2/left_truncation_w_right_censoring_example.pdf>
 Package pdftex.def Info: ./figures/ch-2/left_truncation_w_right_censoring_example.pdf  used on input line 151.
@@ -850,12 +872,7 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
  [41]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [42 <./figures/ch-2/left_truncation_w_right_censoring_example.pdf>]
-
-Package hyperref Warning: Difference (2) between bookmark levels is greater 
-(hyperref)                than one, level fixed on input line 186.
-
-[43] [44]
+ [42 <./figures/ch-2/left_truncation_w_right_censoring_example.pdf>] [43] [44]
 Overfull \hbox (2.8585pt too wide) in paragraph at lines 196--197
 []\OT1/cmr/m/n/12 Treating the left trun-cated life-times with un-known ex-po-sure his-tory as interval-
  []
@@ -873,21 +890,16 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [49]
-<./figures/ch-2/joint-priors.pdf, id=1368, 578.16pt x 433.62pt>
+<./figures/ch-2/joint-priors.pdf, id=1306, 578.16pt x 433.62pt>
 File: ./figures/ch-2/joint-priors.pdf Graphic file (type pdf)
 <use ./figures/ch-2/joint-priors.pdf>
-Package pdftex.def Info: ./figures/ch-2/joint-priors.pdf  used on input line 241.
+Package pdftex.def Info: ./figures/ch-2/joint-priors.pdf  used on input line 243.
 (pdftex.def)             Requested size: 412.56496pt x 309.42061pt.
-
-Overfull \hbox (0.4989pt too wide) in paragraph at lines 250--251
-\OT1/cmr/m/n/12 In this sec-tion, I demon-strate the pro-posed method for im-put-ing the left-truncated
- []
-
-[50] [51 <./figures/ch-2/joint-priors.pdf>] [52]
-<./figures/ch-2/sim-data.pdf, id=1399, 433.62pt x 433.62pt>
+ [50] [51 <./figures/ch-2/joint-priors.pdf>] [52]
+<./figures/ch-2/sim-data.pdf, id=1340, 433.62pt x 433.62pt>
 File: ./figures/ch-2/sim-data.pdf Graphic file (type pdf)
 <use ./figures/ch-2/sim-data.pdf>
-Package pdftex.def Info: ./figures/ch-2/sim-data.pdf  used on input line 260.
+Package pdftex.def Info: ./figures/ch-2/sim-data.pdf  used on input line 262.
 (pdftex.def)             Requested size: 412.56496pt x 412.58508pt.
  (./tables/ch-2/sim_cmms_data.tex
 Overfull \hbox (11.0439pt too wide) in paragraph at lines 5--33
@@ -898,40 +910,41 @@ Overfull \hbox (11.0439pt too wide) in paragraph at lines 5--33
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [53] [54 <./figures/ch-2/sim-data.pdf>]
-<./figures/ch-2/joint-posts.pdf, id=1418, 722.7pt x 361.35pt>
+<./figures/ch-2/joint-posts.pdf, id=1359, 722.7pt x 361.35pt>
 File: ./figures/ch-2/joint-posts.pdf Graphic file (type pdf)
 <use ./figures/ch-2/joint-posts.pdf>
-Package pdftex.def Info: ./figures/ch-2/joint-posts.pdf  used on input line 278.
+Package pdftex.def Info: ./figures/ch-2/joint-posts.pdf  used on input line 280.
 (pdftex.def)             Requested size: 412.56496pt x 206.28041pt.
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
  [55]
 Underfull \vbox (badness 1472) has occurred while \output is active []
 
  [56 <./figures/ch-2/joint-posts.pdf>]
-<./figures/ch-2/joint-posts-inf.pdf, id=1443, 722.7pt x 361.35pt>
+<./figures/ch-2/joint-posts-inf.pdf, id=1385, 722.7pt x 361.35pt>
 File: ./figures/ch-2/joint-posts-inf.pdf Graphic file (type pdf)
 <use ./figures/ch-2/joint-posts-inf.pdf>
-Package pdftex.def Info: ./figures/ch-2/joint-posts-inf.pdf  used on input line 294.
+Package pdftex.def Info: ./figures/ch-2/joint-posts-inf.pdf  used on input line 296.
 (pdftex.def)             Requested size: 412.56496pt x 206.28041pt.
 
 Underfull \vbox (badness 1661) has occurred while \output is active []
 
  [57 <./figures/ch-2/joint-posts-inf.pdf>]
-<./figures/ch-2/prior-post-comp.pdf, id=1462, 722.7pt x 361.35pt>
+<./figures/ch-2/prior-post-comp.pdf, id=1404, 722.7pt x 361.35pt>
 File: ./figures/ch-2/prior-post-comp.pdf Graphic file (type pdf)
 <use ./figures/ch-2/prior-post-comp.pdf>
-Package pdftex.def Info: ./figures/ch-2/prior-post-comp.pdf  used on input line 303.
+Package pdftex.def Info: ./figures/ch-2/prior-post-comp.pdf  used on input line 305.
 (pdftex.def)             Requested size: 330.05322pt x 165.02654pt.
- [58 <./figures/ch-2/prior-post-comp.pdf>] [59]
-Underfull \vbox (badness 2617) has occurred while \output is active []
+ [58 <./figures/ch-2/prior-post-comp.pdf>]
+
+Package natbib Warning: Citation `talts2018' on page 59 undefined on input line 331.
+
+[59]
+Underfull \vbox (badness 1472) has occurred while \output is active []
 
  [60]
-<./figures/ch-2/sim-results-pvalues.pdf, id=1485, 722.7pt x 1084.05pt>
+<./figures/ch-2/sim-results-pvalues.pdf, id=1440, 722.7pt x 1084.05pt>
 File: ./figures/ch-2/sim-results-pvalues.pdf Graphic file (type pdf)
 <use ./figures/ch-2/sim-results-pvalues.pdf>
-Package pdftex.def Info: ./figures/ch-2/sim-results-pvalues.pdf  used on input line 344.
+Package pdftex.def Info: ./figures/ch-2/sim-results-pvalues.pdf  used on input line 347.
 (pdftex.def)             Requested size: 330.05322pt x 495.0796pt.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -940,38 +953,41 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [63]
-<./figures/ch-2/sim-results-elppd.pdf, id=1519, 578.16pt x 578.16pt>
+<./figures/ch-2/sim-results-elppd.pdf, id=1473, 578.16pt x 578.16pt>
 File: ./figures/ch-2/sim-results-elppd.pdf Graphic file (type pdf)
 <use ./figures/ch-2/sim-results-elppd.pdf>
-Package pdftex.def Info: ./figures/ch-2/sim-results-elppd.pdf  used on input line 357.
+Package pdftex.def Info: ./figures/ch-2/sim-results-elppd.pdf  used on input line 360.
 (pdftex.def)             Requested size: 330.05322pt x 330.04865pt.
  [64] [65 <./figures/ch-2/sim-results-elppd.pdf>]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [66]) [67]
+ [66])
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [67] [68]
 \openout2 = `chapters/chapter3.aux'.
 
- (./chapters/chapter3.tex [68
-
-
-
-
-]
+ (./chapters/chapter3.tex
 Chapter 3.
 
 Underfull \vbox (badness 5203) has occurred while \output is active []
 
- [69] [70] (./tables/ch-3/data_summary.tex)
+ [69
+
+
+
+
+] [70] (./tables/ch-3/data_summary.tex)
 Underfull \vbox (badness 2875) has occurred while \output is active []
 
  [71]
-<./figures/ch-3/idler-frame-data.pdf, id=1589, 867.24pt x 433.62pt>
+<./figures/ch-3/idler-frame-data.pdf, id=1544, 867.24pt x 433.62pt>
 File: ./figures/ch-3/idler-frame-data.pdf Graphic file (type pdf)
 <use ./figures/ch-3/idler-frame-data.pdf>
 Package pdftex.def Info: ./figures/ch-3/idler-frame-data.pdf  used on input line 23.
 (pdftex.def)             Requested size: 412.56496pt x 206.28261pt.
  [72]
-<./figures/ch-3/idler-frame-prior.pdf, id=1596, 722.7pt x 361.35pt>
+<./figures/ch-3/idler-frame-prior.pdf, id=1551, 722.7pt x 361.35pt>
 File: ./figures/ch-3/idler-frame-prior.pdf Graphic file (type pdf)
 <use ./figures/ch-3/idler-frame-prior.pdf>
 Package pdftex.def Info: ./figures/ch-3/idler-frame-prior.pdf  used on input line 34.
@@ -981,7 +997,7 @@ Package pdftex.def Info: ./figures/ch-3/idler-frame-prior.pdf  used on input lin
 LaTeX Font Warning: Command \small invalid in math mode on input line 7.
 
 )
-<./figures/ch-3/idler-frame-post.pdf, id=1611, 722.7pt x 361.35pt>
+<./figures/ch-3/idler-frame-post.pdf, id=1566, 722.7pt x 361.35pt>
 File: ./figures/ch-3/idler-frame-post.pdf Graphic file (type pdf)
 <use ./figures/ch-3/idler-frame-post.pdf>
 Package pdftex.def Info: ./figures/ch-3/idler-frame-post.pdf  used on input line 47.
@@ -990,24 +1006,24 @@ Package pdftex.def Info: ./figures/ch-3/idler-frame-post.pdf  used on input line
 Underfull \vbox (badness 2495) has occurred while \output is active []
 
  [74 <./figures/ch-3/idler-frame-prior.pdf>]
-<./figures/ch-3/idler-frame-post-CDF.pdf, id=1627, 578.16pt x 361.35pt>
+<./figures/ch-3/idler-frame-post-CDF.pdf, id=1581, 578.16pt x 361.35pt>
 File: ./figures/ch-3/idler-frame-post-CDF.pdf Graphic file (type pdf)
 <use ./figures/ch-3/idler-frame-post-CDF.pdf>
 Package pdftex.def Info: ./figures/ch-3/idler-frame-post-CDF.pdf  used on input line 56.
 (pdftex.def)             Requested size: 288.7942pt x 180.4926pt.
  [75 <./figures/ch-3/idler-frame-post.pdf>] [76 <./figures/ch-3/idler-frame-post-CDF.pdf>]
-<./figures/ch-3/posterior-FTs.pdf, id=1661, 722.7pt x 867.24pt>
+<./figures/ch-3/posterior-FTs.pdf, id=1616, 722.7pt x 867.24pt>
 File: ./figures/ch-3/posterior-FTs.pdf Graphic file (type pdf)
 <use ./figures/ch-3/posterior-FTs.pdf>
 Package pdftex.def Info: ./figures/ch-3/posterior-FTs.pdf  used on input line 77.
 (pdftex.def)             Requested size: 412.56496pt x 495.073pt.
  [77] [78 <./figures/ch-3/posterior-FTs.pdf>]
-<./figures/ch-3/E-n-failures-draws.pdf, id=1685, 722.7pt x 361.35pt>
+<./figures/ch-3/E-n-failures-draws.pdf, id=1640, 722.7pt x 361.35pt>
 File: ./figures/ch-3/E-n-failures-draws.pdf Graphic file (type pdf)
 <use ./figures/ch-3/E-n-failures-draws.pdf>
 Package pdftex.def Info: ./figures/ch-3/E-n-failures-draws.pdf  used on input line 90.
 (pdftex.def)             Requested size: 412.56496pt x 206.28041pt.
-<./figures/ch-3/E-n-failures-densities.pdf, id=1686, 722.7pt x 722.7pt>
+<./figures/ch-3/E-n-failures-densities.pdf, id=1641, 722.7pt x 722.7pt>
 File: ./figures/ch-3/E-n-failures-densities.pdf Graphic file (type pdf)
 <use ./figures/ch-3/E-n-failures-densities.pdf>
 Package pdftex.def Info: ./figures/ch-3/E-n-failures-densities.pdf  used on input line 97.
@@ -1021,18 +1037,23 @@ Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on inp
 Underfull \vbox (badness 3965) has occurred while \output is active []
 
  [83] [84]
-<./figures/ch-3/cost-funciton.pdf, id=1742, 578.16pt x 722.7pt>
+<./figures/ch-3/cost-funciton.pdf, id=1696, 578.16pt x 722.7pt>
 File: ./figures/ch-3/cost-funciton.pdf Graphic file (type pdf)
 <use ./figures/ch-3/cost-funciton.pdf>
-Package pdftex.def Info: ./figures/ch-3/cost-funciton.pdf  used on input line 186.
+Package pdftex.def Info: ./figures/ch-3/cost-funciton.pdf  used on input line 184.
 (pdftex.def)             Requested size: 330.05322pt x 412.56082pt.
- (./tables/ch-3/cost-function-summary.tex)
+ (./tables/ch-3/cost-function-summary.tex
+Overfull \hbox (8.48027pt too wide) in paragraph at lines 5--22
+ [][] 
+ []
+
+)
+Underfull \vbox (badness 1502) has occurred while \output is active []
+
+ [85] [86 <./figures/ch-3/cost-funciton.pdf>]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [85] [86 <./figures/ch-3/cost-funciton.pdf>] [87]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [88]) [89] [90
+ [87] [88]) [89] [90
 
 
 
@@ -1050,23 +1071,20 @@ Underfull \vbox (badness 2653) has occurred while \output is active []
  [95
 
 
-] [96]
+] [96] [97]
 Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [97]
-Underfull \vbox (badness 1394) has occurred while \output is active []
 
  [98]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [99] [100]
-<./figures/ch-4/SimData.pdf, id=1912, 578.16pt x 433.62pt>
+<./figures/ch-4/SimData.pdf, id=1872, 578.16pt x 433.62pt>
 File: ./figures/ch-4/SimData.pdf Graphic file (type pdf)
 <use ./figures/ch-4/SimData.pdf>
 Package pdftex.def Info: ./figures/ch-4/SimData.pdf  used on input line 71.
 (pdftex.def)             Requested size: 391.93544pt x 293.95123pt.
  [101] [102 <./figures/ch-4/SimData.pdf>]
-<./figures/ch-4/PPCs.pdf, id=1942, 722.7pt x 289.08pt>
+<./figures/ch-4/PPCs.pdf, id=1902, 722.7pt x 289.08pt>
 File: ./figures/ch-4/PPCs.pdf Graphic file (type pdf)
 <use ./figures/ch-4/PPCs.pdf>
 Package pdftex.def Info: ./figures/ch-4/PPCs.pdf  used on input line 84.
@@ -1076,32 +1094,23 @@ Overfull \hbox (82.51172pt too wide) in paragraph at lines 84--85
  [][] 
  []
 
-
+[103 <./figures/ch-4/PPCs.pdf>]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [103] [104 <./figures/ch-4/PPCs.pdf>]
+ [104]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [105]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [106]
-Underfull \vbox (badness 10000) has occurred while \output is active []
+ [105] [106]
+Underfull \vbox (badness 1609) has occurred while \output is active []
 
  [107]
-<./figures/ch-4/SimData_big_small.pdf, id=2018, 578.16pt x 433.62pt>
+<./figures/ch-4/SimData_big_small.pdf, id=1978, 578.16pt x 433.62pt>
 File: ./figures/ch-4/SimData_big_small.pdf Graphic file (type pdf)
 <use ./figures/ch-4/SimData_big_small.pdf>
 Package pdftex.def Info: ./figures/ch-4/SimData_big_small.pdf  used on input line 128.
 (pdftex.def)             Requested size: 391.93544pt x 293.95123pt.
- (./tables/ch-4/big_df.tex) (./tables/ch-4/small_df.tex)
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [108 <./figures/ch-4/SimData_big_small.pdf>] [109]
-Underfull \vbox (badness 2318) has occurred while \output is active []
-
- [110]
-<./figures/ch-4/nuts_energy.pdf, id=2047, 722.7pt x 433.62pt>
+ (./tables/ch-4/big_df.tex) (./tables/ch-4/small_df.tex) [108 <./figures/ch-4/SimData_big_small.pdf>] [109] [110]
+<./figures/ch-4/nuts_energy.pdf, id=2010, 722.7pt x 433.62pt>
 File: ./figures/ch-4/nuts_energy.pdf Graphic file (type pdf)
 <use ./figures/ch-4/nuts_energy.pdf>
 Package pdftex.def Info: ./figures/ch-4/nuts_energy.pdf  used on input line 145.
@@ -1110,66 +1119,73 @@ Package pdftex.def Info: ./figures/ch-4/nuts_energy.pdf  used on input line 145.
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [111 <./figures/ch-4/nuts_energy.pdf>]
-<./figures/ch-4/marginal-posterior_a.pdf, id=2065, 722.7pt x 433.62pt>
+<./figures/ch-4/marginal-posterior_a.pdf, id=2026, 722.7pt x 433.62pt>
 File: ./figures/ch-4/marginal-posterior_a.pdf Graphic file (type pdf)
 <use ./figures/ch-4/marginal-posterior_a.pdf>
 Package pdftex.def Info: ./figures/ch-4/marginal-posterior_a.pdf  used on input line 159.
 (pdftex.def)             Requested size: 391.93544pt x 235.16364pt.
  [112]
-<./figures/ch-4/ppd_z_a.pdf, id=2078, 722.7pt x 578.16pt>
+<./figures/ch-4/ppd_z_a.pdf, id=2039, 722.7pt x 578.16pt>
 File: ./figures/ch-4/ppd_z_a.pdf Graphic file (type pdf)
 <use ./figures/ch-4/ppd_z_a.pdf>
 Package pdftex.def Info: ./figures/ch-4/ppd_z_a.pdf  used on input line 169.
 (pdftex.def)             Requested size: 391.93544pt x 313.55151pt.
  [113 <./figures/ch-4/marginal-posterior_a.pdf>] [114 <./figures/ch-4/ppd_z_a.pdf>]
-<./figures/ch-4/Small-data-pairs.pdf, id=2110, 578.16pt x 578.16pt>
+<./figures/ch-4/Small-data-pairs.pdf, id=2071, 578.16pt x 578.16pt>
 File: ./figures/ch-4/Small-data-pairs.pdf Graphic file (type pdf)
 <use ./figures/ch-4/Small-data-pairs.pdf>
 Package pdftex.def Info: ./figures/ch-4/Small-data-pairs.pdf  used on input line 179.
 (pdftex.def)             Requested size: 391.93544pt x 391.93498pt.
-<./figures/ch-4/parcoord.pdf, id=2113, 578.16pt x 361.35pt>
+<./figures/ch-4/parcoord.pdf, id=2074, 578.16pt x 361.35pt>
 File: ./figures/ch-4/parcoord.pdf Graphic file (type pdf)
 <use ./figures/ch-4/parcoord.pdf>
 Package pdftex.def Info: ./figures/ch-4/parcoord.pdf  used on input line 189.
 (pdftex.def)             Requested size: 330.05322pt x 206.28041pt.
-<./figures/ch-4/zppd-divergencies.pdf, id=2114, 578.16pt x 505.89pt>
+<./figures/ch-4/zppd-divergencies.pdf, id=2075, 578.16pt x 505.89pt>
 File: ./figures/ch-4/zppd-divergencies.pdf Graphic file (type pdf)
 <use ./figures/ch-4/zppd-divergencies.pdf>
 Package pdftex.def Info: ./figures/ch-4/zppd-divergencies.pdf  used on input line 196.
 (pdftex.def)             Requested size: 330.05322pt x 288.79256pt.
  [115] [116 <./figures/ch-4/Small-data-pairs.pdf>] [117 <./figures/ch-4/parcoord.pdf> <./figures/ch-4/zppd-divergencies.pdf>]
-<./figures/ch-4/joint-sig-jump.pdf, id=2158, 578.16pt x 433.62pt>
+<./figures/ch-4/joint-sig-jump.pdf, id=2125, 578.16pt x 433.62pt>
 File: ./figures/ch-4/joint-sig-jump.pdf Graphic file (type pdf)
 <use ./figures/ch-4/joint-sig-jump.pdf>
 Package pdftex.def Info: ./figures/ch-4/joint-sig-jump.pdf  used on input line 206.
 (pdftex.def)             Requested size: 391.93544pt x 293.95123pt.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
  [118 <./figures/ch-4/joint-sig-jump.pdf>]
-<./figures/ch-4/strong-prior-nuts-energy.pdf, id=2175, 433.62pt x 361.35pt>
+<./figures/ch-4/strong-prior-nuts-energy.pdf, id=2142, 433.62pt x 361.35pt>
 File: ./figures/ch-4/strong-prior-nuts-energy.pdf Graphic file (type pdf)
 <use ./figures/ch-4/strong-prior-nuts-energy.pdf>
 Package pdftex.def Info: ./figures/ch-4/strong-prior-nuts-energy.pdf  used on input line 225.
 (pdftex.def)             Requested size: 330.05322pt x 275.05893pt.
-<./figures/ch-4/strong-prior-pairs.pdf, id=2179, 433.62pt x 361.35pt>
+ [119]
+<./figures/ch-4/strong-prior-pairs.pdf, id=2153, 433.62pt x 361.35pt>
 File: ./figures/ch-4/strong-prior-pairs.pdf Graphic file (type pdf)
 <use ./figures/ch-4/strong-prior-pairs.pdf>
 Package pdftex.def Info: ./figures/ch-4/strong-prior-pairs.pdf  used on input line 234.
 (pdftex.def)             Requested size: 330.05322pt x 275.05893pt.
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [119] [120 <./figures/ch-4/strong-prior-nuts-energy.pdf> <./figures/ch-4/strong-prior-pairs.pdf>]
-<./figures/ch-4/marginal-post-extra-info.pdf, id=2211, 578.16pt x 433.62pt>
+ [120 <./figures/ch-4/strong-prior-nuts-energy.pdf>]
+<./figures/ch-4/marginal-post-extra-info.pdf, id=2169, 578.16pt x 433.62pt>
 File: ./figures/ch-4/marginal-post-extra-info.pdf Graphic file (type pdf)
 <use ./figures/ch-4/marginal-post-extra-info.pdf>
 Package pdftex.def Info: ./figures/ch-4/marginal-post-extra-info.pdf  used on input line 254.
 (pdftex.def)             Requested size: 330.05322pt x 247.53648pt.
- [121] [122 <./figures/ch-4/marginal-post-extra-info.pdf>]
+
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [123])
+ [121 <./figures/ch-4/strong-prior-pairs.pdf>]
+Underfull \vbox (badness 1533) has occurred while \output is active []
+
+ [122 <./figures/ch-4/marginal-post-extra-info.pdf>]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [124] [125]
+ [123]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [124]) [125]
 \openout2 = `chapters/chapter5.aux'.
 
  (./chapters/chapter5.tex [126
@@ -1186,7 +1202,7 @@ Underfull \vbox (badness 3780) has occurred while \output is active []
 Underfull \vbox (badness 3375) has occurred while \output is active []
 
  [128]
-<./figures/ch-5/noisy-crack-growth-data.pdf, id=2309, 578.16pt x 433.62pt>
+<./figures/ch-5/noisy-crack-growth-data.pdf, id=2277, 578.16pt x 433.62pt>
 File: ./figures/ch-5/noisy-crack-growth-data.pdf Graphic file (type pdf)
 <use ./figures/ch-5/noisy-crack-growth-data.pdf>
 Package pdftex.def Info: ./figures/ch-5/noisy-crack-growth-data.pdf  used on input line 13.
@@ -1201,7 +1217,7 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [132]
-<./figures/ch-5/PPC_multi_unit.pdf, id=2359, 578.16pt x 578.16pt>
+<./figures/ch-5/PPC_multi_unit.pdf, id=2327, 578.16pt x 578.16pt>
 File: ./figures/ch-5/PPC_multi_unit.pdf Graphic file (type pdf)
 <use ./figures/ch-5/PPC_multi_unit.pdf>
 Package pdftex.def Info: ./figures/ch-5/PPC_multi_unit.pdf  used on input line 45.
@@ -1210,105 +1226,29 @@ Package pdftex.def Info: ./figures/ch-5/PPC_multi_unit.pdf  used on input line 4
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [133 <./figures/ch-5/PPC_multi_unit.pdf>]
-
-Package hyperref Warning: Difference (2) between bookmark levels is greater 
-(hyperref)                than one, level fixed on input line 60.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 60.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\mu' on input line 60.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 60.
-
-
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [134]
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 71.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\nu' on input line 71.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 71.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 82.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\mu' on input line 82.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 82.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 82.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\nu' on input line 82.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 82.
-
-[135]
+ [134] [135]
 Overfull \hbox (1.93282pt too wide) in paragraph at lines 97--97
 []\OT1/cmr/bx/n/17.28 Computation, pos-te-ri-ors, and pre-dic-tive dis-
  []
 
-[136] (./tables/ch-5/n_divergent.tex)
-
-Package hyperref Warning: Difference (3) between bookmark levels is greater 
-(hyperref)                than one, level fixed on input line 103.
-
-[137] (./tables/ch-5/stan_fit_cp_table.tex
+[136] (./tables/ch-5/n_divergent.tex) [137] (./tables/ch-5/stan_fit_cp_table.tex
 
 LaTeX Font Warning: Command \small invalid in math mode on input line 7.
 
 )
-<./figures/ch-5/plot-cp-filtered.pdf, id=2414, 578.16pt x 433.62pt>
+<./figures/ch-5/plot-cp-filtered.pdf, id=2382, 578.16pt x 433.62pt>
 File: ./figures/ch-5/plot-cp-filtered.pdf Graphic file (type pdf)
 <use ./figures/ch-5/plot-cp-filtered.pdf>
 Package pdftex.def Info: ./figures/ch-5/plot-cp-filtered.pdf  used on input line 109.
 (pdftex.def)             Requested size: 330.05322pt x 247.53648pt.
-
-
-Package hyperref Warning: Difference (2) between bookmark levels is greater 
-(hyperref)                than one, level fixed on input line 114.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 114.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\mu' on input line 114.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 114.
-
-[138 <./figures/ch-5/plot-cp-filtered.pdf>] (./tables/ch-5/stan_fit_pp_mu_table.tex
+ [138 <./figures/ch-5/plot-cp-filtered.pdf>] (./tables/ch-5/stan_fit_pp_mu_table.tex
 
 LaTeX Font Warning: Command \small invalid in math mode on input line 7.
 
 )
-<./figures/ch-5/plot-pp-mu-marg-post-1.pdf, id=2435, 433.62pt x 433.62pt>
+<./figures/ch-5/plot-pp-mu-marg-post-1.pdf, id=2403, 433.62pt x 433.62pt>
 File: ./figures/ch-5/plot-pp-mu-marg-post-1.pdf Graphic file (type pdf)
 <use ./figures/ch-5/plot-pp-mu-marg-post-1.pdf>
 Package pdftex.def Info: ./figures/ch-5/plot-pp-mu-marg-post-1.pdf  used on input line 122.
@@ -1317,75 +1257,37 @@ Package pdftex.def Info: ./figures/ch-5/plot-pp-mu-marg-post-1.pdf  used on inpu
 Underfull \vbox (badness 2884) has occurred while \output is active []
 
  [139] [140 <./figures/ch-5/plot-pp-mu-marg-post-1.pdf>]
-<./figures/ch-5/plot-pp-mu-pairs.pdf, id=2453, 433.62pt x 433.62pt>
+<./figures/ch-5/plot-pp-mu-pairs.pdf, id=2421, 433.62pt x 433.62pt>
 File: ./figures/ch-5/plot-pp-mu-pairs.pdf Graphic file (type pdf)
 <use ./figures/ch-5/plot-pp-mu-pairs.pdf>
 Package pdftex.def Info: ./figures/ch-5/plot-pp-mu-pairs.pdf  used on input line 131.
 (pdftex.def)             Requested size: 391.93544pt x 391.95483pt.
-<./figures/ch-5/plot-pp-mu-parcoord.pdf, id=2454, 433.62pt x 289.08pt>
+<./figures/ch-5/plot-pp-mu-parcoord.pdf, id=2422, 433.62pt x 289.08pt>
 File: ./figures/ch-5/plot-pp-mu-parcoord.pdf Graphic file (type pdf)
 <use ./figures/ch-5/plot-pp-mu-parcoord.pdf>
 Package pdftex.def Info: ./figures/ch-5/plot-pp-mu-parcoord.pdf  used on input line 138.
 (pdftex.def)             Requested size: 391.93544pt x 261.3032pt.
-<./figures/ch-5/plot-pp-mu-filtered.pdf, id=2456, 578.16pt x 433.62pt>
+<./figures/ch-5/plot-pp-mu-filtered.pdf, id=2424, 578.16pt x 433.62pt>
 File: ./figures/ch-5/plot-pp-mu-filtered.pdf Graphic file (type pdf)
 <use ./figures/ch-5/plot-pp-mu-filtered.pdf>
 Package pdftex.def Info: ./figures/ch-5/plot-pp-mu-filtered.pdf  used on input line 147.
 (pdftex.def)             Requested size: 330.05322pt x 247.53648pt.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 152.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\nu' on input line 152.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 152.
-
-(./tables/ch-5/stan_fit_pp_nu_table.tex
+ (./tables/ch-5/stan_fit_pp_nu_table.tex
 
 LaTeX Font Warning: Command \small invalid in math mode on input line 7.
 
 [141] [142 <./figures/ch-5/plot-pp-mu-pairs.pdf>] [143 <./figures/ch-5/plot-pp-mu-parcoord.pdf> <./figures/ch-5/plot-pp-mu-filtered.pdf>])
-<./figures/ch-5/plot-pp-nu-parcoord.pdf, id=2504, 433.62pt x 289.08pt>
+<./figures/ch-5/plot-pp-nu-parcoord.pdf, id=2472, 433.62pt x 289.08pt>
 File: ./figures/ch-5/plot-pp-nu-parcoord.pdf Graphic file (type pdf)
 <use ./figures/ch-5/plot-pp-nu-parcoord.pdf>
 Package pdftex.def Info: ./figures/ch-5/plot-pp-nu-parcoord.pdf  used on input line 160.
 (pdftex.def)             Requested size: 391.93544pt x 261.3032pt.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 165.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\mu' on input line 165.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 165.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 165.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\nu' on input line 165.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 165.
-
-[144] (./tables/ch-5/stan_fit_pp_both_table.tex
+ [144] (./tables/ch-5/stan_fit_pp_both_table.tex
 
 LaTeX Font Warning: Command \small invalid in math mode on input line 7.
 
 ) [145 <./figures/ch-5/plot-pp-nu-parcoord.pdf>]
-<./figures/ch-5/post_pc.pdf, id=2532, 722.7pt x 722.7pt>
+<./figures/ch-5/post_pc.pdf, id=2500, 722.7pt x 722.7pt>
 File: ./figures/ch-5/post_pc.pdf Graphic file (type pdf)
 <use ./figures/ch-5/post_pc.pdf>
 Package pdftex.def Info: ./figures/ch-5/post_pc.pdf  used on input line 173.
@@ -1400,12 +1302,7 @@ LaTeX Warning: Reference `subsec:fitunitsmean' on page 148 undefined on input li
 
 LaTeX Warning: Reference `subsec:fitunitsmean' on page 148 undefined on input line 3.
 
-)
-
-Package hyperref Warning: Difference (2) between bookmark levels is greater 
-(hyperref)                than one, level fixed on input line 189.
-
-[148] [149]
+) [148] [149]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [150] [151]
@@ -1413,7 +1310,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 228--229
 []\OT1/cmr/m/n/12 Given that $\OML/cmm/m/it/12 Z[]\OMS/cmsy/m/n/12 j\OML/cmm/m/it/12 ^^V; ^^W \OMS/cmsy/m/n/12 ^^X
  []
 
-<./figures/ch-5/FT_dist.pdf, id=2590, 578.16pt x 289.08pt>
+<./figures/ch-5/FT_dist.pdf, id=2558, 578.16pt x 289.08pt>
 File: ./figures/ch-5/FT_dist.pdf Graphic file (type pdf)
 <use ./figures/ch-5/FT_dist.pdf>
 Package pdftex.def Info: ./figures/ch-5/FT_dist.pdf  used on input line 250.
@@ -1422,7 +1319,7 @@ Package pdftex.def Info: ./figures/ch-5/FT_dist.pdf  used on input line 250.
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 [152]
-<./figures/ch-5/FT_dist_Unit3.pdf, id=2611, 578.16pt x 289.08pt>
+<./figures/ch-5/FT_dist_Unit3.pdf, id=2579, 578.16pt x 289.08pt>
 File: ./figures/ch-5/FT_dist_Unit3.pdf Graphic file (type pdf)
 <use ./figures/ch-5/FT_dist_Unit3.pdf>
 Package pdftex.def Info: ./figures/ch-5/FT_dist_Unit3.pdf  used on input line 259.
@@ -1448,7 +1345,7 @@ Underfull \vbox (badness 5203) has occurred while \output is active []
 
 
 ]
-<figures/ch-6/main_belt.pdf, id=2658, 722.7pt x 578.16pt>
+<figures/ch-6/main_belt.pdf, id=2626, 722.7pt x 578.16pt>
 File: figures/ch-6/main_belt.pdf Graphic file (type pdf)
 <use figures/ch-6/main_belt.pdf>
 Package pdftex.def Info: figures/ch-6/main_belt.pdf  used on input line 9.
@@ -1457,7 +1354,7 @@ Package pdftex.def Info: figures/ch-6/main_belt.pdf  used on input line 9.
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [158] [159 <./figures/ch-6/main_belt.pdf>]
-<figures/ch-6/current_approach.pdf, id=2682, 578.16pt x 578.16pt>
+<figures/ch-6/current_approach.pdf, id=2650, 578.16pt x 578.16pt>
 File: figures/ch-6/current_approach.pdf Graphic file (type pdf)
 <use figures/ch-6/current_approach.pdf>
 Package pdftex.def Info: figures/ch-6/current_approach.pdf  used on input line 18.
@@ -1466,15 +1363,10 @@ Package pdftex.def Info: figures/ch-6/current_approach.pdf  used on input line 1
 Underfull \vbox (badness 2020) has occurred while \output is active []
 
  [160 <./figures/ch-6/current_approach.pdf>] [161]
-
-Package hyperref Warning: Difference (3) between bookmark levels is greater 
-(hyperref)                than one, level fixed on input line 41.
-
-
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [162]
-<figures/ch-6/b-spline-fitting.pdf, id=2734, 722.7pt x 469.755pt>
+<figures/ch-6/b-spline-fitting.pdf, id=2702, 722.7pt x 469.755pt>
 File: figures/ch-6/b-spline-fitting.pdf Graphic file (type pdf)
 <use figures/ch-6/b-spline-fitting.pdf>
 Package pdftex.def Info: figures/ch-6/b-spline-fitting.pdf  used on input line 50.
@@ -1482,10 +1374,6 @@ Package pdftex.def Info: figures/ch-6/b-spline-fitting.pdf  used on input line 5
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-Package hyperref Warning: Difference (2) between bookmark levels is greater 
-(hyperref)                than one, level fixed on input line 56.
 
 [163]
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -1497,12 +1385,12 @@ Underfull \vbox (badness 4621) has occurred while \output is active []
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [167]
-<figures/ch-6/historic_belts.pdf, id=2790, 578.16pt x 216.81pt>
+<figures/ch-6/historic_belts.pdf, id=2758, 578.16pt x 216.81pt>
 File: figures/ch-6/historic_belts.pdf Graphic file (type pdf)
 <use figures/ch-6/historic_belts.pdf>
 Package pdftex.def Info: figures/ch-6/historic_belts.pdf  used on input line 101.
 (pdftex.def)             Requested size: 412.56496pt x 154.7103pt.
-<figures/ch-6/informative-prior-mu.pdf, id=2793, 867.24pt x 216.81pt>
+<figures/ch-6/informative-prior-mu.pdf, id=2761, 867.24pt x 216.81pt>
 File: figures/ch-6/informative-prior-mu.pdf Graphic file (type pdf)
 <use figures/ch-6/informative-prior-mu.pdf>
 Package pdftex.def Info: figures/ch-6/informative-prior-mu.pdf  used on input line 110.
@@ -1511,17 +1399,13 @@ Package pdftex.def Info: figures/ch-6/informative-prior-mu.pdf  used on input li
 Underfull \vbox (badness 1147) has occurred while \output is active []
 
  [168 <./figures/ch-6/historic_belts.pdf>]
-<figures/ch-6/prior-pc.pdf, id=2812, 578.16pt x 578.16pt>
+<figures/ch-6/prior-pc.pdf, id=2780, 578.16pt x 578.16pt>
 File: figures/ch-6/prior-pc.pdf Graphic file (type pdf)
 <use figures/ch-6/prior-pc.pdf>
 Package pdftex.def Info: figures/ch-6/prior-pc.pdf  used on input line 121.
 (pdftex.def)             Requested size: 412.56496pt x 412.56082pt.
  [169 <./figures/ch-6/informative-prior-mu.pdf>] [170 <./figures/ch-6/prior-pc.pdf>] [171]
-
-Package hyperref Warning: Difference (3) between bookmark levels is greater 
-(hyperref)                than one, level fixed on input line 135.
-
-<figures/ch-6/marginal_post_gp.pdf, id=2849, 578.16pt x 361.35pt>
+<figures/ch-6/marginal_post_gp.pdf, id=2817, 578.16pt x 361.35pt>
 File: figures/ch-6/marginal_post_gp.pdf Graphic file (type pdf)
 <use figures/ch-6/marginal_post_gp.pdf>
 Package pdftex.def Info: figures/ch-6/marginal_post_gp.pdf  used on input line 139.
@@ -1530,7 +1414,7 @@ Package pdftex.def Info: figures/ch-6/marginal_post_gp.pdf  used on input line 1
 Underfull \vbox (badness 1014) has occurred while \output is active []
 
  [172 <./figures/ch-6/marginal_post_gp.pdf>]
-<figures/ch-6/marginal_post_lm.pdf, id=2868, 578.16pt x 361.35pt>
+<figures/ch-6/marginal_post_lm.pdf, id=2836, 578.16pt x 361.35pt>
 File: figures/ch-6/marginal_post_lm.pdf Graphic file (type pdf)
 <use figures/ch-6/marginal_post_lm.pdf>
 Package pdftex.def Info: figures/ch-6/marginal_post_lm.pdf  used on input line 150.
@@ -1539,15 +1423,10 @@ Package pdftex.def Info: figures/ch-6/marginal_post_lm.pdf  used on input line 1
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [173]
-
-Package hyperref Warning: Difference (2) between bookmark levels is greater 
-(hyperref)                than one, level fixed on input line 158.
-
-
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [174 <./figures/ch-6/marginal_post_lm.pdf>]
-<figures/ch-6/post_y_belt_wear.pdf, id=2900, 578.16pt x 433.62pt>
+<figures/ch-6/post_y_belt_wear.pdf, id=2868, 578.16pt x 433.62pt>
 File: figures/ch-6/post_y_belt_wear.pdf Graphic file (type pdf)
 <use figures/ch-6/post_y_belt_wear.pdf>
 Package pdftex.def Info: figures/ch-6/post_y_belt_wear.pdf  used on input line 164.
@@ -1559,7 +1438,7 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [176 <./figures/ch-6/post_y_belt_wear.pdf>]
-<figures/ch-6/post_pred_belt_wear.pdf, id=2930, 578.16pt x 650.43pt>
+<figures/ch-6/post_pred_belt_wear.pdf, id=2898, 578.16pt x 650.43pt>
 File: figures/ch-6/post_pred_belt_wear.pdf Graphic file (type pdf)
 <use figures/ch-6/post_pred_belt_wear.pdf>
 Package pdftex.def Info: figures/ch-6/post_pred_belt_wear.pdf  used on input line 189.
@@ -1568,7 +1447,7 @@ Package pdftex.def Info: figures/ch-6/post_pred_belt_wear.pdf  used on input lin
 Underfull \vbox (badness 1502) has occurred while \output is active []
 
  [177] [178 <./figures/ch-6/post_pred_belt_wear.pdf>]
-<figures/ch-6/belt_wear_forecasts.pdf, id=2950, 578.16pt x 289.08pt>
+<figures/ch-6/belt_wear_forecasts.pdf, id=2918, 578.16pt x 289.08pt>
 File: figures/ch-6/belt_wear_forecasts.pdf Graphic file (type pdf)
 <use figures/ch-6/belt_wear_forecasts.pdf>
 Package pdftex.def Info: figures/ch-6/belt_wear_forecasts.pdf  used on input line 200.
@@ -1580,7 +1459,7 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [182]
-<figures/ch-6/test.png, id=2998, 1084.05pt x 1300.86pt>
+<figures/ch-6/test.png, id=2966, 1084.05pt x 1300.86pt>
 File: figures/ch-6/test.png Graphic file (type png)
 <use figures/ch-6/test.png>
 Package pdftex.def Info: figures/ch-6/test.png  used on input line 239.
@@ -1589,7 +1468,7 @@ Package pdftex.def Info: figures/ch-6/test.png  used on input line 239.
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [183] [184 <./figures/ch-6/test.png>] [185] [186]
-<figures/ch-6/belt_wear_failuretime_CDF_gp.pdf, id=3043, 578.16pt x 289.08pt>
+<figures/ch-6/belt_wear_failuretime_CDF_gp.pdf, id=3011, 578.16pt x 289.08pt>
 File: figures/ch-6/belt_wear_failuretime_CDF_gp.pdf Graphic file (type pdf)
 <use figures/ch-6/belt_wear_failuretime_CDF_gp.pdf>
 Package pdftex.def Info: figures/ch-6/belt_wear_failuretime_CDF_gp.pdf  used on input line 279.
@@ -1598,7 +1477,7 @@ Package pdftex.def Info: figures/ch-6/belt_wear_failuretime_CDF_gp.pdf  used on 
 Underfull \vbox (badness 1661) has occurred while \output is active []
 
  [187 <./figures/ch-6/belt_wear_failuretime_CDF_gp.pdf>]
-<figures/ch-6/belt_wear_failuretime_CDF_lm.pdf, id=3054, 578.16pt x 289.08pt>
+<figures/ch-6/belt_wear_failuretime_CDF_lm.pdf, id=3022, 578.16pt x 289.08pt>
 File: figures/ch-6/belt_wear_failuretime_CDF_lm.pdf Graphic file (type pdf)
 <use figures/ch-6/belt_wear_failuretime_CDF_lm.pdf>
 Package pdftex.def Info: figures/ch-6/belt_wear_failuretime_CDF_lm.pdf  used on input line 288.
@@ -1628,7 +1507,25 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
  [195]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [196] [197] [198] [199]) [200] (./thesis.bbl
+ [196] [197] [198] [199]) [200] [201
+
+
+
+
+
+] [202]
+\openout2 = `chapters/appendixA.aux'.
+
+ (./chapters/appendixA.tex
+Appendix A.
+) [203
+
+
+] [204
+
+
+
+] (./thesis.bbl
 Underfull \hbox (badness 10000) in paragraph at lines 179--193
 \OT1/cmtt/m/n/12 betanalpha [] .github [] .io / assets / case [] []studies / identifiability [] .html$[][]
  []
@@ -1636,10 +1533,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 179--193
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [201
-
-
-
+ [205
 
 ]
 Underfull \hbox (badness 6792) in paragraph at lines 303--315
@@ -1654,16 +1548,16 @@ Underfull \hbox (badness 10000) in paragraph at lines 303--315
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [202]
+ [206]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [203]
+ [207]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [204]
+ [208]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [205]
+ [209]
 Underfull \hbox (badness 1430) in paragraph at lines 1344--1360
 []\OT1/cmr/m/n/12 Kowal, D. R.  (2017).  \OT1/cmr/m/it/12 Bayesian meth-ods for func-tional and time se-
  []
@@ -1681,35 +1575,39 @@ Underfull \hbox (badness 10000) in paragraph at lines 1344--1360
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [206]
+ [210]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [207]
+ [211]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [208]
+ [212]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [209]) [210] [211] (./thesis.aux (./chapters/acknowledgements.aux) (./chapters/abstract.aux) (./chapters/chapter1.aux) (./chapters/chapter2.aux) (./chapters/chapter3.aux) (./chapters/chapter4.aux) (./chapters/chapter5.aux) (./chapters/chapter6.aux) (./chapters/chapter7.aux))
+ [213]) [214]
+
+Package natbib Warning: There were undefined citations.
+
+[215] (./thesis.aux (./chapters/publications.aux) (./chapters/contributors.aux) (./chapters/acknowledgements.aux) (./chapters/abstract.aux) (./chapters/chapter1.aux) (./chapters/chapter2.aux) (./chapters/chapter3.aux) (./chapters/chapter4.aux) (./chapters/chapter5.aux) (./chapters/chapter6.aux) (./chapters/chapter7.aux) (./chapters/appendixA.aux))
 
 LaTeX Warning: There were undefined references.
 
 Package rerunfilecheck Info: File `thesis.out' has not changed.
-(rerunfilecheck)             Checksum: D216BEB39F1AF1C3B0057FE6AEE8352D;15678.
+(rerunfilecheck)             Checksum: F40FE5C1703D079DFA936312526E8E0E;9607.
  ) 
 Here is how much of TeX's memory you used:
- 18630 strings out of 477678
- 310537 string characters out of 5833467
- 628317 words of memory out of 5000000
- 36409 multiletter control sequences out of 15000+600000
+ 18702 strings out of 477678
+ 313430 string characters out of 5833467
+ 631958 words of memory out of 5000000
+ 36441 multiletter control sequences out of 15000+600000
  482440 words of font info for 78 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  87i,16n,91p,2638b,737s stack positions out of 10000i,1000n,20000p,200000b,200000s
 {c:/texlive/2022/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc}<c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmti7.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmti8.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt12.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb>
-Output written on thesis.pdf (237 pages, 73539563 bytes).
+Output written on thesis.pdf (247 pages, 73550865 bytes).
 PDF statistics:
- 3472 PDF objects out of 3580 (max. 8388607)
- 3023 compressed objects within 31 object streams
- 572 named destinations out of 1000 (max. 500000)
- 1005 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 3461 PDF objects out of 3580 (max. 8388607)
+ 3002 compressed objects within 31 object streams
+ 591 named destinations out of 1000 (max. 500000)
+ 725 words of extra memory for PDF output out of 10000 (max. 10000000)
 

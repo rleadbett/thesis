@@ -10,6 +10,11 @@ To harness these new aspects of statistical modelling more effectively, the appl
 
 The remainder of this chapter provides a background to the rest of the thesis. First, in Sec.~\ref{sec:decisions}, I provide some context around maintenance decision-making in the mining and mineral processing industry. Then, in Sec.~\ref{sec:reliability}, I give a high-level overview of reliability modelling and how it informs maintenance decisions. Sec.~\ref{sec:Bayesian-methods} outlines Bayesian methods and the key components of the Bayesian model-building workflow, which will be a strong thread throughout the remainder of the thesis. Finally, in Sec.~\ref{sec:thesis-structure}, I lay out the structure of the thesis.
 
+\begin{itemize}
+  \item Attribution statement for this chapter.
+  \item Small section on general notation? $p(.)$ is marginal probability distribution function, $p(.,.)$ is joint and $p(.|.)$ is conditional probability. $\text{Pr}[.]$ is the probability of an event. When a random variable has a standard distribution, I use notation based on the name, e.g. $\theta \sim N(\mu, \sigma^2)$, which is to say $p(\theta) = N(\theta|\mu, \sigma^2)$.
+\end{itemize}
+
 \section{Maintenance decision making}
 \label{sec:decisions}
 
@@ -146,7 +151,7 @@ where the superscript $s$ signifies a particular draw from the posterior obtaine
 
 In a similar fashion, estimates of functions of the parameters and uncertainty intervals for these `utility' functions can be obtained. Two examples of useful utility functions are failure time distributions and cost functions. To calculate the distribution of the function, we calculate the value of the function conditional on the MCMC draws of the parameters
 \begin{equation}
- F_{X} \sim F(x|\theta^s).
+  F(x|\theta^s) \sim F_{X|y}.
 \end{equation}
 
 \paragraph*{Comparing models}
@@ -181,7 +186,7 @@ Although this would be the best measure of predictive accuracy for our Bayesian 
 \end{equation}
 $\left[\theta\right]_{-\left[i\right]}^s$ is the posterior draws for the set of parameters and latent variables conditioned on all the observed data except the withheld observation $y_i$.
 
-In hierarchical models, the definition of a new observation and the likelihood of those observations depends on what aspect of the model's predictive performance we are trying to assess. For example, in a degradation dataset with multiple units and multiple observations per unit, we could obtain new observations for the same units at the same observation times, $\Tilde{y}_{n,i} | z_{n, i}, \sigma$ (although this case is a bit unrealistic), new observations for an observed unit at some time in the future, $\Tilde{y}_{n, I + 1}|\Tilde{z}_{n, I + 1}, \sigma$, or we could observe an entirely new unit, $\Tilde{y}_{n + 1}|\Tilde{z}_{n + 1}, \sigma$, where $\Tilde{y}_{n + 1} = \left[\Tilde{y}_{n + 1, 1}, ..., \Tilde{y}_{n + 1, I}\right]$. In all three cases, the likelihoods of the observations conditional on the draws from the posterior predictive distribution are much the same since, for the most part, we assume in our data models that observations are independent given the underlying degradation parameters. However, the method used for constructing the predictive distributions of the parameters and intermediate quantities will differ depending on the model's hierarchical structure.
+In hierarchical models, the definition of a new observation and the likelihood of those observations depends on what aspect of the model's predictive performance we are trying to assess. For example, in a degradation dataset with multiple units and multiple observations per unit, we could obtain new observations for the same units at the same observation times, $\Tilde{y}_{n,i} | z_{n, i}, \sigma$ (although this case is a bit unrealistic), new observations for an observed unit at some time in the future, $\Tilde{y}_{n, I + 1}|\Tilde{z}_{n, I + 1}, \sigma$, or we could observe an entirely new unit, $\Tilde{y}_{n + 1}|\Tilde{z}_{n + 1}, \sigma$, where $\Tilde{y}_{n + 1} = {\Tilde{y}_{n + 1, 1}, ..., \Tilde{y}_{n + 1, I}}$. In all three cases, the likelihoods of the observations conditional on the draws from the posterior predictive distribution are much the same since, for the most part, we assume in our data models that observations are independent given the underlying degradation parameters. However, the method used for constructing the predictive distributions of the parameters and intermediate quantities will differ depending on the model's hierarchical structure.
 
 Using cross-validation to estimate $\hbox{elppd}$ involves repeatedly re-fitting the model to different subsets of the data, which is computationally inefficient. A much more efficient method is to approximate the $\hbox{elppd}_{\text{\tiny{LOO-CV}}}$ \citep{Vehtari2017}; however, in hierarchical modelling cases where the `left out' portions of the data are nested, and as the size of these nested portions increases, the approximations are less likely to work well \citep{Vehtari2017}. All of the cases in this thesis where $\hbox{elppd}_{\text{\tiny{LOO-CV}}}$ is used to compare models is in the context of such nested data structures. Furthermore, most of the datasets are small. Therefore, I use the full cross-validation scheme and incur the computational overheads.
 

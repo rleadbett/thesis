@@ -1,13 +1,33 @@
 ---
-title: "Main analysis ch3"
+title: "Main analysis of chapter three"
+author: 
+  - name: Ryan Leadbetter
+    affiliation: 
+      - ref: CTMTDS
+affiliations:
+    - id: CTMTDS
+      name: Centre for Transforming Maintenance through Data Science, Curtin University
+date: "`r Sys.Date()`"
+number-sections: true
+bibliography: ../../references.bib
 format:
   html:
     embed-resources: true
-    self-contained-math: true
-editor: source
-cache: false
-warning: false
-message: false
+    toc: true
+    theme: 
+      light: flatly
+      dark: darkly
+editor: visual
+execute: 
+  cache: false
+  message: false 
+  warning: false
+  error: false
+  fig-width: 10
+  fig-height: 10
+css: styles.css
+title-block-banner: "#FFFFFF"
+title-block-banner-color: "#000000"
 ---
 
 ```{r}
@@ -1055,10 +1075,15 @@ E_N_failures_df %>%
     "25\\%" = quantile(C, 0.25),
     "50\\%" = quantile(C, 0.50),
     "75\\%" = quantile(C, 0.75),
-    "95\\%" = quantile(C, 0.95)
+    "95\\%" = quantile(C, 0.95),
+    "$\\text{Pr}[< \\$15000]$" = sum(C < 15000) / n()
   ) %>%
   mutate(
-    across(everything(), ~ round(.x, 0))
+    across(c('Mean':'95\\%'), ~ round(.x, 0)),
+    across(
+      c("$\\text{Pr}[< \\$15000]$"),
+      ~ round(.x, 2)
+    )
   ) %>%
   rename(
     "Interval (weeks)" = weeks
