@@ -53,32 +53,32 @@
 \contentsline {section}{\numberline {5.1}Models for multiple units}{130}{section.5.1}%
 \contentsline {subsection}{\numberline {5.1.1}The complete pooling model}{132}{subsection.5.1.1}%
 \contentsline {subsection}{\numberline {5.1.2}Partial pooling models}{134}{subsection.5.1.2}%
-\contentsline {paragraph}{varying $\mu $ model}{135}{section*.75}%
-\contentsline {paragraph}{varying $\nu $ model}{135}{section*.76}%
-\contentsline {paragraph}{varying $\mu $ and $\nu $ model}{135}{section*.77}%
+\contentsline {paragraph}{varying $\mu $ model}{135}{section*.76}%
+\contentsline {paragraph}{varying $\nu $ model}{135}{section*.77}%
+\contentsline {paragraph}{varying $\mu $ and $\nu $ model}{135}{section*.78}%
 \contentsline {section}{\numberline {5.2}Computation, posteriors, and predictive distributions}{136}{section.5.2}%
-\contentsline {paragraph}{Complete pooling}{137}{section*.79}%
-\contentsline {paragraph}{Varying $\mu $}{138}{section*.82}%
-\contentsline {paragraph}{Varying $\nu $}{141}{section*.88}%
-\contentsline {paragraph}{varying $\mu $ and $\nu $}{144}{section*.91}%
-\contentsline {paragraph}{Posterior predictive checks}{145}{section*.93}%
+\contentsline {paragraph}{Complete pooling}{137}{section*.80}%
+\contentsline {paragraph}{Varying $\mu $}{138}{section*.83}%
+\contentsline {paragraph}{Varying $\nu $}{141}{section*.89}%
+\contentsline {paragraph}{varying $\mu $ and $\nu $}{144}{section*.92}%
+\contentsline {paragraph}{Posterior predictive checks}{145}{section*.94}%
 \contentsline {subsection}{\numberline {5.2.1}Model comparison}{148}{subsection.5.2.1}%
-\contentsline {paragraph}{Leave-one-unit-out cross-validation}{148}{section*.96}%
-\contentsline {paragraph}{Step-ahead cross-validation}{149}{section*.97}%
+\contentsline {paragraph}{Leave-one-unit-out cross-validation}{148}{section*.97}%
+\contentsline {paragraph}{Step-ahead cross-validation}{149}{section*.98}%
 \contentsline {section}{\numberline {5.3}Failure time distributions}{151}{section.5.3}%
 \contentsline {section}{\numberline {5.4}Discussions}{153}{section.5.4}%
 \contentsline {chapter}{\numberline {6}Conveyor belt wear forecasting}{157}{chapter.6}%
 \contentsline {section}{\numberline {6.1}Functional data analysis (the data model)}{162}{section.6.1}%
-\contentsline {paragraph}{B-splines}{163}{section*.103}%
-\contentsline {paragraph}{Functional time series}{163}{section*.105}%
+\contentsline {paragraph}{B-splines}{163}{section*.104}%
+\contentsline {paragraph}{Functional time series}{163}{section*.106}%
 \contentsline {section}{\numberline {6.2}Process models}{165}{section.6.2}%
 \contentsline {subsection}{\numberline {6.2.1}Noisy gamma process}{166}{subsection.6.2.1}%
 \contentsline {subsection}{\numberline {6.2.2}Linear model}{166}{subsection.6.2.2}%
 \contentsline {section}{\numberline {6.3}Parameter model}{167}{section.6.3}%
 \contentsline {section}{\numberline {6.4}Posterior sampling and inference}{171}{section.6.4}%
-\contentsline {paragraph}{Marginal posteriors of parameters}{172}{section*.111}%
-\contentsline {paragraph}{Intermediate quantities}{175}{section*.114}%
-\contentsline {paragraph}{Posterior predictive distributions}{176}{section*.116}%
+\contentsline {paragraph}{Marginal posteriors of parameters}{172}{section*.112}%
+\contentsline {paragraph}{Intermediate quantities}{175}{section*.115}%
+\contentsline {paragraph}{Posterior predictive distributions}{176}{section*.117}%
 \contentsline {section}{\numberline {6.5}Forecasting degradation curves}{179}{section.6.5}%
 \contentsline {section}{\numberline {6.6}Comparison of methods}{180}{section.6.6}%
 \contentsline {section}{\numberline {6.7}Failure time distributions}{185}{section.6.7}%
@@ -87,7 +87,7 @@
 \contentsline {section}{\numberline {7.1}Overview and main discussions}{194}{section.7.1}%
 \contentsline {section}{\numberline {7.2}Future directions}{197}{section.7.2}%
 \contentsline {section}{\numberline {7.3}Implications for industry practitioners}{199}{section.7.3}%
-\contentsline {chapter}{Appendices}{201}{section*.127}%
+\contentsline {chapter}{Appendices}{201}{section*.128}%
 \contentsline {chapter}{\numberline {A}Authorship Agreement}{203}{appendix.a.A}%
 \setcounter {tocdepth}{1}
-\contentsline {chapter}{References}{205}{appendix*.128}%
+\contentsline {chapter}{References}{205}{appendix*.129}%
