@@ -1506,6 +1506,33 @@ Lee, M\BHBI L\BPBI T.%
 
 \bibitem [\protect \citeauthoryear {%
 C.~Lu%
+\ \BBA {} Meeker%
+}{%
+C.~Lu%
+\ \BBA {} Meeker%
+}{%
+{\protect \APACyear {1993}}%
+}]{%
+lu1993}
+\APACinsertmetastar {%
+lu1993}%
+\begin{APACrefauthors}%
+Lu, C.%
+\BCBT {}\ \BBA {} Meeker, W.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{1993}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Using degradation measures to estimate a time-to-failure
+  distribution} {Using degradation measures to estimate a time-to-failure
+  distribution}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Technometrics}{}{}{}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+C.~Lu%
 , Meeker%
 \BCBL {}\ \BBA {} Escobar%
 }{%
@@ -1530,33 +1557,6 @@ Lu, C.%
   failure-time methods for estimating a time-to-failure distribution}.{\BBCQ}
 \newblock
 \APACjournalVolNumPages{Statistica Sinica}{6}{}{}.
-\PrintBackRefs{\CurrentBib}
-
-\bibitem [\protect \citeauthoryear {%
-C\BPBI J.~Lu%
-\ \BBA {} Meeker%
-}{%
-C\BPBI J.~Lu%
-\ \BBA {} Meeker%
-}{%
-{\protect \APACyear {1993}}%
-}]{%
-lu1993}
-\APACinsertmetastar {%
-lu1993}%
-\begin{APACrefauthors}%
-Lu, C\BPBI J.%
-\BCBT {}\ \BBA {} Meeker, W.%
-\end{APACrefauthors}%
-\unskip\
-\newblock
-\APACrefYearMonthDay{1993}{}{}.
-\newblock
-{\BBOQ}\APACrefatitle {Using degradation measures to estimate a time-to-failure
-  distribution} {Using degradation measures to estimate a time-to-failure
-  distribution}.{\BBCQ}
-\newblock
-\APACjournalVolNumPages{Technometrics}{}{}{}.
 \PrintBackRefs{\CurrentBib}
 
 \bibitem [\protect \citeauthoryear {%

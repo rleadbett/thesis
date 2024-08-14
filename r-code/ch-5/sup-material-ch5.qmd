@@ -1,0 +1,2874 @@
+---
+title: "Main analysis of chapter five"
+author: 
+  - name: Ryan Leadbetter
+    affiliation: 
+      - ref: CTMTDS
+affiliations:
+    - id: CTMTDS
+      name: Centre for Transforming Maintenance through Data Science, Curtin University
+date: "`r Sys.Date()`"
+number-sections: true
+bibliography: ../../references.bib
+format:
+  html:
+    embed-resources: true
+    toc: true
+    theme: 
+      light: flatly
+      dark: darkly
+editor: visual
+execute: 
+  cache: true
+  message: false 
+  warning: false
+  error: false
+  fig-width: 10
+  fig-height: 10
+css: ../styles.css
+title-block-banner: "#FFFFFF"
+title-block-banner-color: "#000000"
+---
+
+```{r}
+#| label: init-chunk
+#| code-fold: true
+#| code-summary: "Show setup chunk"
+#| message: false
+#| cache: false
+
+library(readxl)
+library(rstan)
+library(posterior)
+library(dplyr)
+library(tidyverse)
+library(tidyr)
+library(tidybayes)
+library(stringr)
+library(ggplot2)
+library(ggdist)
+library(bayesplot)
+library(cowplot)
+library(RColorBrewer)
+library(kableExtra)
+library(forcats)
+
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+
+theme_set(theme_minimal())
+
+data_path <- file.path(
+  "..",
+  "..",
+  "data"
+)
+figure_path <- file.path(
+  "..",
+  "..",
+  "figures",
+  "ch-5"
+)
+table_path <- file.path(
+  "..",
+  "..",
+  "tables",
+  "ch-5"
+)
+```
+
+```{r}
+#| label: define-functions
+#| code-fold: true
+#| code-summary: "Show function definition chunk"
+
+# Function to retrieve the number of divergent transitions
+GetNDivergencies <- function(stan_fit) {
+  n_divergent <- stan_fit %>%
+    nuts_params() %>%
+    filter(Parameter == "divergent__") %>%
+    pull(Value) %>%
+    sum()
+
+  return(n_divergent)
+}
+
+# Function to plot the marginal distributions
+plotMarginals <- function(stan_fit_obj) {
+    p_mu <- stan_fit_obj %>%
+        mcmc_areas(regex_pars = "mu\\[|mu_mean|mu_sd|^mu$")
+    p_nu <- stan_fit_obj %>%
+        mcmc_areas(regex_pars = "nu\\[|nu_mean|nu_sd|^nu$")
+    p_sigma <- stan_fit_obj %>%
+        mcmc_areas(regex_pars = "sigma")
+
+    p_bottom <- plot_grid(p_mu, p_nu, nrow = 1)
+
+    plot_grid(p_sigma, p_bottom, ncol = 1, rel_heights = c(1, 5))
+}
+
+# Function to plot the posterior predictive paths
+plotReclaimedPaths <- function(stan_fit_obj, data, title) {
+    stan_fit_obj %>%
+    as_draws_rvars() %>%
+    spread_rvars(zplot[i, n]) %>%
+    arrange(i, n) %>%
+    mutate(
+        t = data$cycles, # variable name `cycles` hard-coded
+        true_path = data$value, 
+        unit = factor(data$name),
+        noisy_obs = data$noisy_value 
+    ) %>%
+    mutate(order = str_extract(unit, "\\d+") %>% 
+           as.integer, unit = fct_reorder(unit, order)) %>%
+    ggplot(aes(x = t, dist = zplot, col = unit, group = unit, fill = unit)) +
+    stat_dist_lineribbon(.width = c(0.95), alpha = 0.2) +
+    geom_line(aes(y = true_path)) +
+    geom_point(aes(y = noisy_obs)) +
+    xlim(0, NA) +
+    facet_wrap(vars(unit), nrow = 2) +
+    theme(legend.position = "none") +
+    labs(y = "estimated true degradation", x = "Hundreds of thousands of cycles") +
+    ggtitle(title)
+}
+
+# Function for pgamma capable of handeling rvar objects
+RvarPGamma <- rfun(pgamma)
+
+# Function for failure time
+RvarFailureTimeFunction <- function(t, y_max_obs, t_max_obs, failure_threshold, mu, nu) {
+  if(any(t < t_max_obs)) stop("All values of t must be greater than t_max_obs")
+
+  # Calculate the minimum jump for failure
+  f_delta_y <- failure_threshold - y_max_obs
+
+  # Calculate the probability that delta y > minimum jump given the time step
+  prob_failure <- RvarPGamma(
+    f_delta_y,
+    shape = (t - t_max_obs) / (nu ^ 2),
+    rate = 1 / (mu * (nu ^ 2)),
+    lower.tail = FALSE
+  )
+  return(prob_failure)
+}
+
+# generate posterior predictive simulations
+PlotPriorPredictiveCheck <- function(n, N_units = 10, mu_ppc, nu_ppc) {
+  if(!((nrow(mu_ppc) == n)&(nrow(nu_ppc) == n))){
+    stop("The matrix for each parameter should have n rows.")
+  }
+  if(!((ncol(mu_ppc) == N_units)&(ncol(nu_ppc) == N_units))){
+    stop("The matrix for each parameter should have N_units columns.")
+  }
+
+  N_obs <- 9
+  
+  z_itrs_ppc <- lapply(
+    1:n,
+    function(itr) {
+      z_itr <- lapply(
+        1:N_units,
+        function(j) {
+          jumps <- rgamma(
+            N_obs,
+            shape = (0.1 / nu_ppc[itr, j]^2),
+            rate = (1 / (nu_ppc[itr, j]^2 * mu_ppc[itr, j]))
+          )
+          z <- c(0, cumsum(jumps))
+          return(z)
+        }
+      ) %>%
+        unlist()
+    }
+  ) %>%
+    unlist()
+  
+  df <- data.frame(
+    itr = factor(rep(1:n, each = ((N_obs + 1) * N_units))),
+    unit = factor(rep(rep(1:N_units, each = N_obs + 1), n)),
+    t = rep(seq(0, 0.9  , length.out = (N_obs + 1)), (N_units * n)),
+    z = z_itrs_ppc
+  )
+
+  p <- df %>%
+    ggplot(
+      aes(
+        x = t,
+        y = z,
+        colour = itr,
+        group = interaction(itr, unit),
+        linetype = itr
+      )
+    ) +
+    geom_line() +
+    xlim(0, 1)
+
+  return(p)
+}
+```
+
+# Introduction {#sec-intro}
+
+This document contains the supplementary material for Section 4 (Fitting a noisy gamma process) of the manuscript Leadbetter, R.L, Gonzalez Caceres, G. J. and Phatak, A. (2024) *Fitting noisy gamma processes using RStan* addapted to produce the figures and tables of Chap. 5: *Noisy gamma process with unit-to-unit variability* in the Thesis.
+
+Here, we demonstrate how the basic noisy gamma process model can be expanded to analyse multiple units and how unit-to-unit variability can be included in the model as a random effect (partial pooling). We fit four models;
+ 
+- Complete pooling, which assumes all units arise from the same shared gamma process;
+
+- Partial pooling on $\mu$, which assumes that each unit arises from different gamma processes that have the same coefficient of variation(volatility) and different, but similar, mean degradation rates;
+
+- Partial pooling on $\nu$, which similarly assumes that each unit arises from different gamma processes, but instead, they all have the same mean degradation rate and individual coefficients of variation;
+
+- and Partial pooling on $\mu$ and $\nu$, which assumes that all units arise from different gamma processes whose mean wear rate and coefficient of variation are similar but not the same.
+
+To showcase these four different models, we use the crack growth data published in Rodriguez-Picon et al. [2018], which contains the degradation pathways, each from different units and each consisting of ten degradation observations (crack length) taken at evenly spaced time intervals (expressed in hundreds of thousands of loading cycles); @fig-crack-growth-data (a). In the example, a unit is considered to have failed once its crack length has exceeded $0.4$. We add Gaussian noise to the degradation measurements in the crack growth dataset to simulate measurement error. @fig-crack-growth-data (b) shows the noisy observations as dashed lines and the true underlying degradation pathways as solid lines.
+
+```{r}
+#| label: read-data
+# Read in data
+CrackGrowth <- read.csv(
+  file.path(
+    data_path,
+    "RP2017_crack-growth.csv"
+  )
+)
+CrackGrowth <- rbind(
+  rep(0, ncol(CrackGrowth)),
+  CrackGrowth
+)
+colnames(CrackGrowth) <- c(
+  "cycles",
+  paste("Unit", 1:10, sep = " ")
+)
+```
+
+```{r}
+#| label: fig-crack-growth-data
+#| fig-cap: "The crack growth dataset."
+#| fig-subcap: 
+#|   - "The raw data from Rodriguez-Picon et al. [2018]."
+#|   - "The raw data, shown as solid lines, and noisy data, shown as dashed lines."
+#| layout-ncol: 2
+# Tidy data and then ggplot2; re-order unit names so Unit 1 is not followed by Unit 10; 
+# use cowplot to simplify theme
+CrackGrowth %>% pivot_longer(-cycles) %>% 
+  mutate(order = str_extract(name, "\\d+") %>% 
+           as.integer, name = fct_reorder(name, order)) %>% 
+  ggplot(aes(x = cycles, y = value, col = name)) + geom_line() + 
+  labs(y = "cumulative degradation", x = "Hundreds of thousands of cycles") +
+  labs(color = NULL) +
+  theme_minimal_grid(12)
+
+# Pivot object to tidy data
+# Add noisy data to tidy data frame but not at start
+set.seed(9485873)
+SD <- 0.025
+CrackGrowth <- CrackGrowth %>%
+  pivot_longer(-cycles) %>%
+  mutate(noisy_value = value)
+CrackGrowth <- CrackGrowth %>%
+  mutate(
+    noisy_value = value + 
+      c(rep(0, 10), rnorm(length(value) - 10, mean = 0, sd = SD))
+  )
+
+CrackGrowth$noisy_value[CrackGrowth$noisy_value < 0] <- abs(
+  CrackGrowth$noisy_value[CrackGrowth$noisy_value < 0]
+)
+
+p_noisy_crackgrowth <- CrackGrowth %>% 
+  mutate(order = str_extract(name, "\\d+") %>% 
+           as.integer, name = fct_reorder(name, order)) %>% 
+  ggplot(aes(x = cycles, y = noisy_value, col = name)) + 
+  geom_line(linetype = "dashed") + geom_line(aes(y = value, col = name)) +
+  labs(y = "cumulative degradation", x = "Hundreds of thousands of cycles") +
+  labs(color = NULL) + ylim(0, 0.6) +
+  theme_minimal_grid(12)
+
+p_noisy_crackgrowth
+```
+
+```{r}
+#| label: save-noisy-data-plot
+#| echo: false
+#| output: false
+
+pdf(
+  file.path(figure_path, "noisy-crack-growth-data.pdf"),
+  height = 6,
+  width = 8
+)
+p_noisy_crackgrowth
+dev.off()
+```
+
+In order to use this data to fit degradation models in `Stan`, the data needs to be arranged in a list. `Stan` also uses hard coding, so we need to define the lengths of the different data objects.
+
+```{r}
+#| label: format-data-stan
+# Format data for Stan
+
+noisy_data_mat <- matrix(
+    CrackGrowth$noisy_value,
+    ncol = length(unique(CrackGrowth$name)),
+    nrow = length(unique(CrackGrowth$cycles)),
+    byrow = TRUE
+)
+
+noisy_data_mat <- noisy_data_mat
+
+stan_data <- list(
+    I = nrow(noisy_data_mat),
+    N = ncol(noisy_data_mat),
+    t = unique(CrackGrowth$cycles),
+    y = noisy_data_mat
+)
+```
+
+Next, we fit four different noisy GP models to the crack growth data using `Stan`.
+
+In the proceeding sections, we define each of the models in `Stan` code, sample from the posterior, visualise the marginal posteriors of the parameters and the posterior predictive distributions of the true underlying degradation pathways, and plot the posterior predictive distribution for the failure time of a new unit and for unit three, which is under test but not failed. In the final sections, X and Y, we evaluate and compare each of the four different models' abilities to predict a new unit's degradation and the future degradation of the units currently under test by using cross-fold $elppd$ methods (described in the main body of the paper).
+
+# Complete pooling {#sec-cp}
+
+First, we, define the completely pooled model:
+
+$$
+\begin{align}
+y_{ij}|z_{ij}, \sigma & \sim \mbox{N}(z_{ij}, \sigma) \\
+    \Delta z_{ij}|\mu, \nu & \sim \mbox{Ga} \left( \frac{\Delta t_i}{\nu^2}, \frac{1}{\mu \nu^2} \right) \\
+    \mu & \sim \mbox{N}^{+}(1, 0.2) \\
+    \nu & \sim t_3^{+}(0, 0.5) \\
+    \sigma & \sim \mbox{Unif}(0, 10),
+\end{align}
+$$
+
+where $j$ is the unit and $i$ is the observation. In `Stan` code this is:
+
+```{stan}
+#| label: define-cp-model
+#| output.var: cp_model
+#| cache: true
+#| echo: false
+
+functions {
+  real normal_trunc_rng(real a, real b) {
+    real p_lb = normal_cdf(0, a, b);
+    real u = uniform_rng(p_lb, 1);
+    real y = a + b * inv_Phi(u);
+    return y;
+  }
+}
+
+data{
+  int I;           // number of observations
+  int N;           // number of units
+  vector[I] t;     // the set of observation times
+  matrix[I, N] y;  // the set of noisy measurements
+}
+
+transformed data{
+  vector[I-1] t_diff; // the differences of the observation times
+
+  // t_diff[1] = t[1];
+  t_diff = t[2:I] - t[1:I-1];
+}
+
+parameters{
+  real<lower = 0> sigma;            // sd of measurement error
+  real<lower = 0> mu;               // mean of gp
+  real<lower = 0> nu_a;
+  real<lower = 0> nu_b;
+  matrix<lower = 0>[I-1, N] z_diff;   // the jumps
+}
+
+transformed parameters{
+  real<lower = 0> nu;               // CoV of gp
+  matrix<lower = 0>[I-1, N] z;      // filtered observations
+
+  nu = nu_a / sqrt(nu_b);
+
+// jumps
+  for(n in 1:N){
+    z[,n] = cumulative_sum(z_diff[,n]);
+  }
+}
+
+model{
+
+// priors //
+//// for process model
+//!! Because everything is a real that means that every unit
+//!! has has the same parameters and and so each unit is an
+//!! observation of the same gamma process.
+////
+
+  mu ~ normal(0.5, 0.2);
+  nu_a ~ normal(0, 0.5);
+  nu_b ~ gamma((0.5 * 3), (0.5 * 3));
+  sigma ~ uniform(0, 10);
+
+// process model //
+  for(n in 1:N){
+    z_diff[, n] ~ gamma(t_diff / pow(nu, 2), 1 / (mu * pow(nu, 2)));
+  }
+
+// data model //
+  for (n in 1:N){
+    y[2:I, n] ~ normal(z[, n], sigma);
+  }
+}
+
+generated quantities{
+  matrix[I, N] zplot;
+  matrix[I, N] y_pred;
+  
+  real mu_ppd;
+  real nu_ppd;
+  vector[N] mu_i_ppd;
+  vector[N] nu_i_ppd;
+
+// generate posterior predictive samples
+  for(n in 1:N){
+    y_pred[1, n] = 0;
+    zplot[1, n] = 0;
+    for(i in 2:I){
+      y_pred[i, n] = normal_rng(z[i-1, n], sigma);
+      zplot[i, n] = z[i-1, n];
+    }
+  }
+  
+// parameter PPDs for model comparison
+  mu_ppd = mu;
+  nu_ppd = nu;
+  for(n in 1:N){
+    mu_i_ppd[n] = mu;
+    nu_i_ppd[n] = nu;
+  }
+}
+```
+
+We use the no-U-turn sampler in stan to sample $6000$ draws from the posterior, using six chains, each $2000$ draws long with a burn-in of $1000$. We also set the sampling parameters `adapt_delta` and `max_treedepth` to $0.99$ and $14$ respectively to make sure that we get a detailed picture of the posterior in order to check for any bad behaviour during sampling.
+
+```{r}
+#| label: sampling-cp
+stan_fit_cp <- sampling(
+  cp_model,
+  stan_data,
+  chains = 6, iter = 2000, warmup = 1000,
+  control = list(adapt_delta = 0.99, max_treedepth = 14),
+  refresh = 0
+)
+```
+
+@fig-cp-posterior (a) shows the marginal distributions of the parameters $\mu$, $\nu$, and $\sigma$ and @tbl-marginal-posteriors-cp shows the sampling chain diagnostics from the sampling. The complete pooling model has done a good job of reclaiming the true value of $\sigma$ ($0.025$). There also does not appear to be any degenerate behaviour in the posteriors of the parameters [@fig-cp-posterior (b)].
+
+```{r}
+#| label: tbl-marginal-posteriors-cp
+#| tbl-cap: "The sampler outputs for the complete pooling model."
+
+tbl_draws_cp <- rownames_to_column(
+  as.data.frame(
+    summary(
+      stan_fit_cp,
+      pars = c("sigma", "mu", "nu"),
+      probs = c(0.025, 0.5, 0.975))$summary),
+  var = "Parameter") %>%
+  select(!c(se_mean, sd)) %>%
+  mutate(across(c('mean':'97.5%', Rhat), ~ round(.x, 2))) %>%
+  mutate(n_eff = round(n_eff, 0))
+
+tbl_draws_cp %>%
+  kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+```{r}
+#| label: save-tbl-marginal-posteriors-cp
+#| echo: false
+#| output: false
+
+colnames(tbl_draws_cp) <- c(
+  "Parameter",
+  "Mean",
+  "2.5\\%", "50\\%", "97.5\\%",
+  "$n_{\\small{\\mbox{eff}}}$",
+  "$\\hat{R}$"
+)
+tbl_draws_cp$Parameter <- c(
+  "$\\sigma$", "$\\mu$", "$\\nu$"
+)
+
+tbl_draws_cp %>%
+  kbl(
+    booktabs = T,
+    format = "latex",
+    caption = "Output from fitting a model with complete pooling to the noisy data of Fig.~\\ref{fig:crack-growth-w-noise}. We assume that the data from all units is a manifestation of a single underlying gamma process, and hence the mean and coefficient of variation of the process do not vary from unit-to-unit.",
+    escape = FALSE,
+    label = "cp"
+  ) %>%
+  kable_styling(latex_options = "striped") %>%
+  save_kable(
+    file = file.path(
+      table_path,
+      "stan_fit_cp_table.tex"
+    ),
+    keep_tex = TRUE
+  )
+```
+
+```{r}
+#| label: fig-cp-posterior
+#| fig-cap: "The complete pooling model's posterior."
+#| fig-subcap: 
+#|   - "The marginal posterior distributions of the parameters."
+#|   - "The joint posterior distributions of the parameters."
+#| layout-ncol: 2
+
+# Plot the marginals
+plotMarginals(stan_fit_cp)
+
+# Plot the two-way joint distributions (pairs)
+np_cp <- nuts_params(stan_fit_cp)
+p_pairs_pp_mu <- mcmc_pairs(
+  stan_fit_cp,
+  pars = c("sigma", "mu", "nu"),
+  np = np_cp
+)
+p_pairs_pp_mu
+```
+
+Since we are not working with simulated data, we do not know the true underlying data-generating process for the degradation paths. Therefore, to understand if the model sufficiently describes the data, we must look at the posterior distribution of the underlying(non-noisy) degradation paths. @fig-cp-posterior-paths shows the posterior distribution for the underlying degradation paths as well as the true degradation path of each unit and the noisy degradation measurements.
+
+```{r}
+#| label: fig-cp-posterior-paths
+#| fig-cap: "The posterior distributions of the filtered degradation path for each unit using the complete-pooling model."
+
+plotReclaimedPaths(
+  stan_fit_cp,
+  data = CrackGrowth,
+  "Complete pooling"
+)
+```
+
+```{r}
+#| label: save-fig-cp-posterior-paths
+#| echo: false
+#| output: false
+
+pdf(
+  file.path(figure_path, "plot-cp-filtered.pdf"),
+  height = 6,
+  width = 8
+)
+plotReclaimedPaths(
+  stan_fit_cp,
+  data = CrackGrowth,
+  ""
+)
+dev.off()
+```
+
+In each of the plots in @fig-cp-posterior-paths, the model has done a decent job of reclaiming the true degradation paths of each unit from the noisy data. For the most part, the true paths sit within the $95/%$ credible intervals. Now that we are satisfied that the model has reasonably fit the data, we can derive failure time probabilities and other useful quantities.
+
+To calculate the failure time distribution (with uncertainty intervals) for new units using the posterior of the complete pooling model, we simply use the posterior draws of the parameters $\mu$ and $\nu$ to calulate the probability that a new unit will have exceeded the soft failure threashold of $0.4$ at exposure time $t$.
+
+```{r}
+#| label: fig-ft-cp
+#| fig-cap: "The failure time distribution of new units under the complete pooling model."
+# Extract posterior draws as rvars
+stan_fit_rvar_cp <- as_draws_rvars(stan_fit_cp)
+
+# Create random variable objects for mu and nu
+mu_cp <- stan_fit_rvar_cp$mu
+nu_cp <- stan_fit_rvar_cp$nu
+
+# Create grid of times
+ft <- seq(0, 3, length.out = 100)
+
+# Calculate failure probabilities over grid of times
+ft_dist_cp <- lapply(
+  ft,
+  function(tt) {
+    ft_vect <- RvarFailureTimeFunction(
+      tt,
+      y_max_obs = 0,            # New unit in "new condition".
+      t_max_obs = 0,            # Starts at t = 0.
+      failure_threshold = 0.4,  # Failed when crack length > 0.4
+      mu = mu_cp,
+      nu = nu_cp
+    )
+    ft_cp <- ft_vect %>%
+      draws_of() %>%
+      as.vector() %>%
+      rvar()
+    df <- data.frame(t = tt, density = ft_cp)
+    return(df)
+  }
+)
+ft_dist_cp <- bind_rows(ft_dist_cp)
+
+# Plot as ribbon plot
+ft_dist_cp <- ft_dist_cp %>%
+  ggplot(aes(x = t, dist = density)) +
+  stat_lineribbon(.width = c(.50, .80)) +
+  scale_fill_brewer() +
+  xlim(0, 2) +
+  labs(y = "probability", x = "Hundreds of thousands of cycles")  +
+  theme_minimal_grid(12)
+
+ft_dist_cp
+```
+
+Compared to the FT distribution of the varying $\mu$ model below, this has much less uncertainty. Perhaps that's not surprising because there is one fewer source of uncertainty; nevertheless, it is surprisingly precise.
+
+Similarly, we can calculate the failure time distribution for a unit currently under test. For example, Unit 3 has a true degradation of $0.262$ at $t = 0.9$, so we can generate a failure time distribution for Unit 3 conditioned on its current age and degradation level. Since in the complete pooling case we have assumed that all units share the same parameter values, deriving the failure time distribution for Unit 3 is very similar to the new unit case above, except now we are calculating the probability of the jump in degradation exceeding $0.4 - z_{9,4}$ for times $t > 0.9$.
+
+```{r}
+#| label: fig-ft-unit3-cp
+#| fig-cap: "The failure time distribution of Unit 3 under the complete pooling model."
+
+# Get the current age and degradation level of unit 3
+t_current <- max(stan_data$t)
+post_z_3_I <- stan_fit_rvar_cp$z[9, 3]
+
+# Create grid of times
+ft <- seq(t_current, 3, length.out = 100)
+
+# Calculate failure probabilities over grid of times
+unit3_ft_dist_cp <- lapply(
+  ft,
+  function(tt) {
+    ft_vect <- RvarFailureTimeFunction(
+      tt,
+      y_max_obs = post_z_3_I,   # Current estimated degredation of unit 3.
+      t_max_obs = t_current,    # Current age of unit 3.
+      failure_threshold = 0.4,  # Failed when crack length > 0.4
+      mu = mu_cp,
+      nu = nu_cp
+    )
+    ft_cp <- ft_vect %>%
+      draws_of() %>%
+      as.vector() %>%
+      rvar()
+    df <- data.frame(t = tt, density = ft_cp)
+    return(df)
+  }
+)
+
+unit3_ft_dist_cp <- bind_rows(unit3_ft_dist_cp)
+
+unit3_ft_dist_cp <- unit3_ft_dist_cp %>%
+  ggplot(aes(x = t, dist = density)) +
+  stat_lineribbon(.width = c(.50, .80)) +
+  scale_fill_brewer() +
+  xlim(0, 2) +
+  labs(y = "probability", x = "Hundreds of thousands of cycles")  +
+  theme_minimal_grid(12)
+
+unit3_ft_dist_cp
+```
+
+```{r}
+#| label: post-pred-check-cp
+
+# extract posterior draws
+ppc_post <- as_draws_df(stan_fit_cp) %>%
+  spread_draws(mu, nu)
+
+# sample 3 pairs of mu and nu from the posterior draws
+N_itr <- 3
+N_units <- 10
+sample_rows <- sample(1:nrow(ppc_post), size = N_itr)
+ppc_post <- ppc_post[sample_rows, ]
+
+mu_ppc <- matrix(ppc_post$mu, nrow = N_itr, ncol = N_units)
+nu_ppc <- matrix(ppc_post$nu, nrow = N_itr, ncol = N_units)
+
+# generate posterior predictive simulations
+
+p_ppc_cp <- PlotPriorPredictiveCheck(
+  n = N_itr,
+  N_units = N_units,
+  mu_ppc,
+  nu_ppc
+)
+p_ppc_cp
+```
+
+# Varying $\mu$ {#sec-pp-mu}
+
+In the varying $\mu$ model, we assume the units' degradation paths arise from different underlying gamma processes, each with the same $\nu$ and different but similar $\mu$. To do this, we "pool" information between unit-specific $\mu_j$ by assuming that they arise from a common distribution:
+
+$$
+\begin{align}
+y_{ij}|z_{ij}, \sigma & \sim \mbox{N}(z_{ij}, \sigma) \\
+    \Delta z_{ij}|\mu_j, \nu & \sim \mbox{Ga} \left( \frac{\Delta t_i}{\nu^2}, \frac{1}{\mu_j \nu^2} \right) \\
+    \mu_j & \sim \mbox{N}^{+}(\mu_\mu, \sigma_\mu) \\
+    \mu_\mu & \sim \mbox{N}^{+}(1, 0.2) \\
+    \sigma_\mu & \sim \mbox{Cauchy}^{+}(0, 1) \\
+    \nu & \sim t_3^{+}(0, 0.5) \\
+    \sigma & \sim \mbox{Unif}(0, 10),
+\end{align}
+$$
+
+In `Stan` code this is
+
+```{stan}
+#| label: define-pp-mu-model
+#| output.var: pp_mu_pooling_model
+#| cache: true
+
+functions {
+  real normal_trunc_rng(real a, real b) {
+    real p_lb = normal_cdf(0, a, b);
+    real u = uniform_rng(p_lb, 1);
+    real y = a + b * inv_Phi(u);
+    return y;
+  }
+}
+
+data{
+  int I;           // number of observations
+  int N;           // number of units
+  vector[I] t;     // the set of observation times
+  matrix[I, N] y;  // the set of noisy measurements
+}
+
+transformed data{
+  vector[I-1] t_diff; // the differences of the observation times
+
+  // t_diff[1] = t[1];
+  t_diff = t[2:I] - t[1:I-1];
+}
+
+parameters{
+  real<lower = 0> sigma;            // sd of measurement error
+  real<lower = 0> mu_mean;          // mean hyper parameter of the mu_n
+  real<lower = 0> mu_sd;            // sd hyper parameter of the mu_n
+  vector<lower = ((0 - mu_mean) / mu_sd)>[N] mu_nc;       // the mean of the gamma process
+  real<lower = 0> nu_a;
+  real<lower = 0> nu_b;
+  matrix<lower = 0>[I-1, N] z_diff;   // the jumps
+}
+
+transformed parameters{
+  vector<lower = 0>[N] mu;
+  real<lower = 0> nu;               // coefficient of variation
+  matrix<lower = 0>[I-1, N] z;      // filtered observations
+
+  for (n in 1:N){
+    mu[n] = (mu_nc[n] * mu_sd) + mu_mean;
+  }
+  
+  nu = nu_a / sqrt(nu_b);
+
+// jumps
+  for(n in 1:N){
+    z[,n] = cumulative_sum(z_diff[,n] * mu[n]);
+  }
+}
+
+model{
+
+// priors //
+//// for process model
+//!! Because everything is a real that means that every unit
+//!! has has the same parameters and and so each unit is an
+//!! observation of the same gamma process.
+////
+
+  mu_mean ~ normal(0.5, 0.2);
+  mu_sd ~ cauchy(0, 1);
+  mu_nc ~ normal(0, 1);
+  nu_a ~ normal(0, 1);
+  nu_b ~ gamma((0.5 * 3), (0.5 * 3));
+  sigma ~ uniform(0, 10);
+
+// process model //
+  for(n in 1:N){
+    z_diff[, n] ~ gamma(t_diff / pow(nu, 2), 1 / (pow(nu, 2)));
+  }
+
+// data model //  
+  for (n in 1:N){
+    y[2:I, n] ~ normal(z[, n], sigma);
+  }
+}
+
+generated quantities{
+  matrix[I, N] zplot;
+  matrix[I, N] y_pred;
+
+  real mu_ppd;
+  real nu_ppd;
+  vector[N] mu_i_ppd;
+  vector[N] nu_i_ppd;
+
+// generate posterior predictive samples
+  for(n in 1:N){
+    y_pred[1, n] = 0;
+    zplot[1, n] = 0;
+    for(i in 2:I){
+      y_pred[i, n] = normal_rng(z[i-1, n], sigma);
+      zplot[i, n] = z[i-1,n];
+    }
+  }
+
+// parameter PPDs for model comparison
+  mu_ppd = normal_trunc_rng(mu_mean, mu_sd);
+  nu_ppd = nu;
+  for(n in 1:N){
+    mu_i_ppd[n] = mu[n];
+    nu_i_ppd[n] = nu;
+  }
+}
+```
+
+Once again, we sample $6000$ draws from the posterior, using six chains, each $2000$ draws long with a burn-in of $1000$. Now, some divergent transitions crop up with the extra hierarchical layer in the model. However, there are very few divergencies, and there doesn't appear to be any structure in their locations, @fig-pairs-pp-mu. From @tbl-post-pp-mu and @fig-marginal-pp-mu, we can comfortably say that this model is able to reclaim the true value of the standard deviation of the measurement error to the same extent as the complete pooling model in the previous section.
+
+```{r}
+#| label: sample-pp-mu-model
+#| cache: true
+
+stan_fit_pp_mu <- sampling(
+    pp_mu_pooling_model,
+    stan_data,
+    chains = 6,
+    iter = 2000,
+    warmup = 1000,
+    control = list(
+        adapt_delta = 0.99,
+        max_treedepth = 14
+    ),
+    refresh = 0,
+    seed = 135
+)
+```
+
+```{r}
+#| label: tbl-post-pp-mu
+#| tbl-cap: "The sampler outputs for the varying mu model."
+
+tbl_draws_pp_mu <- rownames_to_column(
+  as.data.frame(
+    summary(
+      stan_fit_pp_mu, 
+      pars = c(
+        "sigma", paste("mu[", 1:4, "]", sep = ""), "nu", "mu_mean", "mu_sd"
+      ),
+      probs = c(0.025, 0.5, 0.975))$summary), 
+  var = "Parameter") %>% 
+  select(!c(se_mean, sd)) %>% 
+  mutate(across(c('mean':'97.5%', Rhat), ~ round(.x, 2))) %>% 
+  mutate(n_eff = round(n_eff, 0))
+
+tbl_draws_pp_mu %>%
+  kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+```{r}
+#| label: save-tbl-marginal-posteriors-pp-mu
+#| echo: false
+#| output: false
+
+colnames(tbl_draws_pp_mu) <- c(
+  "Parameter",
+  "Mean",
+  "2.5\\%", "50\\%", "97.5\\%",
+  "$n_{\\small{\\mbox{eff}}}$",
+  "$\\hat{R}$"
+)
+tbl_draws_pp_mu$Parameter <- c(
+  "$\\sigma$", "$\\mu_1$", "$\\mu_2$", "$\\mu_3$", "$\\mu_4$",
+  "$\\nu$", "$\\mu_\\mu$", "$\\sigma_\\mu$"
+)
+
+tbl_draws_pp_mu %>%
+  kbl(
+    booktabs = T,
+    format = "latex",
+    caption = "Partial output from fitting a BHM to the noisy data of Fig.~\\ref{fig:crack-growth-w-noise} where mean degradation $\\mu_j$ varies between units. Only statistics for Units~1--4 are shown.",
+    escape = FALSE,
+    label = "pp_mu"
+  ) %>%
+  kable_styling(latex_options = "striped") %>%
+  save_kable(
+    file = file.path(
+      table_path,
+      "stan_fit_pp_mu_table.tex"
+    ),
+    keep_tex = TRUE
+  )
+```
+
+```{r}
+#| label: fig-pairs-pp-mu
+#| fig-cap: "The pairs plots of the MCMC draws for the varying mu model."
+#| fig-width: 8
+#| fig-height: 8
+#| warning: false
+#| 
+# Pairs plot of the parameters above
+np_pp_mu <- nuts_params(stan_fit_pp_mu) 
+p_pairs_pp_mu <- mcmc_pairs(
+  stan_fit_pp_mu,
+  pars = c("sigma", paste("mu[", 1:2, "]", sep = ""), "nu", "mu_mean", "mu_sd"),
+  transformations = list(mu_sd = "log"),
+  np = np_pp_mu
+)
+
+p_pairs_pp_mu
+```
+
+```{r}
+#| label: save-fig-pairs-pp-mu
+#| echo: false
+#| output: false
+
+p_pairs_pp_mu_sub <- mcmc_pairs(
+  stan_fit_pp_mu,
+  pars = c(paste("mu[", 1:2, "]", sep = ""), "mu_mean", "mu_sd"),
+  transformations = list(mu_sd = "log"),
+  np = np_pp_mu
+)
+# extract and relabel diagonals
+p_pairs_pp_mu_sub_list <- p_pairs_pp_mu_sub$bayesplot
+p_pairs_pp_mu_sub_list[[1]] <- p_pairs_pp_mu_sub_list[[1]] +
+  labs(subtitle = expression(mu[1]))
+p_pairs_pp_mu_sub_list[[6]] <- p_pairs_pp_mu_sub_list[[6]] +
+  labs(subtitle = expression(mu[2]))
+p_pairs_pp_mu_sub_list[[11]] <- p_pairs_pp_mu_sub_list[[11]] +
+  labs(subtitle = expression(mu[mu]))
+p_pairs_pp_mu_sub_list[[16]] <- p_pairs_pp_mu_sub_list[[16]] +
+  labs(subtitle = expression(log(sigma[mu])))
+
+# regenerate gridplot
+p_pairs_pp_mu_sub <- bayesplot_grid(plots = p_pairs_pp_mu_sub_list)
+
+pdf(
+  file.path(figure_path, "plot-pp-mu-pairs.pdf"),
+  height = 6,
+  width = 6
+)
+p_pairs_pp_mu_sub
+dev.off()
+```
+
+```{r}
+#| label: fig-parcoord-pp-mu
+#| fig-cap: "The parallel coordinate plot of the MCMC draws for the varying mu model."
+#| fig-width: 8
+#| fig-height: 5
+#| warning: false
+#| cache: true
+
+custom_labels <- c(
+  "sigma" = expression(sigma), 
+  "mu_mean" = expression(mu[mu]),
+  "mu_sd" = expression(sigma[mu]),
+  "nu" = expression(nu),
+  "mu[1]" = expression(mu[1]),
+  "mu[2]" = expression(mu[2]),
+  "mu[3]" = expression(mu[3]),
+  "mu[4]" = expression(mu[4]),
+  "mu[5]" = expression(mu[5]),
+  "mu[6]" = expression(mu[6]),
+  "mu[7]" = expression(mu[7]),
+  "mu[8]" = expression(mu[8]),
+  "mu[9]" = expression(mu[9]),
+  "mu[10]" = expression(mu[10])
+)
+
+p_parcoord_pp_mu <- mcmc_parcoord(
+  stan_fit_pp_mu,
+  pars = c(
+    "sigma", "mu_mean",
+    paste("mu[", 1:10, "]", sep = ""),
+    "mu_sd", "nu"
+  ),
+  np = np_pp_mu
+) +
+  scale_x_discrete(labels = custom_labels)
+
+p_parcoord_pp_mu
+```
+
+```{r}
+#| label: save-fig-parcoord-pp-mu
+#| echo: false
+#| output: false
+
+pdf(
+  file.path(figure_path, "plot-pp-mu-parcoord.pdf"),
+  height = 4,
+  width = 6
+)
+p_parcoord_pp_mu
+dev.off()
+```
+
+```{r}
+#| label: fig-marginal-pp-mu
+#| fig-cap: "The marginal posterior distributions of the parameters for the varying mu model."
+
+plotMarginals(stan_fit_pp_mu)
+```
+
+```{r}
+#| label: save-fig-marginal-pp-mu
+#| echo: false
+#| output: false
+
+pdf(
+  file.path(figure_path, "plot-pp-mu-marg-post-1.pdf"),
+  height = 6,
+  width = 6
+)
+plotMarginals(stan_fit_pp_mu)
+dev.off()
+```
+
+The varying $\mu$ model also looks capable of reclaiming the true degradation path of each unit, @fig-pp-mu-posterior-paths.
+
+```{r}
+#| label: fig-pp-mu-posterior-paths
+#| fig-cap: "The posterior distributions of the filtered degradation path for each unit under the varying mu model."
+
+plotReclaimedPaths(
+  stan_fit_pp_mu,
+  data = CrackGrowth,
+  "Varying mean"
+)
+```
+
+```{r}
+#| label: save-fig-pp-mu-posterior-paths
+#| echo: false
+#| output: false
+
+pdf(
+  file.path(figure_path, "plot-pp-mu-filtered.pdf"),
+  height = 6,
+  width = 8
+)
+plotReclaimedPaths(
+  stan_fit_pp_mu,
+  data = CrackGrowth,
+  ""
+)
+dev.off()
+```
+
+Once again, we can derive the failure time distribution and uncertainty for new units and units under test. @fig-ft-pp-mu (a) shows the failure time distribution for new units under the varying $\mu$ model. Since the model assumes that each unit has a specific $\mu_j$, to predict the failure time of new units, we first have to sample posterior predictive values of $\tilde{\mu}_{J + 1}$ from the hierarchical prior $\hbox{N}^{+}(\mu_\mu, \sigma_\mu)$ using the posterior draws of $\mu_\mu$ and $\sigma_\mu$. Using the posterior draws of $\nu$ and the posterior predictive draw of $\tilde{\mu}_{J + 1}$, we calculate the failure probabilities in the same way as we did for the complete pooling case in @fig-ft-cp. To generate the failure time distribution of a unit under test, we use the draws of $\nu$ and the unit-specific parameter $\mu_j$ to calculate the failure probability for $t > 0.9$. @fig-ft-pp-mu (b) shows the current failure time distribution for Unit 3.
+
+```{r}
+#| label: fig-ft-pp-mu
+#| fig-cap: "Varying mu model failure time distributions."
+#| fig-subcap: 
+#|   - "The failure time distribution of new units under the varying mu model."
+#|   - "The failure time distribution of Unit 3 under the varying mu model."
+#| layout-ncol: 2
+#| cache: true
+
+## New unit
+# Draws from posterior
+stan_fit_rvar <- as_draws_rvars(stan_fit_pp_mu)
+
+mu_mean <- stan_fit_rvar$mu_mean
+mu_sd <- stan_fit_rvar$mu_sd
+nu <- stan_fit_rvar$nu
+
+# Sample posterior predictive distribution of mu
+set.seed(123)
+RvarRNorm <- rfun(rnorm)
+mu_ppd <- abs(RvarRNorm(100, mu_mean, mu_sd))
+
+# Create grid of times
+ft <- seq(0, 3, length.out = 100)
+
+# Calculate ft over times
+ft_dist <- lapply(
+  ft,
+  function(tt) {
+    ft_vect <- RvarFailureTimeFunction(
+      tt,
+      y_max_obs = 0,
+      t_max_obs = 0,
+      failure_threshold = 0.4,
+      mu = mu_ppd,
+      nu = nu
+    )
+    ft <- ft_vect %>%
+      draws_of() %>%
+      as.vector() %>%
+      rvar()
+    df <- data.frame(t = tt, density = ft)
+    return(df)
+  }
+)
+
+ft_dist <- bind_rows(ft_dist)
+
+# Plot as ribbon plot
+ft_dist_pp_mu <- ft_dist %>%
+  ggplot(aes(x = t, dist = density)) +
+  stat_lineribbon(.width = c(.50, .80)) +
+  scale_fill_brewer() +
+  xlim(0, 2) +
+  labs(y = "probability", x = "Hundreds of thousands of cycles")  +
+  theme_minimal_grid(12)
+
+ft_dist_pp_mu
+
+## Unit 3
+# Get current age and degredation and unit specific mu of Unit 3
+t_current <- max(stan_data$t)
+post_z_3_I_pp_mu <- stan_fit_rvar$z[9, 3]
+mu_3_pp_mu <- stan_fit_rvar$mu[3]
+
+# Create grid of times
+ft <- seq(t_current, 3, length.out = 100)
+
+# Calculate failure probabilities over grid of times
+unit3_ft_dist_pp_mu <- lapply(
+  ft,
+  function(tt) {
+    ft_vect <- RvarFailureTimeFunction(
+      tt,
+      y_max_obs = post_z_3_I_pp_mu,   # Current estimated degredation of unit 3.
+      t_max_obs = t_current,          # Current age of unit 3.
+      failure_threshold = 0.4,        # Failed when crack length > 0.4
+      mu = mu_3_pp_mu,                # Unit specific mean for unit 3.
+      nu = nu
+    )
+    ft_cp <- ft_vect %>%
+      draws_of() %>%
+      as.vector() %>%
+      rvar()
+    df <- data.frame(t = tt, density = ft_cp)
+    return(df)
+  }
+)
+
+unit3_ft_dist_pp_mu <- bind_rows(unit3_ft_dist_pp_mu)
+
+unit3_ft_dist_pp_mu <- unit3_ft_dist_pp_mu %>%
+  ggplot(aes(x = t, dist = density)) +
+  stat_lineribbon(.width = c(.50, .80)) +
+  scale_fill_brewer() +
+  xlim(0, 2) +
+  labs(y = "probability", x = "Hundreds of thousands of cycles")  +
+  theme_minimal_grid(12)
+
+unit3_ft_dist_pp_mu
+```
+
+```{r}
+#| label: save-ft-distributions
+#| echo: false
+#| output: false
+
+# Get ribbon legend
+p_ft_leg <- get_legend(
+  ft_dist_cp
+)
+
+# Remove legend from plots
+ft_dist_cp <- ft_dist_cp +
+  theme(legend.position = "none")
+unit3_ft_dist_cp <- unit3_ft_dist_cp +
+  theme(legend.position = "none")
+ft_dist_pp_mu <- ft_dist_pp_mu +
+  theme(legend.position = "none")
+unit3_ft_dist_pp_mu <- unit3_ft_dist_pp_mu +
+  theme(legend.position = "none")
+
+# Plot new unit FTs
+pdf(
+  file.path(
+    figure_path,
+    "FT_dist.pdf"
+  ),
+  height = 4,
+  width = 8
+)
+
+plot_grid(
+  ft_dist_cp,
+  ft_dist_pp_mu,
+  p_ft_leg,
+  nrow = 1,
+  rel_widths = c(0.9, 0.9, 0.2)
+)
+
+dev.off()
+
+# Plot unit 3 FTs
+pdf(
+  file.path(
+    figure_path,
+    "FT_dist_Unit3.pdf"
+  ),
+  height = 4,
+  width = 8
+)
+
+plot_grid(
+  unit3_ft_dist_cp,
+  unit3_ft_dist_pp_mu,
+  p_ft_leg,
+  nrow = 1,
+  rel_widths = c(0.9, 0.9, 0.2)
+)
+
+dev.off()
+```
+
+```{r}
+#| label: post-pred-check-pp-mu
+
+# extract posterior draws
+ppc_post <- as_draws_df(stan_fit_pp_mu) %>%
+  spread_draws(mu_mean, mu_sd, nu)
+
+# sample 3 pairs of mu and nu from the posterior draws
+N_itr <- 3
+N_units <- 10
+sample_rows <- sample(1:nrow(ppc_post), size = N_itr)
+ppc_post <- ppc_post[sample_rows, ]
+
+mu_ppc <- matrix(
+  rnorm(N_itr*N_units, ppc_post$mu_mean, ppc_post$mu_sd),
+  nrow = N_itr,
+  ncol = N_units
+)
+nu_ppc <- matrix(ppc_post$nu, nrow = N_itr, ncol = N_units)
+
+# generate posterior predictive simulations
+
+p_ppc_pp_mu <- PlotPriorPredictiveCheck(
+  n = N_itr,
+  N_units = N_units,
+  mu_ppc,
+  nu_ppc
+)
+p_ppc_pp_mu
+```
+
+# Varying $\nu$ {#sec-pp-nu}
+
+In the varying $\nu$ model, we instead assume that the underlying gamma processes for each unit have the same mean wear rate but unit-specific coefficients of variation. We specify the model with the same hierarchical structure for $\nu$ as we used for $\mu$ in the previous model
+
+$$
+\begin{align}
+y_{ij}|z_{ij}, \sigma & \sim \mbox{N}(z_{ij}, \sigma) \\
+    \Delta z_{ij}|\mu, \nu_j & \sim \mbox{Ga} \left( \frac{\Delta t_i}{\nu_j^2}, \frac{1}{\mu \nu_j^2} \right) \\
+    \mu & \sim \mbox{N}^{+}(1, 0.2) \\
+    \nu_j & \sim \mbox{N}^{+}(\mu_\nu, \sigma_\nu) \\
+    \mu_\nu & \sim t_3^{+}(0, 0.5) \\
+    \sigma_\nu & \sim \mbox{Cauchy}^{+}(0, 1) \\
+    \sigma & \sim \mbox{Unif}(0, 10).
+\end{align}
+$$
+
+In `Stan` code this is
+
+```{stan}
+#| label: define-pp-nu-model
+#| output.var: pp_nu_pooling_model
+#| cache: true
+
+functions {
+  real normal_trunc_rng(real a, real b) {
+    real p_lb = normal_cdf(0, a, b);
+    real u = uniform_rng(p_lb, 1);
+    real y = a + b * inv_Phi(u);
+    return y;
+  }
+}
+
+data{
+  int I;           // number of observations
+  int N;           // number of units
+  vector[I] t;     // the set of observation times
+  matrix[I, N] y;  // the set of noisy measurements
+}
+
+transformed data{
+  vector[I-1] t_diff; // the differences of the observation times
+
+  // t_diff[1] = t[1];
+  t_diff = t[2:I] - t[1:I-1];
+}
+
+parameters{
+  real<lower = 0> sigma;            // sd of measurement error
+  real<lower = 0> mu;               // the mean of the gamma process
+  real<lower = 0> nu_a;
+  real<lower = 0> nu_b;
+  real<lower = 0> nu_sd;            // sd hyper parameter of the nu_n
+  vector<lower = ((0 - (nu_a / sqrt(nu_b))) / nu_sd)>[N] nu_nc;
+  matrix<lower = 0>[I-1, N] z_diff;   // the jumps
+}
+
+transformed parameters{
+  real<lower = 0> nu_mean;          // mean hyper parameter of the nu_n
+  vector<lower = 0>[N] nu;
+  matrix<lower = 0>[I-1, N] z;      // filtered observations
+
+  nu_mean = nu_a / sqrt(nu_b);
+
+  for (n in 1:N)
+    nu[n] = (nu_nc[n] * nu_sd) + nu_mean;
+
+// jumps
+  for(n in 1:N){
+    z[,n] = cumulative_sum(z_diff[,n] * mu);
+  }
+}
+
+model{
+
+// priors //
+//// for process model
+//!! Because everything is a real that means that every unit
+//!! has has the same parameters and and so each unit is an
+//!! observation of the same gamma process.
+////
+
+  mu ~ normal(0.5, 0.2);
+  nu_a ~ normal(0, 1);
+  nu_b ~ gamma((0.5 * 3), (0.5 * 3));
+  nu_sd ~ cauchy(0, 0.1); //10);
+  nu_nc ~ normal(0, 1); //(nu_sd / 10));
+  sigma ~ uniform(0, 10);
+
+// process model //
+  for(n in 1:N){
+    z_diff[, n] ~ gamma(t_diff / pow(nu[n], 2), 1 / (pow(nu[n], 2)));
+  }
+
+// data model //
+  for (n in 1:N){
+    y[2:I, n] ~ normal(z[, n], sigma);
+  }
+}
+
+generated quantities{
+  matrix[I, N] zplot;
+  matrix[I, N] y_pred;
+
+  real mu_ppd;
+  real nu_ppd;
+  vector[N] mu_i_ppd;
+  vector[N] nu_i_ppd;
+
+// generate posterior predictive samples
+  for(n in 1:N){
+    y_pred[1, n] = 0;
+    zplot[1, n] = 0;
+      for(i in 2:I){
+        y_pred[i, n] = normal_rng(z[i-1, n], sigma);
+        zplot[i, n] = z[i-1,n];
+      }
+  }
+
+  // parameter PPDs for model comparison
+  mu_ppd = mu;
+  nu_ppd = normal_trunc_rng(nu_mean, nu_sd);
+  for(n in 1:N){
+    mu_i_ppd[n] = mu;
+    nu_i_ppd[n] = nu[n];
+  }
+}
+```
+
+We once again generate $6000$ draws from the posterior using `Stan`. The sampling for the varying $\nu$ model is much more poorly behaved than the previous two models, with 120 divergent transitions.
+
+```{r}
+#| label: sample-pp-nu-model
+#| cache: true
+
+stan_fit_pp_nu <- sampling(
+    pp_nu_pooling_model,
+    stan_data,
+    chains = 6,
+    iter = 2000,
+    warmup = 1000,
+    control = list(
+        adapt_delta = 0.999,
+        max_treedepth = 14
+    ),
+    refresh = 0,
+    seed = 546
+)
+```
+
+```{r}
+#| label: tbl-marginal-posteriors-pp-nu
+#| tbl-cap: "The sampler outputs for the varying nu model."
+
+tbl_draws_pp_nu <- rownames_to_column(
+  as.data.frame(
+    summary(
+      stan_fit_pp_nu, 
+      pars = c("sigma", paste("nu[", 1:4, "]", sep = ""), "mu", "nu_mean", "nu_sd"),
+      probs = c(0.025, 0.5, 0.975))$summary), 
+  var = "Parameter") %>% 
+  select(!c(se_mean, sd)) %>% 
+  mutate(across(c('mean':'97.5%', Rhat), ~ round(.x, 2))) %>% 
+  mutate(n_eff = round(n_eff, 0)) 
+
+tbl_draws_pp_nu %>%
+  kbl() %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed")
+  )
+```
+
+```{r}
+#| label: save-tbl-marginal-posteriors-pp-nu
+#| echo: false
+#| output: false
+
+colnames(tbl_draws_pp_nu) <- c(
+  "Parameter",
+  "Mean",
+  "2.5\\%", "50\\%", "97.5\\%",
+  "$n_{\\small{\\mbox{eff}}}$",
+  "$\\hat{R}$"
+)
+tbl_draws_pp_nu$Parameter <- c(
+  "$\\sigma$", "$\\nu_1$", "$\\nu_2$", "$\\nu_3$", "$\\nu_4$",
+  "$\\mu$", "$\\mu_\\nu$", "$\\sigma_\\nu$"
+)
+
+tbl_draws_pp_nu %>%
+  kbl(
+    booktabs = T,
+    format = "latex",
+    caption = "Partial output from fitting a BHM to the noisy data of Fig.~\\ref{fig:crack-growth-w-noise} where the coefficient of variation $\\nu_j$ varies between units. Only statistics for Units~1--4 are shown.",
+    escape = FALSE,
+    label = "pp_nu"
+  ) %>%
+  kable_styling(latex_options = "striped") %>%
+  save_kable(
+    file = file.path(
+      table_path,
+      "stan_fit_pp_nu_table.tex"
+    ),
+    keep_tex = TRUE
+  )
+```
+
+The pairs plots of the posterior draws are shown in @fig-pairs-pp-nu, with the divergent transitions shown in red. In the lower triangle of the pairs plot, the divergent transitions clearly arise when the $\nu_j$ draws are very close to one another and hence very close to $\mu_\nu$ and $\sigma_\nu$ is very close to zero. In the marginal plots in @fig-marginal-pp-nu, there is very little evidence of a varying $\nu$. Nevertheless, the model is able to reclaim the value of $\sigma$ and the underlying degradation pathways, as shown in @fig-pp-nu-posterior-paths.
+
+```{r}
+#| label: fig-pairs-pp-nu
+#| fig-cap: "The pairs plots of the MCMC draws for the varying nu model."
+#| fig-width: 8
+#| fig-height: 8
+#| warning: false
+#| cache: true
+# Pairs plot of the parameters above
+np_pp_nu <- nuts_params(stan_fit_pp_nu) 
+p_pairs_pp_nu <- mcmc_pairs(
+  stan_fit_pp_nu,
+  pars = c(
+    "sigma",
+    paste("nu[", 1:2, "]", sep = ""),
+    "mu", "nu_mean", "nu_sd"
+  ),
+  transformations = list(
+    nu_sd = "log"
+  ),
+  np = np_pp_nu
+)
+
+p_pairs_pp_nu
+```
+
+```{r}
+#| label: fig-marginal-pp-nu
+#| fig-cap: "The marginal posterior distributions of the parameters for the varying nu model."
+
+plotMarginals(stan_fit_pp_nu)
+```
+
+```{r}
+#| label: fig-parcoord-pp-nu
+#| fig-cap: "The parallel coordinate plot of the MCMC draws for the varying nu model."
+#| fig-width: 8
+#| fig-height: 5
+#| warning: false
+#| cache: true
+custom_labels <- c(
+  "sigma" = expression(sigma), 
+  "nu_mean" = expression(mu[nu]),
+  "nu_sd" = expression(sigma[nu]),
+  "mu" = expression(mu),
+  "nu[1]" = expression(nu[1]),
+  "nu[2]" = expression(nu[2]),
+  "nu[3]" = expression(nu[3]),
+  "nu[4]" = expression(nu[4]),
+  "nu[5]" = expression(nu[5]),
+  "nu[6]" = expression(nu[6]),
+  "nu[7]" = expression(nu[7]),
+  "nu[8]" = expression(nu[8]),
+  "nu[9]" = expression(nu[9]),
+  "nu[10]" = expression(nu[10])
+)
+
+p_parcoord_pp_nu <- mcmc_parcoord(
+  stan_fit_pp_nu,
+  pars = c(
+    "sigma", "mu", "nu_mean",
+    paste("nu[", 1:10, "]", sep = ""),
+    "nu_sd"
+  ),
+  np = np_pp_nu
+) +
+  scale_x_discrete(labels = custom_labels)
+
+p_parcoord_pp_nu
+```
+
+```{r}
+#| label: save-fig-parcoord-pp-nu
+#| echo: false
+#| output: false
+
+pdf(
+  file.path(figure_path, "plot-pp-nu-parcoord.pdf"),
+  height = 4,
+  width = 6
+)
+p_parcoord_pp_nu
+dev.off()
+```
+
+```{r}
+#| label: fig-pp-nu-posterior-paths
+#| fig-cap: "The posterior distributions of the filtered degradation path for each unit under the varying nu model."
+
+plotReclaimedPaths(
+  stan_fit_pp_nu,
+  data = CrackGrowth,
+  "Varying coefficient of variation"
+)
+```
+
+The failure time distribution.
+
+```{r}
+#| label: fig-ft-pp-nu
+#| fig-cap: "Varying nu failure time distributions."
+#| fig-subcap: 
+#|   - "The failure time distribution of new units under the varying nu model."
+#|   - "The failure time distribution of Unit 3 under the varying nu model."
+#| layout-ncol: 2
+#| cache: true
+
+## New unit
+# Draws from posterior
+stan_fit_rvar <- as_draws_rvars(stan_fit_pp_nu)
+
+nu_mean <- stan_fit_rvar$nu_mean
+nu_sd <- stan_fit_rvar$nu_sd
+mu <- stan_fit_rvar$mu
+
+# Sample posterior predictive distribution of mu
+set.seed(123)
+RvarRNorm <- rfun(rnorm)
+nu_ppd <- abs(RvarRNorm(100, nu_mean, nu_sd))
+
+# Create grid of times
+ft <- seq(0, 3, length.out = 100)
+
+# Calculate ft over times
+ft_dist <- lapply(
+  ft,
+  function(tt) {
+    ft_vect <- RvarFailureTimeFunction(
+      tt,
+      y_max_obs = 0,
+      t_max_obs = 0,
+      failure_threshold = 0.4,
+      mu = mu,
+      nu = nu_ppd
+    )
+    ft <- ft_vect %>%
+      draws_of() %>%
+      as.vector() %>%
+      rvar()
+    df <- data.frame(t = tt, density = ft)
+    return(df)
+  }
+)
+
+ft_dist <- bind_rows(ft_dist)
+
+# Plot as ribbon plot
+ft_dist %>%
+  ggplot(aes(x = t, dist = density)) +
+  stat_lineribbon(.width = c(.50, .80)) +
+  scale_fill_brewer() +
+  xlim(0, 2) +
+  labs(y = "probability", x = "Hundreds of thousands of cycles")  +
+  theme_minimal_grid(12)
+
+## Unit 3
+# Get current age and degredation and unit specific nu of Unit 3
+t_current <- max(stan_data$t)
+post_z_3_I_pp_nu <- stan_fit_rvar$z[9, 3]
+nu_3_pp_nu <- stan_fit_rvar$nu[3]
+
+# Create grid of times
+ft <- seq(t_current, 3, length.out = 100)
+
+# Calculate failure probabilities over grid of times
+unit3_ft_dist_pp_nu <- lapply(
+  ft,
+  function(tt) {
+    ft_vect <- RvarFailureTimeFunction(
+      tt,
+      y_max_obs = post_z_3_I_pp_nu,   # Current estimated degredation of unit 3.
+      t_max_obs = t_current,          # Current age of unit 3.
+      failure_threshold = 0.4,        # Failed when crack length > 0.4
+      mu = mu,
+      nu = nu_3_pp_nu                 # Unit specific mean for unit 3.
+    )
+    ft_cp <- ft_vect %>%
+      draws_of() %>%
+      as.vector() %>%
+      rvar()
+    df <- data.frame(t = tt, density = ft_cp)
+    return(df)
+  }
+)
+
+unit3_ft_dist_pp_nu <- bind_rows(unit3_ft_dist_pp_nu)
+
+unit3_ft_dist_pp_nu <- unit3_ft_dist_pp_nu %>%
+  ggplot(aes(x = t, dist = density)) +
+  stat_lineribbon(.width = c(.50, .80)) +
+  scale_fill_brewer() +
+  xlim(0, 2) +
+  labs(y = "probability", x = "Hundreds of thousands of cycles")  +
+  theme_minimal_grid(12)
+
+unit3_ft_dist_pp_nu
+```
+
+```{r}
+#| label: post-pred-check-pp-nu
+
+# extract posterior draws
+ppc_post <- as_draws_df(stan_fit_pp_nu) %>%
+  spread_draws(mu, nu_mean, nu_sd)
+
+# sample 3 pairs of mu and nu from the posterior draws
+N_itr <- 3
+N_units <- 10
+sample_rows <- sample(1:nrow(ppc_post), size = N_itr)
+ppc_post <- ppc_post[sample_rows, ]
+
+mu_ppc <- matrix(ppc_post$mu, nrow = N_itr, ncol = N_units)
+nu_ppc <- matrix(
+  rnorm(N_itr*N_units, ppc_post$nu_mean, ppc_post$nu_sd),
+  nrow = N_itr,
+  ncol = N_units
+)
+
+# generate posterior predictive simulations
+
+p_ppc_pp_nu <- PlotPriorPredictiveCheck(
+  n = N_itr,
+  N_units = N_units,
+  mu_ppc,
+  nu_ppc
+)
+p_ppc_pp_nu
+```
+
+# Partial pooling on both mu and nu {#sec-pp-both}
+
+The final model includes partial pooling of both $\mu$ and $\nu$. It uses the same hyper priors as we use in the two models above, @sec-pp-mu and @sec-pp-nu,
+
+$$
+\begin{align}
+y_{ij}|z_{ij}, \sigma & \sim \mbox{N}(z_{ij}, \sigma) \\
+    \Delta z_{ij}|\mu_j, \nu_j & \sim \mbox{Ga} \left( \frac{\Delta t_i}{\nu_j^2}, \frac{1}{\mu_j \nu_j^2} \right) \\
+    \mu_j & \sim \mbox{N}^{+}(\mu_\mu, \sigma_\mu) \\
+    \mu_\mu & \sim \mbox{N}^{+}(1, 0.2) \\
+    \sigma_\mu & \sim \mbox{Cauchy}^{+}(0, 1) \\
+    \nu_j & \sim \mbox{N}^{+}(\mu_\nu, \sigma_\nu) \\
+    \mu_\nu & \sim t_3^{+}(0, 0.5) \\
+    \sigma_\nu & \sim \mbox{Cauchy}^{+}(0, 1) \\
+    \sigma & \sim \mbox{Unif}(0, 10).
+\end{align}
+$$
+
+We define the above model in the `Stan` code below.
+
+```{stan}
+#| label: define-pp-both-model
+#| output.var: pp_mu_nu_pooling_model
+#| cache: true
+
+functions {
+  real normal_trunc_rng(real a, real b) {
+    real p_lb = normal_cdf(0, a, b);
+    real u = uniform_rng(p_lb, 1);
+    real y = a + b * inv_Phi(u);
+    return y;
+  }
+}
+
+data{
+  int I;           // number of observations
+  int N;           // number of units
+  vector[I] t;     // the set of observation times
+  matrix[I, N] y;  // the set of noisy measurements
+}
+
+transformed data{
+  vector[I-1] t_diff; // the differences of the observation times
+
+  // t_diff[1] = t[1];
+  t_diff = t[2:I] - t[1:I-1];
+}
+
+parameters{
+  real<lower = 0> sigma;            // sd of measurement error
+  real<lower = 0> mu_mean;          // mean hyper parameter of the mu_n
+  real<lower = 0> mu_sd;            // sd hyper parameter of the mu_n
+  vector<lower = ((0 - mu_mean) / mu_sd)>[N] mu_nc;          // the mean of the gamma process
+  real<lower = 0> nu_a;
+  real<lower = 0> nu_b;
+  real<lower = 0> nu_sd;            // sd hyper parameter of the nu_n
+  vector<lower = ((0 - (nu_a / sqrt(nu_b))) / nu_sd)>[N] nu_nc;          // coefficient of variation
+  matrix<lower = 0>[I-1, N] z_diff;   // the jumps
+}
+
+transformed parameters{
+  vector<lower=0>[N] nu;
+  vector<lower=0>[N] mu;
+  real<lower = 0> nu_mean;          // mean hyper parameter of the nu_n
+  matrix<lower = 0>[I-1, N] z;      // filtered observations
+
+  nu_mean = nu_a / sqrt(nu_b);
+
+  for (n in 1:N) {
+    nu[n] = (nu_nc[n] * nu_sd) + nu_mean;
+    mu[n] = (mu_nc[n] * mu_sd) + mu_mean;
+  }
+
+// jumps
+  for(n in 1:N){
+    z[,n] = cumulative_sum(z_diff[,n]);
+  }
+}
+
+model{
+
+// priors //
+//// for process model
+//!! Because everything is a real that means that every unit
+//!! has has the same parameters and and so each unit is an
+//!! observation of the same gamma process.
+////
+
+  mu_mean ~ normal(0.5, 0.2);
+  mu_sd ~ cauchy(0, 1);
+  mu_nc ~ normal(0, 1);
+  nu_a ~ normal(0, 0.5);
+  nu_b ~ gamma((0.5 * 3), (0.5 * 3));
+  nu_sd ~ cauchy(0, 0.1);
+  nu_nc ~ normal(0, 1);
+  sigma ~ uniform(0, 10);
+
+// process model //
+  for(n in 1:N){
+    z_diff[, n] ~ gamma(t_diff / pow(nu[n], 2), 1 / (mu[n] * pow(nu[n], 2)));
+  }
+
+// data model //
+  for (n in 1:N){
+    y[2:I, n] ~ normal(z[, n], sigma);
+  }
+}
+
+generated quantities{
+  matrix[I, N] zplot;
+  matrix[I, N] y_pred;
+  
+  real mu_ppd;
+  real nu_ppd;
+  vector[N] mu_i_ppd;
+  vector[N] nu_i_ppd;
+
+// generate posterior predictive samples
+  for(n in 1:N){
+    y_pred[1, n] = 0;
+    zplot[1, n] = 0;
+    for(i in 2:I){
+      y_pred[i, n] = normal_rng(z[i-1, n], sigma);
+      zplot[i, n] = z[i-1, n];
+    }
+  }
+  
+// parameter PPDs for model comparison
+  mu_ppd = normal_trunc_rng(mu_mean, mu_sd);
+  nu_ppd = normal_trunc_rng(nu_mean, nu_sd);
+  for(n in 1:N){
+    mu_i_ppd[n] = mu[n];
+    nu_i_ppd[n] = nu[n];
+  }
+}
+```
+
+```{r}
+#| label: sample-pp-both-model
+#| cache: true
+
+stan_fit_pp_both <- sampling(
+  pp_mu_nu_pooling_model,
+  stan_data,
+  chains = 6,
+  iter = 2000,
+  warmup = 1000,
+  control = list(
+    adapt_delta = 0.999,
+    max_treedepth = 15
+  ),
+  refresh = 0,
+  seed = 576
+)
+```
+
+The model with varying $\mu$ and $\nu$ suffers from the same sampling issues as the varying $\nu$ model but much worse. However, the model still does a decent job at reclaiming the true parameter value of $\sigma$, and it appears to fit the same unit-specific values of $\mu$ as the varying $\mu$ model in @sec-pp-mu.
+
+```{r}
+#| label: tbl-marginal-posteriors-pp-both
+#| tbl-cap: "The sampler outputs for the varying mu and nu model."
+
+tbl_draws_pp_both <-rownames_to_column(
+  as.data.frame(
+    summary(
+      stan_fit_pp_both, 
+      pars = c("sigma", paste("nu[", 1:4, "]", sep = ""), paste("mu[", 1:4, "]", sep = ""), 
+          "mu_mean", "mu_sd", "nu_mean", "nu_sd"),
+      probs = c(0.025, 0.5, 0.975))$summary), 
+  var = "Parameter") %>% 
+  select(!c(se_mean, sd)) %>% 
+  mutate(across(c('mean':'97.5%', Rhat), ~ round(.x, 2))) %>% 
+  mutate(n_eff = round(n_eff, 0))
+
+tbl_draws_pp_both %>%
+  kbl() %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed")
+  )
+```
+
+```{r}
+#| label: save-tbl-marginal-posteriors-pp-both
+#| echo: false
+#| output: false
+
+colnames(tbl_draws_pp_both) <- c(
+  "Parameter",
+  "Mean",
+  "2.5\\%", "50\\%", "97.5\\%",
+  "$n_{\\small{\\mbox{eff}}}$",
+  "$\\hat{R}$"
+)
+tbl_draws_pp_both$Parameter <- c(
+  "$\\sigma$",
+  "$\\nu_1$", "$\\nu_2$", "$\\nu_3$", "$\\nu_4$",
+  "$\\mu_1$", "$\\mu_2$", "$\\mu_3$", "$\\mu_4$",
+  "$\\mu_\\mu$", "$\\sigma_\\mu$",
+  "$\\mu_\\nu$", "$\\sigma_\\nu$"
+)
+
+tbl_draws_pp_both %>%
+  kbl(
+    booktabs = T,
+    format = "latex",
+    caption = "Partial output from fitting a BHM to the noisy data of Fig.~\\ref{fig:crack-growth-w-noise} where both the coefficient of variation $\\nu_j$ and the mean wear rate $\\mu_j$ varies between units. Only statistics for Units~1--4 are shown.",
+    escape = FALSE,
+    label = "pp_both"
+  ) %>%
+  kable_styling(latex_options = "striped") %>%
+  save_kable(
+    file = file.path(
+      table_path,
+      "stan_fit_pp_both_table.tex"
+    ),
+    keep_tex = TRUE
+  )
+```
+
+```{r}
+#| label: fig-pairs-pp-both
+#| fig-cap: "The pairs plots of the MCMC draws for the varying mu and nu model."
+#| fig-width: 8
+#| fig-height: 8
+#| warning: false
+#| cache: true
+
+# Pairs plot of the parameters above
+np_pp_both <- nuts_params(stan_fit_pp_both) 
+p_pairs_pp_both <- mcmc_pairs(
+  stan_fit_pp_both,
+  pars = c(
+    "sigma",
+    paste("mu[", 1:2, "]", sep = ""),
+    paste("nu[", 1:2, "]", sep = ""),
+    "mu_mean", "mu_sd", "nu_mean", "nu_sd"
+  ),
+  transformations = list(
+    mu_sd = "log",
+    nu_sd = "log"
+  ),
+  np = np_pp_both
+)
+
+p_pairs_pp_both 
+```
+
+```{r}
+#| label: fig-marginal-pp-both
+#| fig-cap: "The marginal posterior distributions of the parameters for the varying mu and nu model."
+
+plotMarginals(stan_fit_pp_both)
+```
+
+Similar to all the other models, this model is able to reclaim the true degradation pathways from the noisy observations.
+
+```{r}
+#| label: fig-pp-both-posterior-paths
+#| fig-cap: "The posterior distributions of the filtered degradation path for each unit under the varying mu and nu model."
+
+plotReclaimedPaths(
+  stan_fit_pp_both,
+  data = CrackGrowth,
+  "Varying mean and coefficient of variation"
+)
+```
+
+```{r}
+#| label: fig-ft-pp-both
+#| fig-cap: "Varying mu and nu failure time distributions."
+#| fig-subcap: 
+#|   - "The failure time distribution of new units under the varying mu and nu model."
+#|   - "The failure time distribution of Unit 3 under the varying mu and nu model."
+#| layout-ncol: 2
+#| cache: true
+
+## New unit
+# Draws from posterior
+stan_fit_rvar <- as_draws_rvars(stan_fit_pp_both)
+
+mu_mean <- stan_fit_rvar$mu_mean
+mu_sd <- stan_fit_rvar$mu_sd
+nu_mean <- stan_fit_rvar$nu_mean
+nu_sd <- stan_fit_rvar$nu_sd
+
+# Sample posterior predictive distribution of mu and nu
+set.seed(123)
+RvarRNorm <- rfun(rnorm)
+mu_ppd <- abs(RvarRNorm(100, mu_mean, mu_sd))
+nu_ppd <- abs(RvarRNorm(100, nu_mean, nu_sd))
+
+# Create grid of times
+ft <- seq(0, 3, length.out = 100)
+
+# Calculate ft over times
+ft_dist <- lapply(
+  ft,
+  function(tt) {
+    ft_vect <- RvarFailureTimeFunction(
+      tt,
+      y_max_obs = 0,
+      t_max_obs = 0,
+      failure_threshold = 0.4,
+      mu = mu_ppd,
+      nu = nu_ppd
+    )
+    ft <- ft_vect %>%
+      draws_of() %>%
+      as.vector() %>%
+      rvar()
+    df <- data.frame(t = tt, density = ft)
+    return(df)
+  }
+)
+
+ft_dist <- bind_rows(ft_dist)
+
+# Plot as ribbon plot
+ft_dist %>%
+  ggplot(aes(x = t, dist = density)) +
+  stat_lineribbon(.width = c(.50, .80)) +
+  scale_fill_brewer() +
+  xlim(0, 2) +
+  labs(y = "probability", x = "Hundreds of thousands of cycles")  +
+  theme_minimal_grid(12)
+
+## Unit 3
+# Get current age and degredation and unit specific mu and nu of Unit 3
+t_current <- max(stan_data$t)
+post_z_3_I_pp_both <- stan_fit_rvar$z[9, 3]
+mu_3_pp_both <- stan_fit_rvar$mu[3]
+nu_3_pp_both <- stan_fit_rvar$nu[3]
+
+# Create grid of times
+ft <- seq(t_current, 3, length.out = 100)
+
+# Calculate failure probabilities over grid of times
+unit3_ft_dist_pp_both <- lapply(
+  ft,
+  function(tt) {
+    ft_vect <- RvarFailureTimeFunction(
+      tt,
+      y_max_obs = post_z_3_I_pp_both, # Current estimated degredation of unit 3.
+      t_max_obs = t_current,          # Current age of unit 3.
+      failure_threshold = 0.4,        # Failed when crack length > 0.4
+      mu = mu_3_pp_both,              # Unit specific mean for unit 3.
+      nu = nu_3_pp_both               # Unit specific CoV for unit 3.
+    )
+    ft_cp <- ft_vect %>%
+      draws_of() %>%
+      as.vector() %>%
+      rvar()
+    df <- data.frame(t = tt, density = ft_cp)
+    return(df)
+  }
+)
+
+unit3_ft_dist_pp_both <- bind_rows(unit3_ft_dist_pp_both)
+
+unit3_ft_dist_pp_both <- unit3_ft_dist_pp_both %>%
+  ggplot(aes(x = t, dist = density)) +
+  stat_lineribbon(.width = c(.50, .80)) +
+  scale_fill_brewer() +
+  xlim(0, 2) +
+  labs(y = "probability", x = "Hundreds of thousands of cycles")  +
+  theme_minimal_grid(12)
+
+unit3_ft_dist_pp_both
+```
+
+```{r}
+#| label: post-pred-check-pp-both
+
+# extract posterior draws
+ppc_post <- as_draws_df(stan_fit_pp_both) %>%
+  spread_draws(mu_mean, mu_sd, nu_mean, nu_sd)
+
+# sample 3 pairs of mu and nu from the posterior draws
+N_itr <- 3
+N_units <- 10
+sample_rows <- sample(1:nrow(ppc_post), size = N_itr)
+ppc_post <- ppc_post[sample_rows, ]
+
+mu_ppc <- matrix(
+  rnorm(N_itr*N_units, ppc_post$mu_mean, ppc_post$mu_sd),
+  nrow = N_itr,
+  ncol = N_units
+)
+nu_ppc <- matrix(
+  rnorm(N_itr*N_units, ppc_post$nu_mean, ppc_post$nu_sd),
+  nrow = N_itr,
+  ncol = N_units
+)
+
+# generate posterior predictive simulations
+p_ppc_pp_both <- PlotPriorPredictiveCheck(
+  n = N_itr,
+  N_units = N_units,
+  mu_ppc,
+  nu_ppc
+)
+p_ppc_pp_both
+```
+
+```{r}
+#| label: save-post-pc
+#| echo: false
+#| output: false
+
+pdf(
+  file.path(figure_path, "post_pc.pdf"),
+  height = 10,
+  width = 10
+)
+
+plot_grid(
+  p_ppc_cp +
+    ylim(0, 0.8) +
+    theme(legend.position = "none") +
+    xlab("Hundreds of thousands of cycles") +
+    ylab("cumulative degradation"),
+  p_ppc_pp_mu +
+    ylim(0, 0.8) +
+    theme(legend.position = "none") +
+    xlab("Hundreds of thousands of cycles") +
+    ylab("cumulative degradation"),
+  p_ppc_pp_nu +
+    ylim(0, 0.8) +
+    theme(legend.position = "none") +
+    xlab("Hundreds of thousands of cycles") +
+    ylab("cumulative degradation"),
+  p_ppc_pp_both +
+    ylim(0, 0.8) +
+    theme(legend.position = "none") +
+    xlab("Hundreds of thousands of cycles") +
+    ylab("cumulative degradation"),
+  nrow = 2,
+  ncol = 2,
+  labels = c("(a)", "(b)", "(c)", "(d)"),
+  label_fontfamily = "Times",
+  label_face = "plain"
+)
+
+dev.off()
+```
+
+```{r}
+data.frame(
+  model = c(
+    "complete pooling",
+    "partial pooling mu",
+    "partial pooling nu",
+    "partial pooling mu and nu"
+  ),
+  "number of divergent transitions" = lapply(
+    c(stan_fit_cp, stan_fit_pp_mu, stan_fit_pp_nu, stan_fit_pp_both),
+    GetNDivergencies
+  ) %>% unlist(),
+  check.names = FALSE
+) %>%
+  kbl(
+    booktabs = T,
+    format = "latex",
+    caption = "The number of divergent transitions that occure during sampling.",
+    escape = FALSE,
+    label = "n_divergent"
+  ) %>%
+  kable_styling(latex_options = "striped") %>%
+  save_kable(
+    file = file.path(
+      table_path,
+      "n_divergent.tex"
+    ),
+    keep_tex = TRUE
+  )
+```
+
+# Cross-validation
+
+In the above sections (@sec-cp, @sec-pp-mu, @sec-pp-nu, and @sec-pp-both), all four models appear to reasonably fit the data. They all manage to reclaim the true value of the standard deviation of the measurement error and are equally capable of reclaiming the underlying degradation pathways from the noisy observations. However, when we derive failure time distributions for new units from the different posteriors, the partial pooling models result in large uncertainty bands. Furthermore, the partial pooling models are more uncertain regarding the failure time of units under test. Therefore, we want to choose the model that fits the observed data but correctly quantifies the uncertainty of the underlying latent process so that we can accurately predict the future degradation of new units and the units under test. To do this, we use an objective measure of how well the model is able to predict unseen data using $elppd$ and cross-validation methods. See the main body of the paper for a description of $elppd$.
+
+## Leave-one-unit-out
+
+To evaluate the predictive performance of the models for new units, we use leave-one-out cross-validation. We refit the model 10 times, each time withholding one of the units. For each withheld unit, we calculate the likelihood of the withheld observations given the draws of the posterior predictive distribution for a new unit (from the model fitted to the other N-1 units). These values are then used to estimate the log pointwise predictive density (https://arxiv.org/pdf/1507.04544.pdf eq. 3) in order to compare the predictive performance of the different Bayesian models. The bellow function calculates the $lppd$ of a withheld observation for a given model.
+
+```{r}
+set.seed(564)
+rvar_rnorm <- rfun(rnorm)
+rvar_dnorm <- rfun(dnorm)
+rvar_rgamma <- rfun(rgamma)
+
+LeaveOneUnitOutCV <- function(unit, model, data) {
+  # Withold observations from one unit
+  train_data <- list(
+    I = data$I,
+    N = data$N - 1,
+    t = data$t,
+    y = data$y[, -c(unit)]
+  )
+  test_data <- data$y[2:data$I, unit]
+
+  # Fit model to N-1 units
+  stan_fit <- sampling(
+    model,
+    train_data,
+    chains = 6,
+    iter = 900,#2000,
+    warmup = 300,#1000,
+    seed = 564,
+    #control = list(
+    #  adapt_delta = 0.999,
+    #  max_treedepth = 15),
+    refresh = 0
+  )
+  
+  # Extract ppd of parameters
+  post <- stan_fit %>%
+    as_draws_rvars() %>%
+    spread_rvars(mu_ppd, nu_ppd, sigma)
+  
+  ## PPD of new unit (no noise)
+  z_ppd <- rvar_rgamma(
+    data$I - 1,
+    shape = diff(data$t) / (post$nu_ppd^2),
+    rate = 1 / (post$mu_ppd * post$nu_ppd^2)
+  ) %>% cumsum()
+
+  ## Estimate log likelihood of new observations given PPD of Z_new
+    elpd <- rvar_dnorm(test_data, z_ppd, post$sigma) %>% # y|z,theta ~ N(z, sigma)
+    rvar_prod() %>% # calculate p(y_i|y_i-1)
+    mean() %>%      # average over draws to get estimate
+    log()           # take the log
+  
+  return(elpd)
+}
+```
+
+I now repeatedly apply the function to calculate $lppd$ for each unit in the dataset to get the $\hbox{elppd}_{LOUO-CV}$ for each model. The results are displayed in @tbl-elppd-louo.
+
+```{r}
+#| label: tbl-elppd-louo
+#| tbl-cap: "The ELPPD-LOUO-CV results for each model."
+
+loo_elpd_np <- lapply(
+  1:stan_data$N,
+  function(n) LeaveOneUnitOutCV(n, cp_model, stan_data)
+) %>%
+  unlist() %>%
+  sum()
+
+loo_elpd_pp_mu <- lapply(
+  1:stan_data$N,
+  function(n) LeaveOneUnitOutCV(n, pp_mu_pooling_model, stan_data)
+) %>%
+  unlist() %>%
+  sum()
+
+loo_elpd_pp_nu <- lapply(
+  1:stan_data$N,
+  function(n) LeaveOneUnitOutCV(n, pp_nu_pooling_model, stan_data)
+) %>%
+  unlist() %>%
+  sum()
+
+loo_elpd_pp_both <- lapply(
+  1:stan_data$N,
+  function(n) LeaveOneUnitOutCV(n, pp_mu_nu_pooling_model, stan_data)
+) %>%
+  unlist() %>%
+  sum()
+
+data.frame(
+  model = c(
+    "complete pooling",
+    "partial pooling mu",
+    "partial pooling nu",
+    "partial pooling mu and nu"
+  ),
+  `LOUO-CV` = c(
+    loo_elpd_np,
+    loo_elpd_pp_mu,
+    loo_elpd_pp_nu,
+    loo_elpd_pp_both
+  )
+) %>%
+  kbl() %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed")
+  )
+```
+
+## Step ahead
+
+To evaluate the model's predictive performance for future degradation of the units currently under test, I use step-ahead cross-validation. I do this by iteratively withholding the last observation for each unit, fitting the model to all the other observations, generating posterior predictive draws for the non-noisy degradation of the withheld observation, and then calculating the $lppd$ of the withheld observations.
+
+### Redefine stan models
+
+The step ahead predictions require a slight re-working of the `Stan` code since there is no longer an even number of observations for each unit. Bellow, I redefine the `Stan` models so that they can handle one unit with $I-1$ observations and also produce the posterior predictive draws of the non-noisy degradation for the withheld observation.
+
+::: {.panel-tabset}
+
+#### complete pooling
+
+```{stan}
+#| label: define-sa-cv-cp-model
+#| output.var: cp_model_sa
+#| cache: true
+
+functions {
+  real normal_trunc_rng(real a, real b) {
+    real p_lb = normal_cdf(0, a, b);
+    real u = uniform_rng(p_lb, 1);
+    real y = a + b * inv_Phi(u);
+    return y;
+  }
+}
+
+data{
+  int I;           // number of observations J-1 units
+  int I_j;         // number of observations for j^th unit
+  int N;           // number of units (J-1)
+  vector[I] t;     // the set of observation times
+  matrix[I, N] y;  // the set of noisy measurements for J-1 units
+  vector[I_j] y_j;
+}
+
+transformed data{
+  vector[I-1] t_diff; // the differences of the observation times
+
+  // t_diff[1] = t[1];
+  t_diff = t[2:I] - t[1:I-1];
+}
+
+parameters{
+  real<lower = 0> sigma;            // sd of measurement error
+  real<lower = 0> mu;               // mean of gp
+  real<lower = 0> nu_a;
+  real<lower = 0> nu_b;
+  matrix<lower = 0>[I-1, N] z_diff;   // the jumps
+  vector<lower = 0>[I_j-1] z_diff_j;
+}
+
+transformed parameters{
+  real<lower = 0> nu;               // CoV of gp
+  matrix<lower = 0>[I-1, N] z;      // filtered observations
+  vector<lower = 0>[I_j-1] z_j;     // filtered observations of unit j
+  nu = nu_a / sqrt(nu_b);
+
+// jumps
+  for(n in 1:N){
+    z[,n] = cumulative_sum(z_diff[,n]);
+  }
+  z_j = cumulative_sum(z_diff_j);
+}
+
+model{
+
+// priors //
+//// for process model
+//!! Because everything is a real that means that every unit
+//!! has has the same parameters and and so each unit is an
+//!! observation of the same gamma process.
+////
+
+  mu ~ normal(0.5, 0.2);
+  nu_a ~ normal(0, 0.5);
+  nu_b ~ gamma((0.5 * 3), (0.5 * 3));
+  sigma ~ uniform(0, 10);
+
+// process model //
+  for(n in 1:N){
+    z_diff[, n] ~ gamma(t_diff / pow(nu, 2), 1 / (mu * pow(nu, 2)));
+  }
+  z_diff_j ~ gamma(t_diff[1:(I_j - 1)] / pow(nu, 2), 1 / (mu * pow(nu, 2)));
+
+// data model //
+  for (n in 1:N){
+    y[2:I, n] ~ normal(z[, n], sigma);
+  }
+  y_j[2:I_j] ~ normal(z_j, sigma);
+}
+
+generated quantities{
+  real mu_ppd;
+  real nu_ppd;
+  real z_diff_j_I_ppd;
+  real z_j_I_ppd;
+  
+  mu_ppd = mu;
+  nu_ppd = nu;
+
+  z_diff_j_I_ppd = gamma_rng(0.1 / pow(nu_ppd, 2), 1 / (mu_ppd * pow(nu_ppd, 2)));
+  z_j_I_ppd = z_j[I_j-1] + z_diff_j_I_ppd;
+}
+```
+
+#### patial pooling mu
+
+```{stan}
+#| label: define-sa-cv-pp_mu-model
+#| output.var: pp_mu_model_sa
+#| cache: true
+
+functions {
+  real normal_trunc_rng(real a, real b) {
+    real p_lb = normal_cdf(0, a, b);
+    real u = uniform_rng(p_lb, 1);
+    real y = a + b * inv_Phi(u);
+    return y;
+  }
+}
+
+data{
+  int I;           // number of observations J-1 units
+  int I_j;         // number of observations for j^th unit
+  int N;           // number of units (J-1)
+  vector[I] t;     // the set of observation times
+  matrix[I, N] y;  // the set of noisy measurements for J-1 units
+  vector[I_j] y_j;
+}
+
+transformed data{
+  vector[I-1] t_diff; // the differences of the observation times
+
+  // t_diff[1] = t[1];
+  t_diff = t[2:I] - t[1:I-1];
+}
+
+parameters{
+  real<lower = 0> sigma;            // sd of measurement error
+  real<lower = 0> mu_mean;          // mean hyper parameter of the mu_n
+  real<lower = 0> mu_sd;            // sd hyper parameter of the mu_n
+  vector<lower = ((0 - mu_mean) / mu_sd)>[N] mu_nc;       // the mean of the gamma process
+  real<lower = ((0 - mu_mean) / mu_sd)> mu_nc_j;       // the mean of the gamma process
+  real<lower = 0> nu_a;
+  real<lower = 0> nu_b;
+  matrix<lower = 0>[I-1, N] z_diff;   // the jumps
+  vector<lower = 0>[I_j-1] z_diff_j;
+}
+
+transformed parameters{
+  vector<lower = 0>[N] mu;
+  real<lower = 0> mu_j;
+  real<lower = 0> nu;               // coefficient of variation
+  matrix<lower = 0>[I-1, N] z;      // filtered observations
+  vector<lower = 0>[I_j-1] z_j;     // filtered observations of unit j
+
+  for (n in 1:N){
+    mu[n] = (mu_nc[n] * mu_sd) + mu_mean;
+  }
+  mu_j = (mu_nc_j * mu_sd) + mu_mean;
+
+  nu = nu_a / sqrt(nu_b);
+
+// jumps
+  for(n in 1:N){
+    z[,n] = cumulative_sum(z_diff[,n] * mu[n]);
+  }
+  z_j = cumulative_sum(z_diff_j * mu_j);
+}
+
+model{
+
+// priors //
+//// for process model
+//!! Because everything is a real that means that every unit
+//!! has has the same parameters and and so each unit is an
+//!! observation of the same gamma process.
+////
+
+  mu_mean ~ normal(0.5, 0.2);
+  mu_sd ~ cauchy(0, 1);
+  mu_nc ~ normal(0, 1);
+  mu_nc_j ~ normal(0, 1);
+  nu_a ~ normal(0, 1);
+  nu_b ~ gamma((0.5 * 3), (0.5 * 3));
+  sigma ~ uniform(0, 10);
+
+// process model //
+  for(n in 1:N){
+    z_diff[, n] ~ gamma(t_diff / pow(nu, 2), 1 / (pow(nu, 2)));
+  }
+  z_diff_j ~ gamma(t_diff[1:(I_j - 1)] / pow(nu, 2), 1 / (pow(nu, 2)));
+
+// data model //
+  for (n in 1:N){
+    y[2:I, n] ~ normal(z[, n], sigma);
+  }
+  y_j[2:I_j] ~ normal(z_j, sigma);
+}
+
+generated quantities{
+  real mu_ppd;
+  real nu_ppd;
+  real z_diff_j_I_ppd;
+  real z_j_I_ppd;
+  
+  mu_ppd = mu_j;
+  nu_ppd = nu;
+
+  z_diff_j_I_ppd = gamma_rng(0.1 / pow(nu_ppd, 2), 1 / (mu_ppd * pow(nu_ppd, 2)));
+  z_j_I_ppd = z_j[I_j-1] + z_diff_j_I_ppd;
+}
+```
+
+#### patial pooling nu
+
+```{stan}
+#| label: define-sa-cv-pp-nu-model
+#| output.var: pp_nu_model_sa
+#| cache: true
+
+functions {
+  real normal_trunc_rng(real a, real b) {
+    real p_lb = normal_cdf(0, a, b);
+    real u = uniform_rng(p_lb, 1);
+    real y = a + b * inv_Phi(u);
+    return y;
+  }
+}
+
+data{
+  int I;           // number of observations J-1 units
+  int I_j;         // number of observations for j^th unit
+  int N;           // number of units (J-1)
+  vector[I] t;     // the set of observation times
+  matrix[I, N] y;  // the set of noisy measurements for J-1 units
+  vector[I_j] y_j;
+}
+
+transformed data{
+  vector[I-1] t_diff; // the differences of the observation times
+
+  // t_diff[1] = t[1];
+  t_diff = t[2:I] - t[1:I-1];
+}
+
+parameters{
+  real<lower = 0> sigma;            // sd of measurement error
+  real<lower = 0> mu;               // the mean of the gamma process
+  real<lower = 0> nu_a;
+  real<lower = 0> nu_b;
+  real<lower = 0> nu_sd;            // sd hyper parameter of the nu_n
+  vector<lower = ((0 - (nu_a / sqrt(nu_b))) / nu_sd)>[N] nu_nc;
+  real<lower = ((0 - (nu_a / sqrt(nu_b))) / nu_sd)> nu_nc_j;
+  matrix<lower = 0>[I-1, N] z_diff;   // the jumps
+  vector<lower = 0>[I_j-1] z_diff_j;
+}
+
+transformed parameters{
+  real<lower = 0> nu_mean;          // mean hyper parameter of the nu_n
+  vector<lower = 0>[N] nu;
+  real<lower = 0> nu_j;
+  matrix<lower = 0>[I-1, N] z;      // filtered observations
+  vector<lower = 0>[I_j-1] z_j;     // filtered observations of unit j
+
+  nu_mean = nu_a / sqrt(nu_b);
+
+  for (n in 1:N){
+    nu[n] = (nu_nc[n] * nu_sd) + nu_mean;
+  }
+  nu_j = (nu_nc_j * nu_sd) + nu_mean;
+
+// jumps
+  for(n in 1:N){
+    z[,n] = cumulative_sum(z_diff[,n] * mu);
+  }
+  z_j = cumulative_sum(z_diff_j * mu);
+}
+
+model{
+
+// priors //
+//// for process model
+//!! Because everything is a real that means that every unit
+//!! has has the same parameters and and so each unit is an
+//!! observation of the same gamma process.
+////
+
+  mu ~ normal(0.5, 0.2);
+  nu_a ~ normal(0, 1);
+  nu_b ~ gamma((0.5 * 3), (0.5 * 3));
+  nu_sd ~ cauchy(0, 0.1); //10);
+  nu_nc ~ normal(0, 1); //(nu_sd / 10));
+  nu_nc_j ~ normal(0, 1); //(nu_sd / 10));
+  sigma ~ uniform(0, 10);
+
+// process model //
+  for(n in 1:N){
+    z_diff[, n] ~ gamma(t_diff / pow(nu[n], 2), 1 / (pow(nu[n], 2)));
+  }
+  z_diff_j ~ gamma(t_diff[1:(I_j - 1)] / pow(nu_j, 2), 1 / (pow(nu_j, 2)));
+
+// data model //
+  for (n in 1:N){
+    y[2:I, n] ~ normal(z[, n], sigma);
+  }
+  y_j[2:I_j] ~ normal(z_j, sigma);
+}
+
+generated quantities{
+  real mu_ppd;
+  real nu_ppd;
+  real z_diff_j_I_ppd;
+  real z_j_I_ppd;
+  
+  mu_ppd = mu;
+  nu_ppd = nu_j;
+
+  z_diff_j_I_ppd = gamma_rng(0.1 / pow(nu_ppd, 2), 1 / (mu_ppd * pow(nu_ppd, 2)));
+  z_j_I_ppd = z_j[I_j-1] + z_diff_j_I_ppd;
+}
+```
+
+#### patial pooling mu and nu
+
+```{stan}
+#| label: define-sa-cv-pp-both-model
+#| output.var: pp_mu_nu_model_sa
+#| cache: true
+
+functions {
+  real normal_trunc_rng(real a, real b) {
+    real p_lb = normal_cdf(0, a, b);
+    real u = uniform_rng(p_lb, 1);
+    real y = a + b * inv_Phi(u);
+    return y;
+  }
+}
+
+data{
+  int I;           // number of observations J-1 units
+  int I_j;         // number of observations for j^th unit
+  int N;           // number of units (J-1)
+  vector[I] t;     // the set of observation times
+  matrix[I, N] y;  // the set of noisy measurements for J-1 units
+  vector[I_j] y_j;
+}
+
+transformed data{
+  vector[I-1] t_diff; // the differences of the observation times
+
+  // t_diff[1] = t[1];
+  t_diff = t[2:I] - t[1:I-1];
+}
+
+parameters{
+  real<lower = 0> sigma;            // sd of measurement error
+  real<lower = 0> mu_mean;          // mean hyper parameter of the mu_n
+  real<lower = 0> mu_sd;            // sd hyper parameter of the mu_n
+  vector<lower = ((0 - mu_mean) / mu_sd)>[N] mu_nc;          // the mean of the gamma process
+  real<lower = ((0 - mu_mean) / mu_sd)> mu_nc_j;
+  real<lower = 0> nu_a;
+  real<lower = 0> nu_b;
+  real<lower = 0> nu_sd;            // sd hyper parameter of the nu_n
+  vector<lower = ((0 - (nu_a / sqrt(nu_b))) / nu_sd)>[N] nu_nc;          // coefficient of variation
+  real<lower = ((0 - (nu_a / sqrt(nu_b))) / nu_sd)> nu_nc_j; 
+  matrix<lower = 0>[I-1, N] z_diff;   // the jumps
+  vector<lower = 0>[I_j-1] z_diff_j;
+}
+
+transformed parameters{
+  vector<lower=0>[N] nu;
+  real<lower=0> nu_j;
+  vector<lower=0>[N] mu;
+  real<lower=0> mu_j;
+  real<lower = 0> nu_mean;          // mean hyper parameter of the nu_n
+  matrix<lower = 0>[I-1, N] z;      // filtered observations
+  vector<lower = 0>[I_j-1] z_j;     // filtered observations of unit j
+
+  nu_mean = nu_a / sqrt(nu_b);
+
+  for (n in 1:N) {
+    nu[n] = (nu_nc[n] * nu_sd) + nu_mean;
+    mu[n] = (mu_nc[n] * mu_sd) + mu_mean;
+  }
+  nu_j = (nu_nc_j * nu_sd) + nu_mean;
+  mu_j = (mu_nc_j * mu_sd) + mu_mean;
+
+// jumps
+  for(n in 1:N){
+    z[,n] = cumulative_sum(z_diff[,n]);
+  }
+  z_j = cumulative_sum(z_diff_j);
+}
+
+model{
+
+// priors //
+//// for process model
+//!! Because everything is a real that means that every unit
+//!! has has the same parameters and and so each unit is an
+//!! observation of the same gamma process.
+////
+
+  mu_mean ~ normal(0.5, 0.2);
+  mu_sd ~ cauchy(0, 1);
+  mu_nc ~ normal(0, 1);
+  mu_nc_j ~ normal(0, 1);
+  nu_a ~ normal(0, 0.5);
+  nu_b ~ gamma((0.5 * 3), (0.5 * 3));
+  nu_sd ~ cauchy(0, 0.1);
+  nu_nc ~ normal(0, 1);
+  nu_nc_j ~ normal(0, 1);
+  sigma ~ uniform(0, 10);
+
+// process model //
+  for(n in 1:N){
+    z_diff[, n] ~ gamma(t_diff / pow(nu[n], 2), 1 / (mu[n] * pow(nu[n], 2)));
+  }
+  z_diff_j ~ gamma(t_diff[1:(I_j - 1)] / pow(nu_j, 2), 1 / (mu_j * pow(nu_j, 2)));
+
+// data model //
+  for (n in 1:N){
+    y[2:I, n] ~ normal(z[, n], sigma);
+  }
+  y_j[2:I_j] ~ normal(z_j, sigma);
+}
+
+generated quantities{
+  real mu_ppd;
+  real nu_ppd;
+  real z_diff_j_I_ppd;
+  real z_j_I_ppd;
+  
+  mu_ppd = mu_j;
+  nu_ppd = nu_j;
+
+  z_diff_j_I_ppd = gamma_rng(0.1 / pow(nu_ppd, 2), 1 / (mu_ppd * pow(nu_ppd, 2)));
+  z_j_I_ppd = z_j[I_j-1] + z_diff_j_I_ppd;
+}
+```
+
+:::
+
+### Calculate $\hbox{elppd}_\hbox{\tiny{SA-CV}}$
+
+I calculate $\hbox{elppd}_\hbox{\tiny{SA-CV}}$ using
+
+$$
+\hbox{elppd}_{\hbox{\tiny{SA-CV}}} = \sum^{J}_{j = 1} \log \frac{1}{S} \sum^S_{s = 1} p(y_{j, I} | \left[\tilde{z}_{j, I}, \sigma \right]_{-\left[ j, I \right]}^s).
+$$
+
+The bellow function calculates the $lppd$ for a withheld observation.
+
+```{r}
+StepAheadCV <- function(model, j) {
+  y_I_j <- noisy_data_mat[10, j]
+  stan_data <- list(
+      I = nrow(noisy_data_mat),
+      I_j = nrow(noisy_data_mat) - 1,
+      N = ncol(noisy_data_mat) - 1,
+      t = unique(CrackGrowth$cycles),
+      y = noisy_data_mat[, -c(j)],
+      y_j = noisy_data_mat[1:9, j]
+  )
+  post <- sampling(
+    model,
+    stan_data,
+    chains = 6,
+    iter = 900,
+    warmup = 300,
+    seed = 564,
+    refresh = 0
+  )
+  post_predictive_dist_df <- post %>%
+    as_draws_rvars() %>%
+    spread_rvars(
+      z_j_I_ppd, sigma
+    )
+  lpd_j <- rvar_dnorm(
+    y_I_j,
+    mean = post_predictive_dist_df$z_j_I_ppd,
+    sd = post_predictive_dist_df$sigma
+  ) %>%
+  E() %>%
+  log()
+
+  return(lpd_j)
+}
+```
+
+I now recursivly fit each model to calculate $\hbox{elppd}_\hbox{\tiny{SA-CV}}$ and display the results in @tbl-elppd-sa.
+
+```{r}
+#| label: tbl-elppd-sa
+#| tbl-cap: "The ELPPD-SA-CV results for each model."
+
+elppd_sa_cv_cp <- lapply(
+  1:10,
+  function(j) StepAheadCV(cp_model_sa, j)
+) %>%
+  unlist() %>%
+  sum()
+
+elppd_sa_cv_pp_mu <- lapply(
+  1:10,
+  function(j) StepAheadCV(pp_mu_model_sa, j)
+) %>%
+  unlist() %>%
+  sum()
+
+elppd_sa_cv_pp_nu <- lapply(
+  1:10,
+  function(j) StepAheadCV(pp_nu_model_sa, j)
+) %>%
+  unlist() %>%
+  sum()
+
+elppd_sa_cv_pp_mu_nu <- lapply(
+  1:10,
+  function(j) StepAheadCV(pp_mu_nu_model_sa, j)
+) %>%
+  unlist() %>%
+  sum()
+
+data.frame(
+  model = c(
+    "complete pooling",
+    "partial pooling mu",
+    "partial pooling nu",
+    "partial pooling mu and nu"
+  ),
+  `SA-CV` = c(
+    elppd_sa_cv_cp,
+    elppd_sa_cv_pp_mu,
+    elppd_sa_cv_pp_nu,
+    elppd_sa_cv_pp_mu_nu
+  )
+) %>%
+  kbl() %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed")
+  )
+```
+
+
+```{r}
+#| label: save-elppd
+#| echo: false
+#| output: false
+
+data.frame(
+  ` ` = c(
+    "complete pooling",
+    "varying $\\mu$",
+    "varying $\\nu$",
+    "varying $\\mu$ and $\\nu$"
+  ),
+  `$\\hbox{elppd}_{\\hbox{\\tiny{LOUO-CV}}}$` = c(
+    loo_elpd_np,
+    loo_elpd_pp_mu,
+    loo_elpd_pp_nu,
+    loo_elpd_pp_both
+  ),
+  `$\\hbox{elppd}_{\\hbox{\\tiny{SA-CV}}}$` = c(
+    elppd_sa_cv_cp,
+    elppd_sa_cv_pp_mu,
+    elppd_sa_cv_pp_nu,
+    elppd_sa_cv_pp_mu_nu
+  ),
+  check.names = FALSE
+) %>%
+  kbl(
+    booktabs = T,
+    format = "latex",
+    caption = "Leave-one-out cross-validation statistics for the models fitted in Section~\\ref{sec:unit-to-unit-sampling}.",
+    escape = FALSE,
+    label = "elppd_loo"
+  ) %>%
+  kable_styling(latex_options = "striped") %>%
+  save_kable(
+    file = file.path(
+      table_path,
+      "cv_elppd_table.tex"
+    ),
+    keep_tex = TRUE
+  )
+```

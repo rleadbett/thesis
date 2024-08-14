@@ -25,12 +25,12 @@ execute:
   error: false
   fig-width: 10
   fig-height: 10
-css: styles.css
+css: ../styles.css
 title-block-banner: "#FFFFFF"
 title-block-banner-color: "#000000"
 ---
 
-This markdown contains the code to reproduce the main analysis in chapter 2. In it I first show my developement on @kaminskiy2005 method for constructing a joint prior for the two Weibull parameters. I then simulate a dataset that emulates the observation process of the idler-frames and demonstrate the method for imputing the partialy observed lifetimes and missing truncation times acording the the method described in Sec. 2.2 of the Thesis. Lastly, I summarise the results of experiments that explore the method under different values of the simulation parameters, these experiments were run of a virtual machine do to the amount of memory and compute needed.
+This markdown contains the code to reproduce the main analysis in Chap. 2. In it I first show my developement on @kaminskiy2005 method for constructing a joint prior for the two Weibull parameters. I then simulate a dataset that emulates the observation process of the idler-frames and demonstrate the method for imputing the partialy observed lifetimes and missing truncation times acording the the method described in Sec. 2.2 of the Thesis. Lastly, I summarise the results of experiments that explore the method under different values of the simulation parameters, these experiments were run of a virtual machine do to the amount of memory and compute needed.
 
 ```{r}
 #| label: set-up-chunk
@@ -66,7 +66,7 @@ tbl_path <- file.path(
 ```{r}
 #| label: define-functions
 #| code-fold: true
-#| code-summary: "Show runctions chunk"
+#| code-summary: "Show function definition chunk"
 # Function to sample from a truncated normal distribution
 rTruncNorm <- function(n, mean, sd, lb = NULL, ub = NULL) {
   # Check if lower bound is supplied & 

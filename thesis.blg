@@ -2,10 +2,12 @@ This is BibTeX, Version 0.99d (TeX Live 2022)
 Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: thesis.aux
 The style file: apacite.bst
+A level-1 auxiliary file: chapters/abstract.aux
 A level-1 auxiliary file: chapters/publications.aux
 A level-1 auxiliary file: chapters/contributors.aux
 A level-1 auxiliary file: chapters/acknowledgements.aux
-A level-1 auxiliary file: chapters/abstract.aux
+A level-1 auxiliary file: chapters/acknowledgement-of-country.aux
+A level-1 auxiliary file: chapters/copyright.aux
 A level-1 auxiliary file: chapters/chapter1.aux
 A level-1 auxiliary file: chapters/chapter2.aux
 A level-1 auxiliary file: chapters/chapter3.aux
@@ -28,36 +30,36 @@ Warning--I didn't find a database entry for "talts2018"
 apacite.bst [2013/07/21 v6.03 APA bibliography style]
 You've used 85 entries,
             6951 wiz_defined-function locations,
-            1831 strings with 27681 characters,
-and the built_in function-call counts, 170341 in all, are:
-= -- 21078
+            1833 strings with 27741 characters,
+and the built_in function-call counts, 170164 in all, are:
+= -- 21045
 > -- 1411
-< -- 8257
-+ -- 8449
+< -- 8251
++ -- 8425
 - -- 182
-* -- 11071
-:= -- 30956
+* -- 11065
+:= -- 30929
 add.period$ -- 363
 call.type$ -- 85
 change.case$ -- 1525
 chr.to.int$ -- 0
 cite$ -- 170
-duplicate$ -- 4666
+duplicate$ -- 4657
 empty$ -- 6710
 format.name$ -- 2364
-if$ -- 32391
+if$ -- 32358
 int.to.chr$ -- 0
 int.to.str$ -- 263
 missing$ -- 0
 newline$ -- 2279
 num.names$ -- 694
-pop$ -- 3205
+pop$ -- 3202
 preamble$ -- 1
 purify$ -- 382
 quote$ -- 0
-skip$ -- 10454
+skip$ -- 10448
 stack$ -- 0
-substring$ -- 9267
+substring$ -- 9237
 swap$ -- 2647
 text.length$ -- 264
 text.prefix$ -- 0

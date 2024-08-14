@@ -1,6 +1,6 @@
 \chapter{A noisy gamma process for modelling degradation measurements with uncertainty}\label{chap:chapter4}
 
-If there are very few or no failures observed for a particular component or asset then the lifetime methods that we have looked at in Chaps.~\ref{chap:chapter2} and~\ref{chap:chapter3} are not useful because the uncertainty in the parameter estimates is so large. If there is some measure of the degradation process that drives failure, then degradation modelling can be used to forecast the degradation of units and inform reliability decision-making. Gamma stochastic processes are a widely used degradation model for degradation that evolves monotonically \citep{lawless2004}. However, most degradation data collected in industrial settings is contaminated by noise, or error. This noise can be attributed to different sources, including measurement error, instrument noise, placement of sensors, and other environmental factors \citep{ye2015}. Consequently, models for gamma processes must be extended to account for such noise.
+If there are very few or no failures observed for a particular component or asset then the lifetime methods that we have looked at in Chaps.~\ref{chap:chapter2} and~\ref{chap:chapter3} are not useful because the uncertainty in the parameter estimates is so large. If there is some measure of the degradation process that drives failure, then degradation modelling can be used to forecast the degradation of units and inform reliability decision-making. Gamma stochastic processes are a widely used degradation model for degradation that evolves monotonically \citep{lawless2004}. However, most degradation data collected in industrial settings is contaminated by noise, or error. This noise can be attributed to different sources, including measurement error, instrument noise, placement of sensors, and other environmental factors \citep{ye2015}. Consequently, models for gamma processes must be extended to account for such noise. \marginnote{\textcolor{red}{Add a line to say that I'm abusing good notation and using lowercase leters for random variables in the remainder of the chapters.}}
 
 In this chapter, I show that this necessary extension can be facilitated in a straightforward and tractable way using the Bayesian hierarchical modelling framework. I also demonstrate, through simulation, that this noisy gamma process model is more difficult to fit than a standard gamma process due to a pre-asymptotic identifiability issue. In the remainder of the chapter starts with Sec.~\ref{sec:GP}, which gives a brief introduction to the gamma process as it is used for degradation modelling. In Sec.~\ref{sec:NGP}, I provide a short overview of current works on modelling noisy gamma processes in the reliability literature and introduce how the model can be implemented using the Bayesian hierarchical modelling framework. Section~\ref{sec:GP-reparameterisation} discusses the merits of reparameterising the gamma distribution in terms of orthogonal parameters that are interpretable in terms of the average degradation rate and volatility of the gamma process; these parameters allow us to more easily think about how to specify prior distributions for the parameters of a gamma process. I then discuss the equally important step of justifying the prior and performing prior predictive checking in Sec.~\ref{sec:GP_priors}, which allows us to specify sensible prior distributions. In Sec.~\ref{sec:NGP-fitting}, I fit the noisy gamma process model to simulated data and show that when there are only a few noisy observations, MCMC sampling and posterior inference are poorly behaved. I diagnose that these issues results from the challenges of separating the measurement error from the inherent volatility of the gamma processes using the useful diagnostics of HMC. After identifying and explaining the issue, the section concludes with a demonstration of how this poor behaviour of sampling and inference can be resolved by adding a small amount of supplementary information into the analysis: either through a more informative prior or supplementary data. Section~\ref{sec:NGP-discussion} summarises the main results and points the way to future work.
 
@@ -176,7 +176,7 @@ Clearly, some issues are occurring in the posterior distribution of the model co
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.95\textwidth]{./figures/ch-4/Small-data-pairs.pdf}
+  \includegraphics[width=0.95\textwidth]{./figures/ch-4/Small-data-pairs.png}
   \caption{Pairs plot showing the MCMC draws from the posterior distribution of the parameters $\sigma$, $\mu$, $\log\nu$, and the filtered value $\Delta z_1$ when the BHM of the noisy gamma process is fitted to the small dataset. The red points indicate divergences, which congregate at the end of the funnel in the pairwise plots of $\log\nu$/$\Delta z_1$ and $\log\nu$/$\mu$.}
   \label{fig:pairs}
 \end{figure}
@@ -186,7 +186,7 @@ The divergent trajectories can help to further explore how the degenerate behavi
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.8\columnwidth]{./figures/ch-4/parcoord.pdf}
+  \includegraphics[width=0.8\columnwidth, draft]{./figures/ch-4/parcoord.png}
   \caption{The parallel coordinate plot of the draws from the posterior conditioned on the small dataset with the divergent traces plotted in red.}
   \label{fig:par-coord-single}
 \end{figure}
@@ -231,7 +231,7 @@ A pairs plot of the MCMC samples is shown in Fig.~\ref{fig:pairs-strong-prior}. 
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.8\columnwidth]{./figures/ch-4/strong-prior-pairs.pdf}
+  \includegraphics[width=0.8\columnwidth, draft]{./figures/ch-4/strong-prior-pairs.png}
   \caption{The pairs plot of the MCMC draws when using a stronger prior on $\sigma$.}
   \label{fig:pairs-strong-prior}
 \end{figure}
@@ -244,7 +244,7 @@ Alternative to using a stronger prior, extra data that informs $\sigma$ can be u
 \end{equation*}
 Extra supplementary observations such as these could be obtained by taking multiple measurements at time $t = 0$, when the degradation is known to be zero, just before decommissioning the component---after which detailed non-noisy measurements can be obtained---or by performing a small experiment. The supplementary observations can be easily incorporated into the Hierarchical model by extending the data model to
 \begin{align*}
- y_i|z_i, \sigma & \sim \mbox{N}(z_i, \sigma)  && \mbox{data model} \\
+ y_i|z_i, \sigma & \sim \mbox{N}(z_i, \sigma) && \mbox{data model} \\
  y_{\text{\tiny{sup}}} & \sim \mbox{N}(0, \sigma).
 \end{align*}
 Similar to the more informative prior, the sampler is much more efficient, no divergencies occur during sampling, and the geometry of the posterior distribution looks much smoother (not shown). The resulting marginal posterior distributions of $\sigma$, $\mu$, and $\nu$ for the model fit with both the small dataset and the supplementary data are also compared in Fig.~\ref{fig:marginal-post-extra-info}. The marginal distributions of the parameters are very much the same as when a stronger prior is used, and the model successfully reclaims the true parameter values.

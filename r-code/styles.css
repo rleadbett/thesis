@@ -1,0 +1,9 @@
+.quarto-title-block .quarto-title-banner {
+  background-image: url(../figures/DSTM-Logo-RGB.png);
+  background-size: 300px;
+  background-position: right;
+  background-repeat: no-repeat;
+  padding-left: 10px;
+  padding-right: 50px;
+  background-origin: content-box;
+}

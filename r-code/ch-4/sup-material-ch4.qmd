@@ -1,0 +1,1546 @@
+---
+title: "Main analysis of chapter four"
+author: 
+  - name: Ryan Leadbetter
+    affiliation: 
+      - ref: CTMTDS
+affiliations:
+    - id: CTMTDS
+      name: Centre for Transforming Maintenance through Data Science, Curtin University
+date: "`r Sys.Date()`"
+number-sections: true
+bibliography: ../../references.bib
+format:
+  html:
+    embed-resources: true
+    toc: true
+    theme: 
+      light: flatly
+      dark: darkly
+editor: visual
+execute: 
+  cache: false
+  message: false 
+  warning: false
+  error: false
+  fig-width: 10
+  fig-height: 10
+css: ../styles.css
+title-block-banner: "#FFFFFF"
+title-block-banner-color: "#000000"
+---
+
+```{r}
+#| label: libraries
+#| code-fold: true
+#| code-summary: "Show setup chunk"
+#| message: false
+#| cache: false
+
+library(rstan)
+library(rmarkdown)
+library(quarto)
+library(splines2)
+library(tidyverse)
+library(dplyr)
+#library(plotly)
+library(ggplot2)
+library(posterior)
+library(ggdist)
+library(tidybayes)
+library(cowplot)
+library(stringr)
+library(bayesplot)
+library(kableExtra)
+
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+
+theme_set(theme_minimal())
+
+data_path <- file.path(
+  "..",
+  "..",
+  "data"
+)
+figure_path <- file.path(
+  "..",
+  "..",
+  "figures",
+  "ch-4"
+)
+table_path <- file.path(
+  "..",
+  "..",
+  "tables",
+  "ch-4"
+)
+```
+
+# Introduction {#sec-intro}
+
+This document contains and addapted version of the supplementary material for Section 4 (Fitting a noisy gamma process) of the manuscript Leadbetter, R.L, Gonzalez Caceres, G. J. and Phatak, A. (2024) *Fitting noisy gamma processes using RStan* to produce the figures in Chap. 4: *A noisy gamma process for modelling degradation measurements with uncertainty* of the Thesis.
+
+Here, we demonstrate the difficulties of fitting a noisy gamma process with limited data and show how they can be overcome by adding information to the analysis either through more data, supplementary data, or a stronger prior. Specifically, the difficulties arise because the standard deviation of the measurement error and the coefficient of variation of the gamma process are pre-asymptotically unidentifiable. In other words, they are difficult to separate when there is only a small amount of data. To show this, we generate a small and large data set by simulating from a known noisy gamma process. When the model is fitted to the small data set, the inference is incorrect and the sampling is very inefficient. However, when the model is fitted to the larger data set, there are no sampling problems, and the model successfully recovers the true parameter values and degradation path. Diagnostic plots for the Hamiltonian Monte Carlo (HMC) algorithm highlight the issue of pre-asymptotic unidentifiability in the posterior conditioned on the small data set. Our hypothesis--that the noise due to measurement error and the volatility of the GP are pre-asymptotically unidentifiable--is supported by the fact that when we add information into the analysis that specifically informs one of the unidentifiable parameters (in this case, the standard deviation of the noise), the computational issues are resolved, and the inference becomes reliable.
+
+In @sec-data, we construct two data sets, one small and one large, by simulating from a noisy gamma process with known parameters. In @sec-defmodel, we define the model for the noisy gamma process and then go on to implement it in `Stan`. Model fitting is described in @sec-fitmodel, and we sample from the posteriors for both the big and small data sets. Then, in @sec-postdist, we examine the posteriors conditioned on the two different data sets and determine how well the true data-generating parameters have been recovered in each case. @sec-diagplots examines the diagnostic plots for the small data set case and discusses why the sampling is so poorly behaved when the number of observations is small. In @sec-rptsim, we repeat the simulation 100 times to show that the poorly behaved sampling is a repeated problem, not just a one-off phenomenon. Finally, in @sec-addinf, we show how the poorly behaved sampling for small data sets can be rectified by adding information into the analysis either through a stronger prior on the standard deviation of the measurement error or by adding some supplementary data that only informs the measurement error. The fourth way we can overcome these difficulties--incorporating information from multiple similar units--is discussed in Section 5 of the main paper.
+
+# Synthetic data {#sec-data}
+
+The first step is to create the synthetic data by:
+
+1.  Selecting some feasible values of the parameters: $\mu = 10$, $\nu = \frac{1}{\sqrt{0.8}}$, and $\sigma = 4$.
+
+2.  Generating the observation times by sampling the time steps from $\Delta t_i \sim U(0.8, 1.3)$ and taking the cumulative sum of the steps: $t_i = \sum^{i}_{j = 1} \Delta t_j$.
+
+3.  Sampling 20 jumps from a gamma process with parameters in Step 1 and the generated time steps in Step 2.
+
+4.  Calculating the cumulative sum of the jumps to get the degradation at each observation time.
+
+5.  Finally, sampling noise from $N(0, \sigma^2)$ and adding it to each degradation measurement to create the noisy gamma process.
+
+The above five steps are executed in the function `simData` below. @fig-sim-noisy-path shows the simulated noisy degradation path. The true underlying degradation path is plotted as a black line, and its noisy observations are plotted as red points.
+
+```{r}
+#| label: fig-sim-noisy-path
+#| fig-cap: "A simulated gamma process degradation path using mu = 10 and nu = 1.118 and the noisy observation of that path using sigma = 4."
+#| echo: false
+#| warning: false
+
+set.seed(180)#123)#
+
+mu <- 10
+nu <- 1 / sqrt(0.8)
+
+simData <- function(n = 20, mu = 10, nu = 1 / sqrt(0.8)) {
+  # generate some non-evenly spaced time points
+  t_diff <- runif(n, 0.8, 1.3)
+  t <- cumsum(t_diff)
+  
+  # define parameters
+  shape <- 1 / nu^2
+  rate <- 1 / (mu * nu^2)
+  
+  # sample the jumps
+  z_diff <- rgamma(length(t_diff), 
+                   shape = t_diff*shape, 
+                   rate = rate)
+  # calculate filtered values
+  z <- cumsum(z_diff)
+  
+  # add noise
+  z_noisy <- z + rnorm(length(t_diff),
+                       mean = 0,
+                       sd = 4)
+  
+  # save and plot
+  sim_data <- data.frame(
+    t = c(0, t),
+    z_diff = c(NA, z_diff),
+    z = c(0, z),
+    y = c(NA, z_noisy)
+  )
+  
+  return(sim_data)
+}
+
+# save and plot
+sim_data_df <- simData()
+
+sim_data_df %>%
+  ggplot(aes(x = t)) +
+  geom_line(aes(y = z)) +
+  geom_point(aes(y = y), col = "red")
+```
+
+```{r}
+#| label: save-fig-sim-data
+#| echo: false
+#| output: false
+
+pdf(
+  file.path(figure_path, "SimData.pdf"),
+  height = 6,
+  width = 8
+)
+
+sim_data_df %>%
+  ggplot(aes(x = t)) +
+  geom_line(aes(y = z)) +
+  geom_point(aes(y = y), col = "red") +
+  xlab("time") +
+  ylab("wear") +
+  theme(legend.position = "none")
+
+dev.off()
+```
+
+```{r}
+#| label: save-tbl-sim-data
+#| echo: false
+#| output: false
+
+sim_data_df_tbl <- sim_data_df
+colnames(sim_data_df_tbl) <- c("$t$", "$\\Delta z$", "$z$", "$y$")
+
+sim_data_df_tbl %>%
+  kbl(
+    booktabs = T,
+    format = "latex",
+    caption = "The twenty simulated noisy degradation observation that make up the `big' data set.",
+    escape = FALSE,
+    label = "big_df",
+    digits = 2
+  ) %>%
+  kable_styling(latex_options = "striped") %>%
+  save_kable(
+    file = file.path(
+      table_path,
+      "big_df.tex"
+    ),
+    keep_tex = TRUE
+  )
+```
+
+We also create a small data set to demonstrate the problems that occur when fitting a noisy GP with limited information. To create the smaller data set, we take a subset of 10 points from the full data set. @fig-small-subset-observations shows which data are randomly selected to be in the subsetted data set (red) and which are not (grey).
+
+```{r}
+#| label: fig-small-subset-observations
+#| fig-cap: "The noisy observations selected for the small dataset."
+#| echo: false
+#| warning: false
+
+set.seed(111)
+
+n <- 20
+i_large <- 2:(n + 1)
+i_small <- sample(i_large, 10, replace = FALSE)
+i_small <- i_small[order(i_small)]
+
+#cat("Small data set observations:", i_small - 1, "\n")
+
+sim_data_df[i_small, ] %>%
+  ggplot(aes(x = t)) +
+  geom_point(aes(y = y), col = "red") +
+  geom_point(aes(y = y), data = sim_data_df, col = "black", alpha = 0.2) +
+  xlim(0, max(sim_data_df$t) + 1) +
+  ylim(0, max(sim_data_df$y) + 10)
+
+```
+
+For simplicity, we call the data set containing all of the simulated noisy degradation measurements the *"big" data set* and the data set that is made up of the subset the *"small" data set*. @fig-sim-data-big-and-small below shows the true underlying degradation path (black line), the noisy degradation measurements (points), and which of these points make up the "small" data set (red points).
+
+```{r}
+#| label: fig-sim-data-big-and-small
+#| fig-cap: "The simulated degradation path and noisy observations, all of the noisy points are used in the big data set while only the red are used in the small data set."
+
+sim_data_df <- sim_data_df %>%
+  mutate(subset = 0)
+sim_data_df$subset[i_small] <- 1
+
+p_sim_data <- sim_data_df %>%
+  mutate(subset = as.factor(subset)) %>%
+  ggplot(aes(x = t)) +
+  geom_line(aes(y = z), col = "black") +
+  geom_point(aes(y = y, col = subset)) +
+  scale_color_manual(values = c("0" = "black",
+                                "1" = "red")) +
+  xlab("time") +
+  ylab("wear") +
+  theme(legend.position = "none")
+
+p_sim_data
+```
+
+```{r}
+#| label: save-fig-sim-data-big-and-small
+#| echo: false
+#| output: false
+
+pdf(
+  file.path(figure_path, "SimData_big_small.pdf"),
+  height = 6,
+  width = 8
+)
+
+p_sim_data
+
+dev.off()
+```
+
+```{r}
+#| label: save-tbl-sim-data-small
+#| echo: false
+#| output: false
+
+sim_data_df$subset[1] <- 1
+sim_data_df_tbl_small <- sim_data_df %>%
+  filter(subset == 1) %>%
+  select(-c("subset"))
+colnames(sim_data_df_tbl_small) <- c("$t$", "$\\Delta z$", "$z$", "$y$")
+
+sim_data_df_tbl_small %>%
+  kbl(
+    booktabs = T,
+    format = "latex",
+    caption = "The subset of ten simulated noisy degradation observation from the `big' data set which make up the `small' data set.",
+    escape = FALSE,
+    label = "small_df",
+    digits = 2
+  ) %>%
+  kable_styling(latex_options = "striped") %>%
+  save_kable(
+    file = file.path(
+      table_path,
+      "small_df.tex"
+    ),
+    keep_tex = TRUE
+  )
+```
+
+# Defining the model {#sec-defmodel}
+
+The full Bayesian model for the gamma process with noise is
+
+$$
+\begin{align}
+y_{i}|z_i, \sigma &\sim \hbox{N}(z_i, \sigma^2) \\
+\Delta z_i|\Delta t_i, \mu, \nu &\sim \hbox{Ga}\left(\frac{\Delta t_i}{\nu^2}, \frac{1}{\mu \space \nu^2} \right) \\
+\sigma &\sim \hbox{Unif}(0, 100) \\
+\mu &\sim \hbox{N}^{+}(10, 10) \\
+\nu &\sim \hbox{t}^{+}_3(0, 1),
+\end{align}
+$$
+
+To improve computational performance we reparameterise the *Student t* distribution using
+
+$$
+\begin{align}
+\hbox{\textit{df}} &= 3 \\
+\tau &\sim \hbox{Ga}(\hbox{\textit{df}} / 2, \hbox{\textit{df}} / 2) \\
+\alpha &\sim \hbox{N}^{+}(0,1) \\
+\nu &= \alpha / \sqrt{\tau}.
+\end{align}
+$$
+
+Implemented in `Stan` code the, full model is;
+
+```{stan}
+#| label: define-noisy-GP
+#| output.var: "GP_c"
+#| echo: true
+#| cache: true
+
+data{
+// data
+int I;         // number of observations
+vector[I] t;   // the set of observation times
+vector[I] y;   // the set of noisy degradation measurements
+
+// hyper parameters for mu
+real a_hat;    // our estimate of the mean wear rate
+real b_hat;    // our uncertanty of this estimate
+}
+transformed data{
+vector[I] t_diff;              // The time steps between each observation
+
+// calculate the time steps
+t_diff[1] = t[1];
+t_diff[2:I] = t[2:I] - t[1:I-1];
+}
+parameters{
+real<lower = 0> sigma;         // the standard deviation of the measurement error
+real<lower = 0> mu;            // the mean wear rate of the gamma process
+real<lower = 0> tau_nu;        // the reparameterisation for nu
+real<lower = 0> alpha_nu;      // ...
+vector<lower = 0>[I] z_diff;   // the degradation jumps
+}
+transformed parameters{
+real<lower = 0> nu;           // coefficient of variation of GP
+vector<lower = 0>[I] z;        // the filtered degradation measurements
+
+// reparameterise for nu
+nu = (alpha_nu / sqrt(tau_nu));
+
+// calculate the degradation measurements from the stochastic jumps
+z = cumulative_sum(z_diff);
+}
+model{
+
+// priors //
+// for process model
+tau_nu ~ gamma(1.5, 1.5);
+alpha_nu ~ normal(0, 1);
+mu ~ normal(a_hat, b_hat);
+// for data model
+sigma ~ uniform(0, 100);
+
+// process model //
+z_diff ~ gamma(t_diff / pow(nu, 2), 1 / (mu * pow(nu, 2)));
+
+// data model //
+y ~ normal(z, sigma);
+
+}
+generated quantities{
+vector[I] y_pred;
+real log_nu;
+
+// generate posterior predictive samples within Stan (much quicker than in R)
+for(i in 1:I){
+  y_pred[i] = normal_rng(z[i], sigma);
+}
+
+// used in diagnostics
+log_nu = log(nu);
+}
+```
+
+# Fitting the model {#sec-fitmodel}
+
+We fit the model to both the "big" and "small" data sets, generating $88,000$ samples from each posterior; four chains, each $25,000$ samples in length with a burn-in of $3,000$ samples and no thinning. To ensure detailed exploration and a high resolution of the posterior, we use an aggressive adaptive step size (`adapt_delta = 0.99`) and high max tree depth (`max_treedepth = 13`) setting for the No-U-Turn sampler.
+
+```{r}
+#| label: fit-stan-models
+#| warning: true
+#| message: true
+#| error: true
+
+## sample from posterior for small data set ##
+# prepare data for stan
+data_small <- list(I = 10,
+                   t = sim_data_df$t[i_small],
+                   y = sim_data_df$y[i_small],
+                   a_hat = mean(sim_data_df$y[i_small] /
+                                sim_data_df$t[i_small]), 
+                   b_hat = 10)
+
+# perform sampling
+GP_post_small <- rstan::sampling(GP_c,
+                                 data = data_small,
+                                 chains = 4,
+                                 iter = 25000,
+                                 warmup = 3000,
+                                 control = list(adapt_delta = 0.99,
+                                                max_treedepth = 13),
+                                 verbose = FALSE,
+                                 seed = 1234)
+
+## sample from posterior for big data set ##
+# prepare data for stan
+data_big <- list(I = 20,
+                 t = sim_data_df$t[2:21],
+                 y = sim_data_df$y[2:21],
+                 a_hat = mean(sim_data_df$y[2:21] /
+                              sim_data_df$t[2:21]),
+                 b_hat = 10)
+
+# perform sampling
+GP_post_big <- rstan::sampling(GP_c,
+                               data = data_big,
+                               chains = 4,
+                               iter = 25000,
+                               warmup = 3000,
+                               control = list(adapt_delta = 0.99,
+                                              max_treedepth = 13),
+                               verbose = FALSE,
+                               seed = 1234)
+```
+
+The warning messages from the sampler indicate that it is harder to fit the model to the "small" data set than to the "big" one. @fig-mcmc-energies-big-and-small shows the energy plots for the two different samplers. The energy densities in @fig-mcmc-energies-big-and-small suggest that the sampling is also slower than it should be for the "small" data set. The energy transition density, $\pi_{\Delta E}$, is much narrower than the marginal energy distribution, $\pi_{E}$, when conditioning on the "small" data set, indicating that the chain is inefficiently exploring the target distribution and may not be able to explore the tails of the distribution completely [@betancourt_conceptual_2017, 28, 45]. Ideally, these two densities should look roughly the same.
+
+```{r}
+#| label: fig-mcmc-energies-big-and-small
+#| fig-cap: "The No-U-Turn chain energies when sampling from the posteriors conditioned on the big versus small datasets."
+#| fig-subcap: 
+#|   - "Small data set."
+#|   - "Big data set."
+#| layout-ncol: 2
+
+np_post_small <- nuts_params(GP_post_small)
+np_post_big <- nuts_params(GP_post_big)
+
+mcmc_nuts_energy(np_post_small)
+mcmc_nuts_energy(np_post_big)
+```
+
+```{r}
+#| label: save-fig-nuts-energies
+#| echo: false
+#| output: false
+
+pdf(
+  file.path(figure_path, "nuts_energy.pdf"),
+  height = 6,
+  width = 10
+)
+
+plot_grid(
+  mcmc_nuts_energy(np_post_big),
+  mcmc_nuts_energy(np_post_small),
+  labels = c("(a)", "(b)"),
+  label_fontfamily = "Times",
+  label_face = "plain",
+  nrow = 1,
+  ncol = 2
+)
+
+dev.off()
+```
+
+# Posterior distributions {#sec-postdist}
+
+The simplest way of determining if the parameter values have been successfully reclaimed is to look at the marginal posterior of each parameter. @fig-marginal-posteriors compares the marginal distribution of each parameter for both posteriors--big and small--with the true parameter values used to simulate the fictitious data. It is clear in @fig-marginal-posteriors that the model has done a poor job at reclaiming the parameters when fit to the "small" data set. Also, the posterior conditioned on the "small" data set appears to be multimodal. In contrast, when the model is fit to the "big" data set, the true values of each parameter are sufficiently reclaimed.
+
+```{r}
+#| label: fig-marginal-posteriors
+#| fig-cap: "The true values compared to the marginal posterior distributions of the parameters conditioned on the two different data sets."
+
+GP_post_big_r <- posterior::as_draws_rvars(GP_post_big)
+GP_post_small_r <- posterior::as_draws_rvars(GP_post_small)
+
+marginal_post_comp_df <- spread_rvars(GP_post_big_r,
+                                      c(sigma, mu, nu)) %>%
+                           rbind(spread_rvars(GP_post_small_r,
+                                              c(sigma, mu, nu))) %>%
+                           mutate(model = c("big data set", "small data set"))
+
+marginal_post_comp_df[3, ] <- list(4, mu, nu, "truth values")
+
+p_sigma <- marginal_post_comp_df %>% 
+  ggplot(aes(y = model)) +
+  stat_dist_halfeye(aes(dist = sigma, 
+                        fill = after_stat(cut_cdf_qi(cdf, .width = c(0.7, 0.98)))),
+                    .width = c(0.7, 0.98)) +
+  scale_fill_brewer(direction = -1) +
+  theme(legend.position = "none") +
+  xlim(0, 30) +
+  xlab(expression(sigma))
+
+p_mu <- marginal_post_comp_df %>% 
+  ggplot(aes(y = model)) +
+  stat_dist_halfeye(aes(dist = mu, 
+                        fill = after_stat(cut_cdf_qi(cdf, .width = c(0.7, 0.98)))),
+                    .width = c(0.7, 0.98)) +
+  scale_fill_brewer(direction = -1) +
+  theme(legend.position = "none") +
+  xlim(5, 20) +
+  xlab(expression(mu))
+
+p_nu <- marginal_post_comp_df %>% 
+  ggplot(aes(y = model)) +
+  stat_dist_halfeye(aes(dist = nu, 
+                        fill = after_stat(cut_cdf_qi(cdf, .width = c(0.7, 0.98)))),
+                    .width = c(0.7, 0.98)) +
+  scale_fill_brewer(direction = -1) +
+  theme(legend.position = "none") +
+  xlim(0, 3) +
+  xlab(expression(nu))
+
+p_marginal_post <- plot_grid(p_sigma,
+          p_mu +
+            theme(axis.text.y = element_blank(),
+                  axis.title.y = element_blank()),
+          p_nu +
+            theme(axis.text.y = element_blank(),
+                  axis.title.y = element_blank()), 
+          nrow = 1,
+          ncol = 3,
+          rel_widths = c(1.1, 0.9, 0.9),
+          align = "v",
+          labels = c("(a)", "(b)", "(c)"),
+          label_fontfamily = "Times",
+          label_face = "plain")
+
+p_marginal_post
+```
+
+```{r}
+#| label: save-fig-marginal-posteriors
+#| echo: false
+#| output: false
+
+pdf(
+  file.path(figure_path, "marginal-posterior_a.pdf"),
+  height = 6,
+  width = 10
+)
+p_marginal_post
+dev.off()
+```
+
+It is easiest to interpret how well the model has reclaimed the true degradation path through the posterior predictive distribution for the filtered degradation path, @fig-reclaimed-path-big-and-small. Interpreting the posterior in terms of the posterior predictive distribution gives a better understanding of how the parameters covary with one another and helps to understand if the model has quantified the uncertainties of the parameters properly.
+
+```{r}
+#| label: fig-reclaimed-path-big-and-small
+#| fig-cap: "The posterior distribution of the underlying degradation paths conditioned on the two different datasets compared to the true path and noisy observations."
+
+ppd_big <- spread_rvars(GP_post_big_r, z[i], y_pred[i])
+ppd_big$t <- sim_data_df$t[2:21]
+ppd_big$true_deg <- sim_data_df$z[2:21]
+ppd_big$obs_deg <- sim_data_df$y[2:21]
+ppd_big$model <- "big"
+
+ppd_small <- spread_rvars(GP_post_small_r, z[i], y_pred[i])
+ppd_small$t <- sim_data_df$t[i_small]
+ppd_small$true_deg <- sim_data_df$z[i_small]
+ppd_small$obs_deg <- sim_data_df$y[i_small]
+ppd_small$model <- "small"
+
+p_ppd_big <- ppd_big %>% 
+  ggplot(aes(x = t)) +
+  stat_dist_lineribbon(aes(dist = z), 
+                       .width = c(.5, .75, .95), 
+                       alpha = 0.2) +
+  scale_fill_brewer() +
+  geom_line(aes(y = true_deg)) +
+  geom_point(aes(y = obs_deg)) +
+  xlab("time") +
+  ylab("wear") +
+  theme(legend.position = "none")
+
+p_ppd_small <- ppd_small %>% 
+  ggplot(aes(x = t)) +
+  stat_dist_lineribbon(
+    aes(dist = z), 
+    .width = c(.5, .75, .95), 
+    alpha = 0.2
+  ) +
+  scale_fill_brewer() +
+  geom_line(aes(y = true_deg)) +
+  geom_point(aes(y = obs_deg)) +
+  xlab("time") +
+  ylab("wear")
+
+p_ppd_z <- plot_grid(
+  p_ppd_big, 
+  p_ppd_small +
+    theme(
+      axis.text.y = element_blank(),
+      axis.title.y = element_blank()
+    ), 
+  nrow = 1,
+  ncol = 2,
+  labels = c("(a)", "(b)"),
+  label_fontfamily = "Times",
+  label_face = "plain",
+  rel_widths = c(0.48, 0.52)
+)
+
+p_ppd_z
+```
+
+```{r}
+#| label: save-fig-reclaimed-path-big-and-small
+#| echo: false
+#| output: false
+
+pdf(
+  file.path(figure_path, "ppd_z_a.pdf"),
+  height = 8,
+  width = 10
+)
+p_ppd_z
+dev.off()
+```
+
+When the model is fit to the "big" data set, it successfully reclaims the underlying degradation path with what looks to be reasonable uncertainty bands. Whereas, when the model is fit to the "small" data set, it does a poor job of reclaiming the underlying degradation path. When conditioned on the "small" data set, the model has underfit to the data; in other words, the coefficient of variation has shrunk to zero so that the GP is effectively a strait line, and the measurement error has inflated to compensate for the underfitting of the underlying process. This underfitting explains the multi-modality in the marginal posteriors of the parameters; one mode around the truth and the other around the "underfit" model. Even if I make the prior on the coefficient of variation much more diffuse and less heavily centred around zero by changing the prior to $\nu \sim half\_t(50, 0, 25)$ and re-generate the plots, the results are very similar. So, clearly, this is not a prior sensitivity problem but rather a problem with the data/model.[^1]
+
+[^1]: I have not shown the alternative prior in this markdown, but to do this, all the reader needs to do is go back to the Stan model, change the prior, and re-run the code.
+
+Complicated sampling problems such as the one we have here--i.e. problems that remain even when the model is properly specified and implemented and when the priors do not contradict the data--usually result in areas of tight curvature in the posterior. In a [blog post](https://betanalpha.github.io/assets/case_studies/identifiability.html#2_Degeneracy), the well-known Bayesian statistician and Stan developer Michael Betancourt refers to these areas of tight curvature (or in other words, localised covariance) as degeneracies in the posterior (or pathologies Betencourt2017 p13, & Gelman2020 p29). Investigating these degeneracies can help diagnose the underlying issue causing the sampler to misbehave. One advantage of using a sampling algorithm that is a variant of HMC is the chain-specific diagnostics. Because HMC and its variants are based on the geometry of the joint posterior, they often fail loudly when the posterior is complex and difficult to sample from, whereas other MCMC samplers will not. The loud failure of HMC algorithms and the subsequent diagnostics output by `Stam` can be used to explore any complected degenerate behaviour in the posterior.
+
+# Diagnostic plots {#sec-diagplots}
+
+The most useful diagnostic for exploring degenerate behaviour is divergent transitions. These divergencies occur when the leapfrog algorithm used to approximate the Hamiltonian trajectories cannot keep up with the curvature of the posterior, and so diverges off to infinity. Hence, the divergent traditions are spatially correlated with the problematic areas of extreme curvature in the posterior. @fig-pairs-plot-small shows the pairs plots of the MCMC samples conditioned on the small dataset, with the divergent transitions plotted in red. The red points highlight the area of the posterior that is causing the issues.
+
+```{r}
+#| label: fig-pairs-plot-small
+#| fig-cap: "A pairs plot of the MCMC draws sampled from the posterior conditioned on the small dataset."
+
+# generate pairs
+p_paris_small <- mcmc_pairs(GP_post_small,
+           np = np_post_small,
+           pars = c("sigma",
+                    "mu",
+                    "log_nu",
+                    "z_diff[1]"),
+           )
+
+# extract and relabel diagonals
+p_paris_small_list <- p_paris_small$bayesplot
+p_paris_small_list[[1]] <- p_paris_small_list[[1]] +
+  labs(subtitle = expression(sigma))
+p_paris_small_list[[6]] <- p_paris_small_list[[6]] +
+  labs(subtitle = expression(mu))
+p_paris_small_list[[11]] <- p_paris_small_list[[11]] +
+  labs(subtitle = expression(log(nu)))
+p_paris_small_list[[16]] <- p_paris_small_list[[16]] +
+  labs(subtitle = expression(Delta*z[1]))
+
+# regenerate gridplot
+p_paris_small <- bayesplot_grid(plots = p_paris_small_list)
+p_paris_small
+```
+
+```{r}
+#| label: save-fig-pairs-plot-small
+#| echo: false
+#| output: false
+
+png(
+  file.path(figure_path, "Small-data-pairs.png"),
+  height = 8,
+  width = 8,
+  units = "in",
+  res = 500
+)
+p_paris_small
+dev.off()
+```
+
+In @fig-pairs-plot-small there are some strong funnel shapes in the posterior. These are the cause of the problems with the sampler. The strongest funnel shape appears to be between the log of $\nu$ and the first filtered jump. Funnel-shaped degeneracies exist between all the jumps and $log(\nu)$, but I only show the first jump to save space. It is difficult to interpret anything further from the pairs plot since they only compare two-dimensional relationships in parameter space, and we have a many-dimensional posterior. Parallel coordinate plots are a useful tool for understanding these diagnostics with respect to all the "parameters".[^2] The parallel coordinate plot for the posterior samples conditiond on the small data set is shown in @fig-parcoord-small.
+
+[^2]: Quotation marks are used because $\Delta z_i$ is treated as missing data, which in the Bayesian analysis is handled the same as a parameter.
+
+```{r}
+#| label: fig-parcoord-small
+#| fig-cap: "The parallel coordinate plot of the posterior samples for the small dataset. Divergent transitions are shown in red."
+
+np_post_small <- nuts_params(GP_post_small)
+custom_labels <- c(
+  "sigma" = expression(sigma), 
+  "mu" = expression(mu), 
+  "nu" = expression(nu),
+  "z_diff[1]" = expression(Delta*z[1]),
+  "z_diff[2]" = expression(Delta*z[2]),
+  "z_diff[3]" = expression(Delta*z[3]),
+  "z_diff[4]" = expression(Delta*z[4]),
+  "z_diff[5]" = expression(Delta*z[5]),
+  "z_diff[6]" = expression(Delta*z[6]),
+  "z_diff[7]" = expression(Delta*z[7]),
+  "z_diff[8]" = expression(Delta*z[8]),
+  "z_diff[9]" = expression(Delta*z[9]),
+  "z_diff[10]" = expression(Delta*z[10])
+)
+p_parcoord <- mcmc_parcoord(GP_post_small,
+                            np = np_post_small,
+                            pars = c("sigma",
+                                     "mu",
+                                     "nu",
+                                     "z_diff[1]",
+                                     "z_diff[2]",
+                                     "z_diff[3]",
+                                     "z_diff[4]",
+                                     "z_diff[5]",
+                                     "z_diff[6]",
+                                     "z_diff[7]",
+                                     "z_diff[8]",
+                                     "z_diff[9]",
+                                     "z_diff[10]")) +
+  scale_x_discrete(labels = custom_labels)
+
+p_parcoord
+```
+
+```{r}
+#| label: save-fig-parcoord-small
+#| echo: false
+#| output: false
+png(
+  file.path(figure_path, "parcoord.png"),
+  height = 5,
+  width = 8,
+  units = "in",
+  res = 50
+)
+p_parcoord
+dev.off()
+```
+
+In @fig-parcoord-small, there is a very clear structure in the divergent transitions. They pass through a very specific value of $\mu$ and $\nu$ as well as very clear values of the filtered jumps. They are also generally in the range of $\sigma = 10$ to $\sigma = 20$, which is higher than the real value of $\sigma = 4$. Using the same general idea of the parallel coordinate plot, in @fig-degradation-path-divergencies, I map the divergent transitions onto the posterior predictive distribution of the filtered measurements. From this plot, we can see very clearly that the majority of the divergent trajectories correspond with straight lines through the data. This causes me to believe that the problem comes from an inability to rule out a linear model with large measurement error.
+
+```{r}
+#| label: fig-degradation-path-divergencies
+#| fig-cap: "The divergent transitions of the MCMC chain overlayed on the posterior distribution of the underlying degradation path."
+#| warning: false
+
+ppd_df <- GP_post_small %>% 
+  as_draws_df() %>%
+  select(str_c("z[", 1:10, "]"), .chain, .iteration, .draw) %>%
+  left_join(filter(np_post_small, 
+                   Parameter == "divergent__"),
+            by = c(".chain" = "Chain", ".iteration" = "Iteration")) %>%
+  tidyr::pivot_longer(-c(.chain, .iteration, .draw, Parameter, Value)) %>%
+  mutate(jump = name,
+         divergent = Value,
+         z = value) %>%
+  left_join(data.frame(jump = str_c("z[", 1:10, "]"),
+                       t = data_small$t),
+            by = "jump") %>%
+  select(-c("Parameter", "Value", "value"))
+
+p_divergent_paths <- ppd_df %>%
+  ggplot(aes(x = t, y = z)) +
+  stat_lineribbon() +
+  scale_fill_brewer() +
+  geom_line(data = filter(ppd_df, divergent == 1),
+            aes(group = .draw),
+            col = "red",
+            alpha = 0.2)
+
+p_divergent_paths
+```
+
+```{r}
+#| label: save-fig-degradation-path-divergencies
+#| echo: false
+#| output: false
+
+pdf(
+  file.path(figure_path, "zppd-divergencies.pdf"),
+  height = 7,
+  width = 8
+)
+p_divergent_paths
+dev.off()
+```
+
+In the two data sets, one jump that is the same in both data sets is $\Delta z_{15}$ in the big data set and $\Delta z_9$ in the small data set. @fig-scatter-nu-jump5 compares the joint densities of $\Delta z_{15}$ and $log(\nu)$ for the posterior conditioned on the "big" data set with $\Delta z_9$ and $log(\nu)$ for the posterior conditioned on the "small" data set. @fig-scatter-nu-jump5 shows, once again, that there are two competing modes in the posterior conditioned on the small data set. In contrast, in the posterior conditioned on the big data set, there is only one. The divergencies are also plotted as red points in @fig-scatter-nu-jump5. Nearly all the divergent transitions are associated with the mode that sits deep within the funnel. This misleading mode in the posterior conditioned on the small data set is centred at a very small value of $\nu$ and $\Delta z_9 = \mu \times \Delta t_9$; in other words, the values of a linear path. The second mode is located around the true parameter values. In the case of the "big" data set, the incorrect mode is washed out by the extra information in the data. However, there are still remnants of the funnel shape.
+
+```{r}
+#| label: fig-scatter-nu-jump5
+#| fig-cap: "A comparison of the posterior joint distribution of coefficient of variation and the 15th jump for the big data set and 9th jump for the small data set."
+
+GP_post_big_d <- posterior::as_draws_df(GP_post_big)
+GP_post_small_d <- posterior::as_draws_df(GP_post_small)
+GP_post_big_d$model <- "big"
+GP_post_small_d$model <- "small"
+
+GP_post_big_d <- nuts_params(GP_post_big) %>% 
+  filter(Parameter == "divergent__") %>%
+  full_join(GP_post_big_d, 
+            by = c("Chain" = ".chain", 
+                   "Iteration" = ".iteration"))
+
+GP_post_small_d <- nuts_params(GP_post_small) %>% 
+  filter(Parameter == "divergent__") %>%
+  full_join(GP_post_small_d, 
+            by = c("Chain" = ".chain", 
+                   "Iteration" = ".iteration"))
+
+joint_posts_nu <- rbind(select(GP_post_big_d, nu, `z_diff[15]`, model, Value) %>%
+        mutate(`z_diff[9]` = `z_diff[15]`) %>%
+        select(nu, `z_diff[9]`, model, Value), 
+      select(GP_post_small_d, nu, `z_diff[9]`, model, Value)) %>%
+  mutate(`log(nu)` = log(nu),
+         Divergent = as.factor(ifelse(Value == 0, "false", "true")))
+
+p_joint_post_nu_big <- joint_posts_nu %>% 
+  filter(model == "big") %>%
+  ggplot(aes(x = `log(nu)`, y = `z_diff[9]`)) +
+  stat_density2d(bins = 50, alpha = 0.2, color = "black") +
+  geom_point(data = ~filter(.x, Divergent == "true"), 
+             alpha = 0.2, 
+             col = "red",
+             shape = 3) +
+  ylim(0, 25) +
+  xlim(-5, 1.5) +
+  xlab(expression(log(nu))) +
+  ylab(expression(paste(Delta, z[15]))) +
+  theme(legend.position = "none")
+
+p_joint_post_nu_small <- joint_posts_nu %>% 
+  filter(model == "small") %>%
+  ggplot(aes(x = `log(nu)`, y = `z_diff[9]`)) +
+  stat_density2d(bins = 50, alpha = 0.2, color = "black") +
+  geom_point(data = ~filter(.x, Divergent == "true"), 
+             alpha = 0.2, 
+             col = "red",
+             shape = 3) +
+  ylim(0, 25) +
+  xlim(-5, 1.5) +
+  xlab(expression(log(nu))) +
+  ylab(expression(paste(Delta, z[9]))) +
+  theme(legend.position = "none")
+
+p_joint_nu_jump <- plot_grid(p_joint_post_nu_big,
+          p_joint_post_nu_small, 
+          nrow = 1,
+          ncol = 2,
+          labels = c("big", "small"))
+
+p_joint_nu_jump
+```
+
+A similar thing can be seen in the joint posterior of $\sigma$ and $\Delta z_{15}$/$\Delta z_9$ in @fig-scatter-sigma-jump5.
+
+```{r}
+#| label: fig-scatter-sigma-jump5
+#| fig-cap: "A comparison of the posterior joint distribution of sigma and the 15th jump for the big data set and 9th jump for the small data set."
+
+GP_post_big_d <- posterior::as_draws_df(GP_post_big)
+GP_post_small_d <- posterior::as_draws_df(GP_post_small)
+GP_post_big_d$model <- "big"
+GP_post_small_d$model <- "small"
+
+GP_post_big_d <- nuts_params(GP_post_big) %>% 
+  filter(Parameter == "divergent__") %>%
+  full_join(GP_post_big_d, 
+            by = c("Chain" = ".chain", 
+                   "Iteration" = ".iteration"))
+
+GP_post_small_d <- nuts_params(GP_post_small) %>% 
+  filter(Parameter == "divergent__") %>%
+  full_join(GP_post_small_d, 
+            by = c("Chain" = ".chain", 
+                   "Iteration" = ".iteration"))
+
+joint_posts_sig <- rbind(select(GP_post_big_d, sigma, `z_diff[15]`, model, Value) %>%
+        mutate(`z_diff[9]` = `z_diff[15]`) %>%
+        select(sigma, `z_diff[9]`, model, Value), 
+      select(GP_post_small_d, sigma, `z_diff[9]`, model, Value)) %>%
+  mutate(Divergent = as.factor(ifelse(Value == 0, "false", "true")))
+
+p_joint_post_sig_big <- joint_posts_sig %>%
+  filter(model == "big") %>%
+  ggplot(aes(x = sigma, y = `z_diff[9]`)) +
+  stat_density2d(bins = 50, alpha = 0.2, color = "black") +
+  geom_point(data = ~filter(.x, Divergent == "true"), 
+             alpha = 0.2, 
+             col = "red",
+             shape = 3) +
+  xlab(expression(sigma)) +
+  ylab(expression(paste(Delta, z[15]))) +
+  theme(legend.position = "none") +
+  xlim(0, 30) +
+  ylim(0, 20)
+
+p_joint_post_sig_small <- joint_posts_sig %>%
+  filter(model == "small") %>%
+  ggplot(aes(x = sigma, y = `z_diff[9]`)) +
+  stat_density2d(bins = 50, alpha = 0.2, color = "black") +
+  geom_point(data = ~filter(.x, Divergent == "true"), 
+             alpha = 0.2, 
+             col = "red",
+             shape = 3) +
+  xlab(expression(sigma)) +
+  ylab(expression(paste(Delta, z[9]))) +
+  theme(legend.position = "none") +
+  xlim(0, 30) +
+  ylim(0, 20)
+
+
+p_joint_sig_jump <- plot_grid(p_joint_post_sig_big,
+          p_joint_post_sig_small, 
+          nrow = 1, 
+          ncol = 2,
+          labels = c("big", "small"))
+
+p_joint_sig_jump
+```
+
+```{r}
+#| label: save-fig-scatter-nu-sigma-jump5
+#| echo: false
+#| output: false
+
+pdf(
+  file.path(figure_path, "joint-sig-jump.pdf"),
+  height = 6,
+  width = 8
+)
+plot_grid(
+  p_joint_post_nu_big,
+  p_joint_post_nu_small,
+  p_joint_post_sig_big,
+  p_joint_post_sig_small,
+  nrow = 2,
+  ncol = 2,
+  labels = c("(a)", "(b)", "(c)", "(d)"),
+  label_fontfamily = "Times",
+  label_face = "plain"
+)
+dev.off()
+```
+
+Ultimately, it seems the model struggles to distinguish between the true values of the parameters and the values that correspond to a linear line with large uncertainty. I can show this is not a random occurrence by repeating the above data-generating and fitting process multiple times.
+
+# Repeated simulations {#sec-rptsim}
+
+In this section, I perform $100$ iterations of the above simulation and model fitting process. There are far too many posteriors to interpret individually. So, in @fig-sim-example-results, all the marginal densities of $\sigma$ and $\nu$ are overlaid for easy comparison. The divergences are added as a rug plot at the bottom of the two plots.
+
+```{r}
+#| label: simulation-example
+
+simulation_results <- as.list(rep(NA, 10))
+
+for (i in 1:100) {
+  sim_data <- simData(n = 10)
+  # sample from posterior for big data set
+  stan_data <- list(I = 10,
+                    t = sim_data$t[-c(1)],
+                    y = sim_data$y[-c(1)],
+                    a_hat = mean(sim_data$t[-c(1)] /
+                                 sim_data$y[-c(1)]),
+                    b_hat = 10)
+  
+  GP_post <- rstan::sampling(GP_c,
+                             data = stan_data,
+                             chains = 4,
+                             iter = 5000,
+                             warmup = 500,
+                             control = list(adapt_delta = 0.99, 
+                                            max_treedepth = 13),
+                             verbose = FALSE,
+                             seed = 1234)
+  
+  
+  samples <- as_draws_df(GP_post)
+  divergencies <- nuts_params(GP_post) %>% 
+    filter(Parameter == "divergent__")
+  
+  
+  simulation_results[[i]] <- left_join(samples, 
+                                       divergencies, 
+                                       by = c(".chain" = "Chain", 
+                                              ".iteration" = "Iteration"))
+  
+  rm(GP_post)
+}
+```
+
+```{r}
+#| label: fig-sim-example-results
+#| fig-cap: "The marginal posterior distributions of sigma and nu for the 100 repetitions of the simulation process. The locations of the divergencies are shown as a rug plot at the bottom, and the true values of the parameters are indicated by the vertical black line."
+
+p1 <- bind_rows(simulation_results, .id = "df") %>%
+  ggplot(aes(x = sigma, group = df)) + 
+  geom_density(col = "grey", alpha = 0.4) +
+  geom_vline(xintercept = 4) +
+  geom_rug(data = filter(bind_rows(simulation_results, 
+                                   .id = "df"), 
+                         Value == 1), 
+           col = "red",
+           alpha = 0.3)
+
+p2 <- bind_rows(simulation_results, .id = "df") %>%
+  ggplot(aes(x = nu, group = df)) + 
+  geom_density(col = "grey", alpha = 0.4) +
+  geom_vline(xintercept = 1 / sqrt(0.8)) +
+  geom_rug(data = filter(bind_rows(simulation_results, 
+                                   .id = "df"), 
+                         Value == 1), 
+           col = "red",
+           alpha = 0.3)
+
+cowplot::plot_grid(p1, p2, labels = c("sigma", "nu"))
+```
+
+While some of the marginal distributions appear to be nicely centred around the true values, there are many with the same strange multimodal shape that was present in the example simulation above. Therefore, this is a problem that repeatedly occurs and should not be overlooked. For real data, we have no way of telling if the data contain enough information to properly identify the model.
+
+# Adding informtion about $\sigma$ {#sec-addinf}
+
+To check my hypothesis that poor sampling and inference is caused by pre-asymptotic non-identifiability of the parameters $\sigma$ and $\nu$, I add information to into the analysis that specifically informs $\sigma$ to see if the undesirable behaviour goes away. Adding information about $\sigma$ should help separate the two parameters. Two ways of adding information into the analysis are through a more informative prior or adding extra data that only informs $\sigma$. This second method could be achieved by taking multiple measurements at time $t = 0$ when the degradation is known to be zero or just before decommissioning the component when we can go and take detailed, non-noisy measurements.
+
+## Stronger prior {#subsec-strongprior}
+
+First, I will use a stronger prior; $\sigma \sim N(4, 1)$.
+
+```{stan}
+#| label: define-stronger-prior-stan-model
+#| output.var: "GP_strong_prior"
+#| echo: true
+#| cache: true
+
+data{
+// data
+int I;         // number of observations
+vector[I] t;   // the set of observation times
+vector[I] y;   // the set of noisy degradation measurements
+
+// prior for mu
+real a_hat;    // our estimate of the mean wear rate
+real b_hat;    // our uncertanty of this estimate
+}
+transformed data{
+vector[I] t_diff;              // The time steps between each observation
+
+t_diff[1] = t[1];
+t_diff[2:I] = t[2:I] - t[1:I-1];
+}
+parameters{
+real<lower = 0> sigma;         // the standard deviation of the measurement error
+real<lower = 0> mu;            // the mean wear rate of the gamma process
+real<lower = 0> tau_nu;       // the reparam for the nu
+real<lower = 0> alpha_nu;     // ...
+vector<lower = 0>[I] z_diff;   // the degradation jumps
+}
+transformed parameters{
+real<lower = 0> nu;           // coefficient of variation of GP
+vector<lower = 0>[I] z;        // filtered degradation measurements
+
+// reparameterise for nu
+nu = (alpha_nu / sqrt(tau_nu));
+
+// calculate the degradation measurements from the jumps
+z = cumulative_sum(z_diff);
+}
+model{
+
+// priors //
+// for process model
+tau_nu ~ gamma(1.5, 1.5);
+alpha_nu ~ normal(0, 1);
+mu ~ normal(a_hat, b_hat);
+// for data model
+sigma ~ normal(4, 1);
+
+// process model //
+z_diff ~ gamma(t_diff / pow(nu, 2), 1 / (mu * pow(nu, 2)));
+
+// data model //
+y ~ normal(z, sigma);
+
+}
+generated quantities{
+vector[I] y_pred;
+
+// generate posterior predictive samples
+for(i in 1:I){
+  y_pred[i] = normal_rng(z[i], sigma);
+}
+}
+```
+
+```{r}
+#| label: fit-stronger-prior
+#| warning: true
+#| message: true
+#| error: true
+
+GP_post_stron_prior <- rstan::sampling(GP_strong_prior,
+                                       data = data_small,
+                                       chains = 4,
+                                       iter = 25000,
+                                       warmup = 3000,
+                                       control = list(adapt_delta = 0.99,
+                                                      max_treedepth = 13),
+                                       verbose = FALSE,
+                                       seed = 1234)
+```
+
+There are no divergent transition warnings, and the chain energy plots (@fig-strong-prior-nuts-energies) show that the sampling method is relatively efficient.
+
+```{r}
+#| label: fig-strong-prior-nuts-energies
+#| fig-cap: "The No-U-Turn sampler chain energies when a stronger prior is used for the small dataset."
+
+np_post_stron_prior <- nuts_params(GP_post_stron_prior)
+mcmc_nuts_energy(np_post_stron_prior)
+```
+
+```{r}
+#| label: save-fig-strong-prior-nuts-energies
+#| echo: false
+#| output: false
+
+pdf(
+  file.path(figure_path, "strong-prior-nuts-energy.pdf"),
+  height = 5,
+  width = 6
+)
+mcmc_nuts_energy(np_post_stron_prior)
+dev.off()
+```
+
+The pairs plot in @fig-strong-prior-joint-post, shows that the stronger prior has resulted in much more mellow geometries in the posterior. There are no longer any deep funnel shapes.
+
+```{r}
+#| label: fig-strong-prior-joint-post
+#| fig-cap: "The joint distributions of MCMC samples when a stronger prior is used for the small dataset."
+
+p_strong_prior_pairs <- mcmc_pairs(GP_post_stron_prior,
+           np = np_post_stron_prior,
+           pars = c("sigma",
+                    "mu",
+                    "nu",
+                    "z_diff[1]"),
+           transform = list(nu = "log"))
+
+p_strong_prior_pairs_list <- p_strong_prior_pairs$bayesplot
+p_strong_prior_pairs_list[[1]] <- p_strong_prior_pairs_list[[1]] +
+  labs(subtitle = expression(sigma))
+p_strong_prior_pairs_list[[6]] <- p_strong_prior_pairs_list[[6]] +
+  labs(subtitle = expression(mu))
+p_strong_prior_pairs_list[[11]] <- p_strong_prior_pairs_list[[11]] +
+  labs(subtitle = expression(log(nu)))
+p_strong_prior_pairs_list[[16]] <- p_strong_prior_pairs_list[[16]] +
+  labs(subtitle = expression(Delta*z[1]))
+
+# regenerate gridplot
+p_strong_prior_pairs <- bayesplot_grid(plots = p_strong_prior_pairs_list)
+p_strong_prior_pairs
+```
+
+```{r}
+#| label: save-fig-strong-prior-joint-post
+#| echo: false
+#| output: false
+
+png(
+  file.path(figure_path, "strong-prior-pairs.png"),
+  height = 5,
+  width = 6,
+  units = "in",
+  res = 500
+)
+p_strong_prior_pairs
+dev.off()
+```
+
+Most importantly, the modes of the marginal posteriors are very nicely centred around the true parameter values (@fig-strong-prior-marginal-post). Adding a more informative prior on $\sigma$ even gives better results than using the bigger data set.
+
+```{r}
+#| label: fig-strong-prior-marginal-post
+#| fig-cap: "A comparison of the marginal posteriors of the parameters when a stronger prior is used for the small dataset."
+
+GP_post_stron_prior_r <- posterior::as_draws_rvars(GP_post_stron_prior)
+
+marginal_post_comp_df[4, ] <- spread_rvars(
+  GP_post_stron_prior_r,
+  c(sigma, mu, nu)
+) %>%
+  mutate(model = c("strong_prior"))
+
+p_sigma <- marginal_post_comp_df %>% 
+  ggplot(aes(y = model)) +
+  stat_dist_halfeye(aes(dist = sigma, 
+                        fill = after_stat(cut_cdf_qi(cdf, .width = c(0.7, 0.98)))),
+                    .width = c(0.7, 0.98)) +
+  scale_fill_brewer(direction = -1) +
+  theme(legend.position = "none") +
+  xlim(0, 30) +
+  xlab("sigma")
+
+p_mu <- marginal_post_comp_df %>% 
+  ggplot(aes(y = model)) +
+  stat_dist_halfeye(aes(dist = mu, 
+                        fill = after_stat(cut_cdf_qi(cdf, .width = c(0.7, 0.98)))),
+                    .width = c(0.7, 0.98)) +
+  scale_fill_brewer(direction = -1) +
+  theme(legend.position = "none") +
+  xlim(5, 20) +
+  xlab("mu")
+
+p_nu <- marginal_post_comp_df %>% 
+  ggplot(aes(y = model)) +
+  stat_dist_halfeye(aes(dist = nu, 
+                        fill = after_stat(cut_cdf_qi(cdf, .width = c(0.7, 0.98)))),
+                    .width = c(0.7, 0.98)) +
+  scale_fill_brewer(direction = -1) +
+  theme(legend.position = "none") +
+  xlim(0, 3) +
+  xlab("nu")
+
+plot_grid(p_sigma,
+          p_mu +
+            theme(axis.text.y = element_blank(),
+                  axis.title.y = element_blank()),
+          p_nu +
+            theme(axis.text.y = element_blank(),
+                  axis.title.y = element_blank()), 
+          nrow = 1,
+          ncol = 3,
+          align = "v",
+          labels = "auto")
+```
+
+## Supplementary data {#subsec-suppdata}
+
+Alternatively, information about sigma can be added to the analysis through additional supplementary data. Here, I add $5$ extra observations that specifically inform only the measurement error. I do this by simulating from $N(0, 4^2)$ and adding this to the data that I feed to `Stan` as `y_sup`.
+
+```{stan}
+#| label: define-sup-data-stan-model
+#| output.var: "GP_sup_data"
+#| echo: true
+#| cache: true
+
+data{
+// data
+int I;               // number of observations
+int I_sup;           // number of suplimentary observations
+vector[I] t;         // the set of observation times
+vector[I] y;         // the set of noisy degradation measurements
+vector[I_sup] y_sup; // suplimentary data informing sigma
+// prior for mu
+real a_hat;          // our estimate of the mean wear rate
+real b_hat;          // our uncertanty of this estimate
+}
+transformed data{
+vector[I] t_diff;              // The time steps between each observation
+
+t_diff[1] = t[1];
+t_diff[2:I] = t[2:I] - t[1:I-1];
+}
+parameters{
+real<lower = 0> sigma;         // the standard deviation of the measurement error
+real<lower = 0> mu;            // the mean wear rate of the gamma process
+real<lower = 0> tau_nu;       // the reparam for the nu
+real<lower = 0> alpha_nu;     // ...
+vector<lower = 0>[I] z_diff;   // the degradation jumps
+}
+transformed parameters{
+real<lower = 0> nu;           // coefficient of variation of GP
+vector<lower = 0>[I] z;        // filtered degradation measurements
+
+// reparameterise for nu
+nu = (alpha_nu / sqrt(tau_nu));
+
+// calculate the degradation measurements from the jumps
+z = cumulative_sum(z_diff);
+}
+model{
+
+// priors //
+// for process model
+tau_nu ~ gamma(1.5, 1.5);
+alpha_nu ~ normal(0, 1);
+mu ~ normal(a_hat, b_hat);
+// for data model
+sigma ~ normal(4, 1);
+
+// process model //
+z_diff ~ gamma(t_diff / pow(nu, 2), 1 / (mu * pow(nu, 2)));
+
+// data model //
+y ~ normal(z, sigma);
+y_sup ~ normal(0, sigma);
+}
+generated quantities{
+vector[I] y_pred;
+
+// generate posterior predictive samples
+for(i in 1:I){
+  y_pred[i] = normal_rng(z[i], sigma);
+}
+}
+```
+
+```{r}
+#| label: fit-sup-data
+#| warning: true
+#| message: true
+#| error: true
+
+data_small_sup <- data_small
+data_small_sup$I_sup <- 5
+data_small_sup$y_sup <- rnorm(n = data_small_sup$I_sup,
+                              mean = 0,
+                              sd = 4)
+
+GP_post_sup_data <- rstan::sampling(GP_sup_data,
+                                    data = data_small_sup,
+                                    chains = 4,
+                                    iter = 25000,
+                                    warmup = 3000,
+                                    control = list(adapt_delta = 0.99,
+                                                   max_treedepth = 13),
+                                    verbose = FALSE,
+                                    seed = 1234)
+```
+
+Similar to when a stronger prior is used, there are no divergent transitions, and the chain energies show that sampling is relatively efficient (@fig-sup-data-nuts-energies).
+
+```{r}
+#| label: fig-sup-data-nuts-energies
+#| fig-cap: "The No-U-Turn sampler chain energies when supplementary data is used for the small dataset."
+
+np_post_sup_data <- nuts_params(GP_post_sup_data)
+mcmc_nuts_energy(np_post_sup_data)
+```
+
+This posterior also has much nicer geometries than the posterior conditioned on the "small" data set alone (@fig-sup-data-joint-post).
+
+```{r}
+#| label: fig-sup-data-joint-post
+#| fig-cap: "The joint distributions of MCMC samples when supplementary data is used for the small dataset."
+
+mcmc_pairs(GP_post_sup_data,
+           np = np_post_sup_data,
+           pars = c("sigma",
+                    "mu",
+                    "nu",
+                    "z_diff[1]"),
+           transform = list(nu = "log"))
+```
+
+@fig-sup-data-marginal-post compares the marginal distribution of the parameters for all of the different fitted models. Adding the supplementary data yields much the same inference as using a stronger prior on $\sigma$.
+
+```{r}
+#| label: fig-sup-data-marginal-post
+#| fig-cap: "Comparison of the marginal posteriors of the parameters when supplementary data is used for the small dataset."
+
+GP_post_sup_data_r <- posterior::as_draws_rvars(GP_post_sup_data)
+
+marginal_post_comp_df[5, ] <- spread_rvars(
+  GP_post_sup_data_r,
+  c(sigma, mu, nu)
+) %>%
+  mutate(model = c("sup_data"))
+
+marginal_post_comp_df$model[4:5] <- c(
+  "stronger prior",
+  "suplimentary data"
+)
+
+p_sigma <- marginal_post_comp_df %>%
+  ggplot(aes(y = model)) +
+  stat_dist_halfeye(
+    aes(
+      dist = sigma, 
+      fill = after_stat(cut_cdf_qi(cdf, .width = c(0.7, 0.98)))
+    ),
+    .width = c(0.7, 0.98)
+  ) +
+  scale_fill_brewer(direction = -1) +
+  theme(legend.position = "none") +
+  xlim(0, 30) +
+  xlab(expression(sigma))
+
+p_mu <- marginal_post_comp_df %>%
+  ggplot(aes(y = model)) +
+  stat_dist_halfeye(
+    aes(
+      dist = mu, 
+      fill = after_stat(cut_cdf_qi(cdf, .width = c(0.7, 0.98)))
+    ),
+    .width = c(0.7, 0.98)
+  ) +
+  scale_fill_brewer(direction = -1) +
+  theme(legend.position = "none") +
+  xlim(5, 20) +
+  xlab(expression(mu))
+
+p_nu <- marginal_post_comp_df %>%
+  ggplot(aes(y = model)) +
+  stat_dist_halfeye(
+    aes(
+      dist = nu, 
+      fill = after_stat(cut_cdf_qi(cdf, .width = c(0.7, 0.98)))
+    ),
+    .width = c(0.7, 0.98)
+  ) +
+  scale_fill_brewer(direction = -1) +
+  theme(legend.position = "none") +
+  xlim(0, 3) +
+  xlab(expression(nu))
+
+p_marginal_post_extra_info <- plot_grid(
+  p_sigma,
+  p_mu +
+    theme(
+      axis.text.y = element_blank(),
+      axis.title.y = element_blank()
+    ),
+  p_nu +
+    theme(
+      axis.text.y = element_blank(),
+      axis.title.y = element_blank()
+    ), 
+  nrow = 1, ncol = 3,
+  rel_widths = c(1.1, 0.9, 0.9),
+  align = "v",
+  labels = c("(a)", "(b)", "(c)"),
+  label_fontfamily = "Times",
+  label_face = "plain"
+)
+
+p_marginal_post_extra_info
+```
+
+```{r}
+#| label: save-fig-sup-data-marginal-post
+#| echo: false
+#| output: false
+#| cache: false
+
+pdf(
+  file.path(figure_path, "marginal-post-extra-info.pdf"),
+  height = 6,
+  width = 8
+)
+p_marginal_post_extra_info
+dev.off()
+```
+
+Adding more information into the prior on $\sigma$ or adding supplementary data that specifically informs $\sigma$ has drastically improved the sampling efficiency and the inference of the model. Lastly, @fig-comparing-scatter-nu-jump5 shows the joint posterior of $\Delta z_9$ and $log(\nu)$ for the two new model fits and compares them with @fig-scatter-nu-jump5. The joint posterior of $\Delta z_9$ and $log(\nu)$ for the two new cases show no sign of multimodality or pathological behaviour.
+
+```{r}
+#| label: fig-comparing-scatter-nu-jump5
+#| fig-cap: "A comparison of the posterior joint distribution of coefficient of variation and the 15th jump for the big data set and the 9th jump for the small data set, using the same model, a model with a stronger prior, and including supplementary data that informs the standard deviation of the measurement error."
+
+GP_post_stron_prior_d <- posterior::as_draws_df(GP_post_stron_prior)
+GP_post_sup_data_d <- posterior::as_draws_df(GP_post_sup_data)
+GP_post_stron_prior_d$model <- "strong_prior"
+GP_post_sup_data_d$model <- "sup_data"
+
+joint_posts_sig_extra <- rbind(dplyr::select(GP_post_stron_prior_d, nu, `z_diff[9]`, model), 
+      select(GP_post_sup_data_d, nu, `z_diff[9]`, model)) %>%
+  mutate(`log(nu)` = log(nu))
+
+p_joint_post_nu_strong_prior <- joint_posts_sig_extra %>%
+  filter(model == "strong_prior") %>%
+  ggplot(aes(x = `log(nu)`, y = `z_diff[9]`)) +
+  stat_density2d(bins = 50, alpha = 0.2, colour = "black") +
+  ylim(0, 25) +
+  xlim(-5, 1.5) +
+  xlab(expression(paste("log(nu)"))) +
+  ylab(expression(paste(Delta, z[9]))) +
+  theme(legend.position = "none")
+
+p_joint_post_nu_sup_data <- joint_posts_sig_extra %>%
+  filter(model == "sup_data") %>%
+  ggplot(aes(x = `log(nu)`, y = `z_diff[9]`)) +
+  stat_density2d(bins = 50, alpha = 0.2, colour = "black") +
+  ylim(0, 25) +
+  xlim(-5, 1.5) +
+  xlab(expression(paste("log(nu)"))) +
+  ylab(expression(paste(Delta, z[9]))) +
+  theme(legend.position = "none")
+
+p_joint_nu_jump_extra_info <- plot_grid(
+  p_joint_post_nu_big +
+    theme(axis.text.x = element_blank(),
+          axis.title.x = element_blank()),
+  p_joint_post_nu_small +
+    theme(axis.text.x = element_blank(),
+          axis.title.x = element_blank()),
+  p_joint_post_nu_strong_prior, 
+  p_joint_post_nu_sup_data,
+  nrow = 2,
+  ncol = 2,
+  labels = c("(a)", "(b)", "(c)", "(d)"),
+  label_fontfamily = "Times",
+  label_face = "plain"
+)
+
+p_joint_nu_jump_extra_info
+```
+
+```{r}
+#| label: save-fig-comparing-scatter-nu-jump5
+#| echo: false
+#| output: false
+#| cache: false
+
+pdf(
+  file.path(figure_path, "joint-nu-jump-extra.pdf"),
+  height = 8,
+  width = 8
+)
+p_joint_nu_jump_extra_info
+dev.off()
+```
+
+As hypothesized, adding information that informs one of the pre-asymptotically non-identifiable parameters has helped to identify the whole model efficiently and accurately. Therefore, consolidating my belief that the problems observed when fitting the model to only the "small" data set result from a pre-asymptotic identifiability issue between the measurement error and the volatility of the underlying gamma process.

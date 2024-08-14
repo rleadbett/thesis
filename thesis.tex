@@ -98,6 +98,9 @@
 
 \showthesisquote % if selected, show thesis quote
 
+% include the abstract
+\include{chapters/abstract}
+
 % include list of publications
 \include{chapters/publications}
 
@@ -107,8 +110,11 @@
 % include the acknowledgements
 \include{chapters/acknowledgements}
 
-% include the abstract
-\include{chapters/abstract}
+% include the acknowledgement of country
+\include{chapters/acknowledgement-of-country}
+
+% include the copyright statement
+\include{chapters/copyright}
 
 % include the table of contents
 \includetoc % neatly adds the table of contents
@@ -130,11 +136,11 @@ The problem was motivated by an industry placement where I collated a dataset of
 
 The importance of maintenance and the culture around it at the company has changed a lot over the decades that the mines have been operating. It has only been in recent years that replacement records have reliably been captured in the company's records. This gives rise to the problem of partially observed lifetime data, which I will address in this part of the thesis.
 
-My initial approach to modelling such data was published in the conference paper:
+My initial approach to modelling such data was published as a conference paper:
 \begin{itemize}
   \item Leadbetter, R., Phatak, A., Polpo, A. \& Hodkiewicz, M. (2021) \textit{Informative Bayesian Survival Analysis to Handle Heavy Censoring in Lifetime Data}, International Conference on Maintenance and Intelligent Asset Management (ICMIAM), Ballarat, Australia, pp. 1-6,\\ doi: 10.1109/ICMIAM54662.2021.9715184.
 \end{itemize}
-I was the first author of this publication, performed all of the analysis (under the guidance of the co-authors), and produced the first version of the manuscript. All authors revised and edited the paper. However, since the initial approach was published, I have taken an alternative approach to the problem; this is the approach that I present in Chap.~\ref{chap:chapter2}.
+I was the first author of this publication, performed all of the analysis (under the guidance of the co-authors), and produced the first version of the manuscript. All authors revised and edited the paper. However, since the initial approach was published, I have taken an alternative approach to the problem; this is the approach that I present in Chap.~\ref{chap:chapter2}. In Chap.~\ref{chap:chapter3}, I apply the newly proposed approach to the industry idler-frame data.
 
 \include{chapters/chapter2}
 \include{chapters/chapter3}
@@ -161,8 +167,8 @@ The e-prints for the two papers have been uploaded to arXiv.org. The full refere
 
 % start your appendices
 \begin{customappendix}{} % add \alphanumbering between brackets if you want to have alphabetic numbered appendices
+
 \include{chapters/appendixA}
-%\include{chapters/copyright}
 
 \end{customappendix}
 
