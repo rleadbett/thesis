@@ -40,31 +40,28 @@ Throughout this Thesis, the Bayesian approaches I have presented address real pr
 
 Throughout the work, I stress the components of good Bayesian statistical workflow and demonstrated their application in the reliability domain. These include thinking carefully about how a model can be encoded in order to simplify its implementation; evaluating and refining the model and priors through simulation before fitting the data; interpreting uncertainty in the posterior through visualisation and posterior predictive distributions; propagating this posterior uncertainty through useful utility functions such as cost functions or the failure time distribution; and comparing sets of Bayesian models in a fully Bayesian framework using elppd and cross-validation methods. In the interests of reproducible research, I provide all of the code to implement the models and perform the analysis of this Thesis on a Github repository [Leadbetter et al., 2024] so that other reliability practitioners may follow along, reproduce and apply my work in practice, and adapt the models and workflow to their own industry problems.
 
-The most relevant components of this workflow, and therefore the ones I have focused on most deeply in this Thesis, are 1) the careful construction of the model and prior so that the analyst can take advantage of as much information in the data and as much supplemental information as possible, and 2) how he/she can incorporate the posterior uncertainty of the Bayesian into the subsequent maintenance decisions that the analysis aims to inform. 
+The most relevant components of this Bayesian statistical workflow to reliability applications, and therefore the ones I have focused on most deeply in this Thesis, are 1) the careful construction of the model and prior so that the analyst can take advantage of as much information in the data and as much supplemental information as possible, and 2) how he/she can incorporate the posterior uncertainty of the Bayesian into the subsequent maintenance decisions that the analysis aims to inform. 
 Much of the historical reliability data in mining is small, messy, and often noisy, and as a result the analyst cannot afford to throw away data and needs to take full advantage of as much of the information as he/she has available to them, in both the data set being analysed, historic data and domain expert knowledge.
 \begin{itemize}
-  \item Reframing the likelihood for right censored and left truncated data in terms of missing data imputation avoids discarding left-truncated observatio
+  \item Reframing the likelihood for right censored and left truncated data in terms of missing data imputation can avoid having to discard left-truncated observations when their exposure history is unknown.
+  \item Modelling multiple units simultaneously shares information to help identify the degradation model.
 \end{itemize} 
+Prior construction
+\begin{itemize}
+  \item A joint prior can be constructed for the two Weibull parameters so that information can be encoded in different parts of the lifetime distribution and how this is useful when data are partially observed.
+  \item The gamma process can be re-parameterised in terms of $\mu$ and $\nu$ and how this makes clear what information is being encoded in the prior.
+  \item How the informative prior for the mean wear rate of a GP or LM can be derived from the historic datasets in the belt wear case study.
+\end{itemize}
 Data in the mining and mineral processing Much of the historical datasets in mining are small and messy, and the wealth of industry domain expert knowledge is incredibly helpful in overcoming these limitations in the data.
 
-I have particularly focussed on two of the components of the Bayesian workflow because of their relevance to reliability problems in industry: developing well-constructed informative priors and propagating posterior uncertainty into the decision making framework.
 
-I've stressed how supplementary information (both from historic data or domain expert knowledge) can be carefully encodedincluded in the analysis through the prior\dots
+
+
+
+I've also stressed the demonstration of simple examples of using the posterior of a Bayesian model to inform short and long-term maintenance decisions. Little in the literature guides practitioners on how to incorporate the uncertainty encoded in a posterior distribution into maintenance decisions. Even though this last step is paramount in the methods from the literature resulting in quantifiable impact in real applications. Here I have provided concrete examples of\dots
 \begin{itemize}
-  \item The construction of 
+  \item Derive RUL and cumulative failures for short term decisions in the idler frame case study.
+  \item How to produce FT distributions for units under test and new units in the noisy gamma process with unit-to-unit variability.
+  \item How to produce the FT distribution for the belt in the conveyor belt wear case study when the first passage time also depends on the variability along the length of the belt (the noisy level in the process model.)
 \end{itemize}
-Much of the historical datasets in mining are small and messy, and the wealth of industry domain expert knowledge is incredibly helpful in overcoming these limitations in the data.
-
-I've also stressed the demonstration of simple examples of using the posterior of a Bayesian model to inform short and long-term maintenance decisions.
-
-Little in the literature guides practitioners on how to incorporate the uncertainty encoded in a posterior distribution into maintenance decisions.
-For the the academic contributions to reliability, such as the onse I have presented, to result in solid, quantifiable impact, this last step is crucial.
 More works in Bayesian reliability, like this one, should present examples of this last step in a Bayesian \textit{reliability} workflow.
-
-Tangible impact
-
-Of these components of the Bayesian workflow, I have focused on defining a well-constructed prior and propagating posterior uncertainty into the decision making framework. I've stressed how supplementary information can be included in the analysis through the prior (or directly in the likelihood in the case of Sec.~\ref{sec:comp-sols}) and the benefits this provides when analysing small datasets, since this is common for reliability data in industry. New monitoring devices promise to supply detailed and large datasets in the future, but good decisions must be made now. Much of the historical datasets in mining are small and messy, and the wealth of industry domain expert knowledge is incredibly helpful in overcoming these limitations in the data. I've also stressed the demonstration of simple examples of using the posterior of a Bayesian model to inform short and long-term maintenance decisions. Little in the literature guides practitioners on how to incorporate the uncertainty encoded in a posterior distribution into maintenance decisions. More works in Bayesian reliability, like this one, should present examples of this last step in a Bayesian \textit{reliability} workflow.
-
-%\section{Conclusions of the Thesis} \label{sec:Thesis-conclusion}
-
-%Keep it simple.
