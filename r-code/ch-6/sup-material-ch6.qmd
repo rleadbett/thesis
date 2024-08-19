@@ -1,0 +1,2679 @@
+---
+title: "Main analysis of chapter six"
+author: 
+  - name: Ryan Leadbetter
+    affiliation: 
+      - ref: CTMTDS
+affiliations:
+    - id: CTMTDS
+      name: Centre for Transforming Maintenance through Data Science, Curtin University
+date: "`r Sys.Date()`"
+number-sections: true
+bibliography: ../../references.bib
+format:
+  html:
+    embed-resources: true
+    toc: true
+    theme: 
+      light: flatly
+      dark: darkly
+editor: visual
+execute: 
+  cache: false
+  message: false 
+  warning: false
+  error: false
+  fig-width: 10
+  fig-height: 10
+css: ../styles.css
+title-block-banner: "#FFFFFF"
+title-block-banner-color: "#000000"
+---
+
+This Quarto document contains the main analysis for the paper \_\_\_\_\_\_\_. When compiled, it also generates all the figures used in the main publication. This document acts as suplimentary material to the main text for readers who are interested in reproducing the analysis or just want to take a closer look at the the more technical aspects of the data, model fitting, diagnostics, and model evaluation.
+
+```{r}
+#| label: load-libraries
+#| message: false
+#| warning: false
+#| cache: false
+#| code-fold: true
+#| code-summary: "Show setup chunk"
+
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(rstan)
+library(bayesplot)
+library(posterior)
+library(tidybayes)
+library(ggdist)
+library(cowplot)
+library(splines2)
+library(stringr)
+library(wesanderson)
+library(distributional)
+library(RColorBrewer)
+library(gganimate)
+library(scales)
+
+# Stan options
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+
+# ggplot theme options
+theme_set(
+  theme_minimal()
+)
+
+figure_path <- file.path("..", "..", "figures", "ch-6")
+table_path <- file.path("..", "..", "tables", "ch-6")
+```
+
+## Belt wear data
+
+The data we use are ultrasonic thickness (UT) measurements used to monitor the wear of the top coat on an overland conveyor belt. We use data from three belts all installed on the same overland conveyor at different points in time at one of our industry partners mine sites. @fig-scematic below shows a typical overland conveyorbelt on the left and a scematic of the belts on the right. The structural component on of the belt is the carcas, which is protected by a tob and bottom coat of rubber. Typicaly the top-coat wears much faster than the bottom-coat because it is constantly being loaded with ore. To monitor the thickness of the topcoat, and therefore ensure the protection of the carcas, the thickness of the topcoat is monitored through UT testing. To demonstrate what the raw data looks like, on the cross section of the belt shown in the figure bellow, we have overlayed three sets of UT thickness measurements on the topcoat. Light blue is the earliest measurement and dark blue is the most recent. From the three wear profiles we can see the fairly typical "dishing out" of the topcoat as it is worn away by the ore over time.
+
+![Example of conveyor belt condition monitoring](suplimentary-figures/belt-cm-example.PNG){#fig-scematic}
+
+The main belt that we will analise is `Belt_A`, the most recent belt. However, we use the data from historic belts `Belt_B` and `Belt_C` to construct an informative prior for some of the parameters in our model. Below we plot the raw data and show the UT data in a table below. Note that these data data are recorded in *mm* of wear, rather than remaining thickness like in the cross section of the belt shown in @fig-scematic.
+
+```{r}
+#| label: load-data
+load(
+  file = file.path(
+    "..", "..", "data",
+    "Example_beltwear_data.RData"
+  )
+)
+zero_wear <- example_belts[["belt_A"]] %>% 
+  filter(tonnes == 0) %>% 
+  summarise(mean(wear))
+example_belts[["belt_A"]] <- example_belts[["belt_A"]] %>%
+  mutate(wear = wear - zero_wear[1, 1])
+belt_wear_data <- example_belts
+```
+
+::: panel-tabset
+### Belt_A
+
+```{r}
+#| label: belt-a-raw-prof-fig
+#| echo: false
+#| fig-cap: "Wear profile of belt A."
+#| fig-width: 8
+#| fig-hight: 5
+
+p_belt_A_wear_prof <- belt_wear_data[["belt_A"]] %>%
+  mutate(operation_time = as.factor(operation_time)) %>%
+  ggplot(aes(x = measurement_pos, y = wear, col = operation_time)) +
+  geom_line() +
+  scale_color_brewer(palette = "YlOrRd") +
+  ylim(-1, 30) +
+  xlab("measurement location") +
+  ylab("wear (mm)") +
+  labs(col = "days in operation")
+
+p_belt_A_wear_prof
+```
+
+```{r}
+#| label: belt-a-tbl
+#| echo: false
+#| tbl-cap: "Wear data for belt A."
+
+rmarkdown::paged_table(belt_wear_data[["belt_A"]])
+```
+
+### Belt_B
+
+```{r}
+#| label: belt-b-raw-prof-fig
+#| echo: false
+#| fig-cap: "Wear profile of belt b."
+#| fig-width: 8
+#| fig-hight: 5
+
+p_belt_B_wear_prof <- belt_wear_data[["belt_B"]] %>%
+  mutate(operation_time = as.factor(operation_time)) %>%
+  ggplot(aes(x = measurement_pos, y = wear, col = operation_time)) +
+  geom_line() +
+  scale_color_brewer(palette = "YlOrRd") +
+  ylim(0, 30) +
+  xlab("measurement location") +
+  ylab("wear (mm)") +
+  labs(col = "days in operation")
+p_belt_B_wear_prof
+```
+
+```{r}
+#| label: belt-b-tbl
+#| echo: false
+#| tbl-cap: "Wear data for belt B."
+
+rmarkdown::paged_table(belt_wear_data[["belt_B"]])
+```
+
+### Belt_C
+
+```{r}
+#| label: belt-c-raw-prof-fig
+#| echo: false
+#| fig-cap: "Wear profile of belt C."
+#| fig-width: 8
+#| fig-hight: 5
+
+p_belt_C_wear_prof <- belt_wear_data[["belt_C"]] %>%
+  mutate(operation_time = as.factor(operation_time)) %>%
+  ggplot(aes(x = measurement_pos, y = wear, col = operation_time)) +
+  geom_line() +
+  scale_color_brewer(palette = "YlOrRd") +
+  ylim(0, 30) +
+  xlab("measurement location") +
+  ylab("wear (mm)") +
+  labs(col = "days in operation")
+
+p_belt_C_wear_prof
+```
+
+```{r}
+#| label: belt-c-tbl
+#| echo: false
+#| tbl-cap: "Wear data for belt C."
+
+rmarkdown::paged_table(belt_wear_data[["belt_C"]])
+```
+:::
+
+```{r}
+#| label: save-belt-figs-main-belts
+#| echo: false
+#| output: false
+
+# Main belt
+pdf(
+  file.path(figure_path, "main_belt.pdf"),
+  height = 8, width = 10
+)
+  p_belt_A_wear_prof +
+    geom_hline(yintercept = 25, 
+              linetype = "dashed") +
+    ylim(-2, 30)
+    
+dev.off()
+```
+
+```{r}
+#| label: save-belt-figs-hist-belts
+#| echo: false
+#| output: false
+# Historic belts
+pdf(
+  file.path(figure_path, "historic_belts.pdf"),
+  height = 3, width = 8
+)
+  plot_grid(
+    p_belt_B_wear_prof, p_belt_C_wear_prof,
+    ncol = 2,
+    nrow = 1,
+    labels = c("(a)", "(b)"),
+    label_fontfamily = "Times",
+    label_face = "plain",
+    label_x = -0.01
+  )
+dev.off()
+```
+
+## A typical way of forecasting belt wear
+
+To manage the reliability of the conveyor, engineers will typicaly specify a "soft failure threashold" which indicates the functional failure of the belt. They then try to forecast the belts wear to estimate when this soft failure will ocure in order to plan the replacement of the belt ahead of time.
+
+Even though these belt wear data sets only have a few observations each, the observations themselves are fairly complicated. Our natural instincted when confronted with complex observations is to reduce the complexity so that we can use forecasting methods that we are famiar with. This approach is cominaly taken in practice when dealing with conveyor belt wear data. Bellow we show two typical aproaches used to forecast belt wear. Both use linear regression, the first uses the measurements from the fastest wearing location along the belts cross section as in @webb_2020, while the second uses the maximum wear measurement from each profile-an approach used in many condition monitoring software.
+
+::: panel-tabset
+#### Fastest wearing location
+
+```{r}
+#| echo: false
+
+p_profiles_a <- belt_wear_data[["belt_A"]] %>%
+  mutate(is_pred = ifelse(tonnes < 0.5, "past", "future"),
+         tonnes = as.factor(round(tonnes, 2))) %>%
+  ggplot(aes(x = measurement_pos, y = wear, col = tonnes)) +
+  geom_line(aes(lty = is_pred), size = 1.5) +
+  geom_point(
+    data = belt_wear_data[["belt_A"]][belt_wear_data[["belt_A"]]$measurement_pos == 
+                      unique(belt_wear_data[["belt_A"]]$measurement_pos)[11], ] %>%
+               mutate(is_pred = ifelse(tonnes < 0.5, "past", "future")),
+             aes(alpha = is_pred),
+             col = "red",
+             pch = 1,
+             size = 7,
+             ) +
+  scale_color_brewer(palette = "YlOrRd") +
+  scale_linetype_manual(values=c("dashed", "solid")) +
+  scale_alpha_manual(values = c(0.5, 1)) +
+  theme(legend.position = "none") +
+  ylim(-1, 30) +
+  xlab("measurement position") +
+  ylab("wear (mm)")
+
+p_linear_fit_a <-  belt_wear_data[["belt_A"]][belt_wear_data[["belt_A"]]$measurement_pos == 
+                    unique(belt_wear_data[["belt_A"]]$measurement_pos)[11], ] %>%
+  mutate(is_pred = ifelse(tonnes < 0.5, "past", "future")) %>%
+  ggplot(aes(x = tonnes, y = wear)) +
+  geom_abline(
+    slope = lm(
+      wear ~ 0 + tonnes,
+      belt_wear_data[["belt_A"]][(belt_wear_data[["belt_A"]]$measurement_pos == 
+      unique(belt_wear_data[["belt_A"]]$measurement_pos)[11])&
+      (belt_wear_data[["belt_A"]]$tonnes < 0.5), ])$coefficients, 
+    intercept = 0, 
+    size = 1.5
+  ) +
+  geom_point(aes(alpha = is_pred), col = "red", size = 4) +
+  scale_alpha_manual(values = c(0.3, 1)) +
+  theme(legend.position = "none") +
+  ylim(-1, 30) +
+  geom_vline(xintercept = unique(belt_wear_data[["belt_A"]]$tonnes)[5] + 0.1, 
+             linetype = "dashed", size = 1.5) +
+  annotate("text", x = 0.30, y = 30, label = "past", size = 6) +
+  annotate("text", x = 0.55, y = 30, label = "future", size = 6) +
+  ylab("")
+  
+
+cowplot::plot_grid(p_profiles_a, p_linear_fit_a, ncol = 2)
+```
+
+#### Greatest wear measurements
+
+```{r}
+#| echo: false
+#| warning: false
+df_max_obs <- belt_wear_data[["belt_A"]] %>%
+  group_by(tonnes) %>%
+  summarise(n = which.max(wear),
+            wear = max(wear)) %>%
+  mutate(
+    measurement_pos = unique(belt_wear_data[["belt_A"]]$measurement_pos)[n],
+    is_pred = ifelse(tonnes < 0.5, "past", "future")
+  )
+
+p_profiles_b <- belt_wear_data[["belt_A"]] %>%
+  mutate(
+    is_pred = ifelse(tonnes < 0.5, "past", "future"),
+    tonnes = as.factor(round(tonnes, 2))
+  ) %>%
+  ggplot(aes(x = measurement_pos, y = wear, col = tonnes)) +
+  geom_line(aes(lty = is_pred), size = 1.5) +
+  geom_point(
+    data = df_max_obs,
+    aes(alpha = is_pred),
+    col = "red",
+    pch = 1,
+    size = 7
+  ) +
+  scale_color_brewer(palette = "YlOrRd") +
+  scale_linetype_manual(values=c("dashed", "solid")) +
+  scale_alpha_manual(values = c(0.5, 1)) +
+  theme(legend.position = "none") +
+  ylim(-1, 30) +
+  xlab("measurement position") +
+  ylab("wear (mm)")
+
+p_linear_fit_b <-  df_max_obs %>%
+  ggplot(aes(x = tonnes, y = wear)) +
+  geom_abline(
+      slope = lm(
+        wear ~ 0 + tonnes,
+        df_max_obs[df_max_obs$is_pred == "past", ]
+      )$coefficients, 
+      intercept = 0,
+      size = 1.5
+    ) +
+  geom_point(aes(alpha = is_pred), col = "red", size = 4) +
+  scale_alpha_manual(values = c(0.3, 1)) +
+  theme(legend.position = "none") +
+  ylim(-1, 30) +
+  geom_vline(
+    xintercept = unique(belt_wear_data[["belt_A"]]$tonnes)[5] + 0.1, 
+    linetype = "dashed", size = 1.5
+  ) +
+  annotate("text", x = 0.30, y = 30, label = "past", size = 6) +
+  annotate("text", x = 0.55, y = 30, label = "future", size = 6) +
+  ylab("")
+
+cowplot::plot_grid(p_profiles_b, p_linear_fit_b, ncol = 2)
+```
+
+```{r}
+#| label: save-current-approach-demo
+#| echo: false
+#| output: false
+
+pdf(
+  file.path(figure_path, "current_approach.pdf"),
+  height = 8, width = 8
+)
+plot_grid(
+  p_profiles_a, p_linear_fit_a, p_profiles_b, p_linear_fit_b,
+  ncol = 2,
+  nrow = 2,
+  labels = c("(a)", "(b)", "(c)", "(d)"),
+  label_fontfamily = "Times",
+  label_face = "plain",
+  label_x = -0.01
+)
+dev.off()
+```
+
+:::
+
+For both of these linear approaches to forecasting wear, we can see that the future measurements have been over-predicted. But even more importantly, because we do not understand the distribution of these measurements, we have no way of quantifying our prediction uncertainty. In the remainder of this markdaown document we introduce a method that uses the entire wear profile to inform a pricipled model for belt wear, which allows us to properly quantify our uncertainty when forecasting the wear profile.
+
+## Our models
+
+The Bayesian hierarchical models for belt wear, which we implement and fit in the probabalistic programing language `Stan`, are
+**Gamma process**
+$$
+\begin{align*}
+z_{i, n}|\underline{y}_{i}, \sigma \sim & N(f_i(n), \sigma)               && \text{Data model: FDA} \\ 
+f_i(n) =                                & \sum^{M}_{i = 1}b_m(n)y_{i, m}                            \\
+\end{align*}
+$$ {#eq-data-model-gp}
+
+$$
+\begin{align*}
+y_{i, m}|y^*_{i, m}, \phi \sim & t_{10} (y^*_{i, m}, \phi y^*_{i, m}) && \text{Process model: Noisy GP}   \\
+\Delta y^*_{i, m} = & y^*_{i, m} - y^*_{i - 1, m}                                                         \\
+\Delta y_{i, m}|\mu_m, \nu_m \sim & Ga \left( \frac{\Delta t_i}{\nu_m^2}, \frac{1}{\mu_m \nu_m^2} \right)
+\end{align*}
+$$ {#eq-process-model-gp}
+
+$$
+\begin{align*}
+\sigma \sim     & U(0, A)                 && \text{Parameter model: Priors} \\
+\phi \sim       & Cauch^{+}(0, 5)                                           \\
+\nu_m \sim      & N(\nu_{mean}, \nu_{sd})                                   \\
+\nu_{mean} \sim & t_3^{+}(0, 0.5)                                           \\
+\nu_{sd} \sim   & Cauch^{+}(0, 0.25)                                        \\
+\mu_m \sim      & N(\hat{a}_m, \hat{b}_m)
+\end{align*}
+$$ {#eq-param-model-gp}
+
+where $\Delta y^*_{i, m} = y^*_{i, m} - y^*_{i - 1, m}$ and $\Delta t_{i} = t_{i} - t_{i - 1}$ and
+**Linear path**
+$$
+\begin{align*}
+z_{i, n}|\underline{y}_{i}, \sigma \sim & N(f_i(n), \sigma)               && \text{Data model: FDA} \\ 
+f_i(n) =                                & \sum^{M}_{i = 1}b_m(n)y_{i, m}
+\end{align*}
+$$ {#eq-data-model-lm}
+
+$$
+\begin{align*}
+y_{i, m}|y^*_{i, m}, \phi \sim & t_{10} (y^*_{i, m}, \phi y^*_{i, m}) && \text{Process model: Noisy GP} \\
+y^*_{i, m} = & \mu_m t_i
+\end{align*}
+$$ {#eq-process-model-lm}
+
+$$
+\begin{align*}
+\sigma \sim     & U(0, A)                 && \text{Parameter model: Priors} \\
+\phi \sim       & Cauch^{+}(0, 5)                                           \\
+\mu_m \sim      & N(\hat{a}_m, \hat{b}_m).
+\end{align*}
+$$ {#eq-param-model-lm}
+
+Information about the notation as well as the intricasies regarding Bayesian heirarchical modeling, functional data alaysis (FDA), the noisy gamma process (GP), and choise of prior distributions are contained in chapter 6 of the main thesis.
+
+### B-spline design matrix
+
+In the first level of the hierarchical models (in @eq-data-model-gp and @eq-data-model-gp-lm), we takes a functional interpretation of the UT measurements across the surface of the belt. That is, we asssume that the measurements are noisy observations of a smooth underlying function. We describe this smooth function using a B-spline. @fig-B-spline-demo-1 shows the functional interpretation for the fith observation of `Belt_A`. The B-spline is composed of the weighted sum of a set of B-spline basis functions, we can see the weighted basis functions is @fig-B-spline-demo-2 and the unweighted basis functions in @fig-B-spline-demo-3.
+
+```{r}
+#| label: B-spline-demo
+#| echo: false
+#| warning: false
+
+# Define true design matrix
+numb_knots <- 8
+B <- bSpline(seq(0, 15, length.out = 22),
+             knots = seq(1, 14, length.out = numb_knots),
+             degree = 3,
+             intercept = T)[, 3:10]
+
+# Define fine desing matrix for smooth plotting
+fine_grid <- seq(0, 15, 0.1)
+fine_basis_mat <- bSpline(fine_grid,
+                          knots = seq(1, 14, 
+                                      length.out = numb_knots),
+                          degree = 3,
+                          intercept = T)[, 3:10]
+
+
+# Function to fit B-spline coeficients
+min.RSS <- function(par, y){
+  par_mat <- matrix(par, ncol = 1)
+  res <- (B %*% par)[2:21] - y
+  return(sum(res^2))
+}
+
+# Fit B-spline to observation 5
+t <- unique(belt_wear_data[["belt_A"]]$tonnes)
+
+obs_5 <- belt_wear_data[["belt_A"]] %>% 
+  filter(tonnes == t[5])
+
+spline_coefs_obs_5 <- optim(par = rep(0.1, 8), 
+                            fn = min.RSS, 
+                            y = obs_5$wear,
+                            lower = 0)[["par"]]
+
+
+# Plot of smoothed data
+n_grid <- seq(0, 22, length.out = length(fine_grid))
+smoothed_obs_5 <- fine_basis_mat %*% matrix(spline_coefs_obs_5, ncol = 1)
+p_spline <- data.frame(x = n_grid,
+                       y = smoothed_obs_5) %>%
+  ggplot(aes(x = x, y = y)) +
+  geom_line(color = brewer.pal(n = 9, "YlOrRd")[5],
+            size = 1.2) +
+  geom_point(data = data.frame(x = seq(0, 22, length.out = 22)[2:21],
+                               y = obs_5$wear),
+             color = brewer.pal(n = 9, "YlOrRd")[5],
+             size = 3) +
+  ylim(0, 10) +
+  xlab("") +
+  ylab("wear (mm)")
+
+# Plot of weighted basis funcitons
+
+p_weighted_basis <- data.frame(t(t(fine_basis_mat) * spline_coefs_obs_5)) %>%
+  mutate(n = (fine_grid / 15) * 21) %>%
+  pivot_longer(-c("n")) %>%
+  ggplot(aes(x = n, y = value, group = name, col = name)) +
+  geom_line() +
+  ylab("weighted value") +
+  xlab("") +
+  theme(
+    legend.position = "none"
+  ) +
+  scale_y_continuous(labels = scales::number_format(accuracy = 0.1))
+
+# Plot of unweighted basis functions
+
+p_raw_basis <- data.frame(fine_basis_mat) %>%
+  mutate(n = (fine_grid / 15) * 21) %>%
+  pivot_longer(-c("n")) %>%
+  ggplot(aes(x = n, y = value, group = name, col = name)) +
+  geom_line() +
+  ylab("unweighted value") +
+  xlab("n") +
+  theme(
+    legend.position = "none"
+  )
+```
+
+```{r}
+#| label: fig-B-spline-demo
+#| echo: false
+#| layout-ncol: 1
+#| fig-cap:
+#|  Fitted B-spline and basis funcitons for the fith observation of Belt_A.
+#| fig-subcap:
+#|  - "Fitted B-spline"
+#|  - "Weighted basis functions"
+#|  - "Unweighted basis functions"
+#| fig-width: 8
+#| fig-height: 2
+
+p_spline
+
+p_weighted_basis
+
+p_raw_basis 
+```
+
+```{r}
+#| label: save-B-spline-basis-fig
+#| echo: false
+#| output: false
+
+# Plot in grid
+pdf(
+  file.path(figure_path, "b-spline-fitting.pdf"),
+  height = 6.5, width = 10
+)
+plot_grid(
+  p_spline,
+  p_weighted_basis,
+  p_raw_basis,
+  ncol = 1,
+  nrow = 3,
+  labels = c("(a)", "(b)", "(c)"),
+  label_fontfamily = "Times",
+  label_face = "plain",
+  label_x = -0.01,
+  label_y = 1.015
+)
+dev.off()
+```
+
+However, we cant fit estimate the spline coeficients-the weights of the basis functions-using the continuous forms of the basis functions. To estimate the spline coeficients we the design matrix, a matrix containing the values of the basis functions at each discrete measurement location. We use the `splines2` package to do this.
+
+```{r}
+#| label: design-matrix-construction
+
+numb_knots <- 8
+B <- bSpline(seq(0, 15, length.out = 22),
+             knots = seq(1, 14, length.out = numb_knots),
+             degree = 3,
+             intercept = T)[, 3:10]
+```
+
+```{r}
+#| label: write_matrix_fun
+#| echo: false
+
+write_matex <- function(x) {
+  begin <- "\\begin{matrix}"
+  end <- "\\end{matrix}"
+  X <-
+    apply(x, 1, function(x) {
+      paste(
+        paste(round(x, digits = 2), collapse = "&"),
+        "\\\\"
+      )
+    })
+  paste(c(begin, X, end), collapse = "")
+}
+```
+
+$$
+B = `r write_matex(B)`
+$$
+
+::: callout-note
+# Dropped basis functions
+
+We have dropped some basis functions at the edges. We do this because we wish to constrain how "wigly" the spline can be at the edge of the belt, and also because we want the spline to be ancoured at 0 at the edges.
+:::
+
+### Informative prior {#sec-informative-priors}
+
+The two process models in @eq-process-model-gp and @eq-process-model-lm are set up so that we can encode information about the mean wear rate of spline coefficients by placing informative priors on the $\mu_m$. This means that we can supliment the analysis with past data or domain expert knowledge. We have two previouse belt lives--`Belt_B` and `Belt_C`-- which we can use to construct an informative prior for the $\mu_m$. We can crudely estemate the mean degradation of the coeficients by fitting splines to each of the observations from the two historic belts and then fitting linear models to the relationship between the ceofficients values and tonnes. @fig-estimated-coefs bellow shows the estimated linear fits.
+
+```{r}
+#| label: fig-estimated-coefs
+#| echo: false
+#| fig-cap: 
+#|  Estimating mean wear rate of the spline paramters from historic belt data to
+#|  construct an informative prior for $\mu_m$.
+#| fig-width: 10
+#| fig-height: 2
+#| message: false
+#| error: false
+#| warning: false
+
+fitSpline <- function(Y){
+  optim(par = rep(0.1, 8), 
+        fn = min.RSS, 
+        y = Y,
+        lower = 0)[["par"]] %>%
+    return()
+}
+
+historic_spline_coefs <- rbind(belt_wear_data[["belt_B"]] %>%
+                                mutate(belt = "belt_B"),
+                               belt_wear_data[["belt_C"]] %>%
+                                mutate(belt = "belt_C")) %>% 
+  group_by(belt, tonnes) %>%
+  summarise(spline_coef = fitSpline(wear),
+            coef = 1:8)
+
+coef_lm_fits <- lapply(1:8,
+                       function(m) {
+                        fit <- lm(data = historic_spline_coefs %>%
+                                          filter(coef == m),
+                                  formula = spline_coef ~ tonnes + 0)
+                        param_est <- summary(fit)
+                        return(
+                          c(a_hat = param_est$coefficients[1, 1],
+                            b_hat = param_est$coefficients[1, 2])
+                        )
+                       })
+
+coef_colours <- c(hue_pal()(8)[2:8], hue_pal()(8)[1])
+
+fit_plot_list <- lapply(1:8,
+                        function(m) {
+                          p <- historic_spline_coefs %>%
+                            filter(coef == m) %>%
+                            ggplot(aes(x = tonnes, y = spline_coef)) +
+                            geom_smooth(method = "lm",
+                                        formula = 'y ~ x + 0',
+                                        colour = coef_colours[m]) +
+                            geom_point() +
+                            xlab("") +
+                            ylab("") +
+                            ylim(0, 25)
+
+                          return(p)
+                        })
+
+plot_grid(plotlist = fit_plot_list, nrow = 1)
+```
+
+```{r}
+#| label: save-linear-fits-prior
+#| echo: false
+#| output: false
+
+# Plot in grid
+pdf(
+  file.path(figure_path, "informative-prior-mu.pdf"),
+  height = 3, width = 12
+)
+plot_grid(plotlist = fit_plot_list, nrow = 1)
+dev.off()
+```
+
+The prior for the $\mu_m$ are normaly distributed. Therefore to compose a mildly informative prior, we set the mean of these distributions to the estimated slope of the linear fit and the standard deviation to the distribution to be five times the standard deviation of the estimated slopes.
+
+### Prior predictive checks
+
+Now that we have specified the full prior model in the form of a group of marginal distributions, each of the marginal priors make sense on their own, but it is important to make sure that the prior we have specified encodes what we intended in the space of the data. To check this we can use prior predictive checking @gabry_2019. Using the informative prior developed for $\mu_m$ in the previous section and the specified priors for the other parameters in @eq-param-model, we can simulate data from our Bayesian model and then visualise this data to check that our specified priors encode what we originaly intended.
+
+The priors that we have specified for the varinace parameters are extreemly vaigue, and so we only perform prior predictive checks for the "non-noisy" wear profiles. In @fig-ppc below, we simulate sixteen fictitious belt wear data sets from the prior.
+
+```{r}
+#| echo: false
+#| label: fig-ppc
+#| fig-cap: 
+#|  Sixteen synthetic non-noisy belt wear data sets generated using the prior,
+#|  otherwise known as prior predictive checks.
+#| fig-width: 10
+#| fig-height: 10
+
+set.seed(64467364)
+
+t <- unique(belt_wear_data[["belt_A"]]$tonnes)
+I <- length(t)
+N <- unique(belt_wear_data[["belt_A"]]$measurement_pos)
+M <- ncol(B)
+
+# Get informative hyper parameters for mu
+mu_hyper_par <- coef_lm_fits %>% 
+  bind_rows() %>%
+  mutate(b_hat = b_hat * 5)
+
+# Sample values of the parameters
+## mu
+rTruncNorm <- function(n, mean, sd, lb) {
+  lb_norm <- (lb - mean) / sd
+  unif_rv <- runif(n, pnorm(lb_norm), 1)
+  norm_rv <- (qnorm(unif_rv) * sd) + mean
+  
+  return(norm_rv)
+}
+
+mu <- lapply(
+  1:M,
+  function(m){
+    rTruncNorm(
+      1000, 
+      mean = mu_hyper_par$a_hat[m], 
+      sd = mu_hyper_par$b_hat[m],
+      lb = 0
+    ) %>%
+    rvar() %>%
+    return()
+  }
+)
+
+## nu
+rTruncT <- function(n, nu, mean, sd, lb) {  
+  lb_norm <- (lb - mean) / sd
+  unif_rv <- runif(n, pt(lb_norm, df = nu), 1)
+  t_rv <- (qt(unif_rv, df = nu) * sd) + mean
+  
+  return(t_rv)
+}
+
+nu_mean <- rTruncT(    # sample from t_3
+  1000, 
+  nu = 3, 
+  mean = 0, 
+  sd = 0.5,
+  lb = 0
+) %>%
+rvar()
+
+nu_sd <- rTruncT(       # sample from cauchy
+  1000, 
+  nu = 1, 
+  mean = 0, 
+  sd = 0.25, 
+  lb = 0
+) %>%
+rvar()
+
+rvar_rTruncNorm <- rfun(rTruncNorm)
+
+nu <- rvar_rTruncNorm(
+  8,
+  mean = nu_mean,
+  sd = nu_sd,
+  lb = 0
+)
+
+# Sample the jumps of the spline coefficients
+rvar_rgamma <- rfun(rgamma)
+
+jumps <- lapply(
+  1:M,
+  function(m){
+    shape_par <- diff(t) / (nu[[m]]^2)
+    rate_par <- 1 / (mu[[m]] * nu[[m]]^2)
+    rvar_rgamma((I - 1), 
+                shape = shape_par, 
+                rate = rate_par) %>%
+    return()
+  }
+)
+
+# Calculate the value of the coefs and arange in matrix
+spline_params_gp <- lapply(
+  jumps,
+  cumsum
+)
+spline_params_lm <- lapply(
+  mu,
+  function(m) m*t[2:9]
+)
+
+coef_mat_gp <- lapply(
+  spline_params_gp,
+  function(param){
+    param %>%
+    as.matrix() %>%
+    return()
+  }
+) %>% do.call(cbind, .)
+
+coef_mat_lm <- lapply(
+  spline_params_lm,
+  function(param){
+    param %>%
+    as.matrix() %>%
+    return()
+  }
+) %>% do.call(cbind, .)
+
+# Map to data space
+ut_mat_gp <- t(fine_basis_mat %**% t(coef_mat_gp))
+ut_mat_lm <- t(fine_basis_mat %**% t(coef_mat_lm))
+ut_df_gp <- ut_mat_gp %>%
+  as.data.frame() %>%
+  mutate(i = 1:(I - 1)) %>%
+  pivot_longer(cols = -c("i")) %>%
+  mutate(n = rep(1:nrow(fine_basis_mat), (I - 1)))
+ut_df_lm <- ut_mat_lm %>%
+  as.data.frame() %>%
+  mutate(i = 1:(I - 1)) %>%
+  pivot_longer(cols = -c("i")) %>%
+  mutate(n = rep(1:nrow(fine_basis_mat), (I - 1)))
+
+# Functions to generate PPC
+ppc <- function() {
+  draw_id <- sample(1:1000, 1)
+
+  p <- ggplot() +
+    geom_line(
+      data = ut_df_gp %>%
+        mutate(
+          i = as.factor(i),
+          draw = lapply(
+            value, 
+            function(val) {
+              draws_of(val)[draw_id]
+            }
+          ) %>%
+          unlist()
+        ),
+      aes(x = n, y = draw, col = i)
+    ) +
+    geom_line(
+      data = ut_df_lm %>%
+        mutate(
+          i = as.factor(i),
+          draw = lapply(
+            value, 
+            function(val) {
+              draws_of(val)[draw_id]
+            }
+          ) %>%
+          unlist()
+        ),
+      aes(x = n, y = draw, col = i),
+      linetype = 2
+    ) +
+    scale_color_brewer(palette = "YlOrRd") +
+    theme(legend.position = "none") +
+    annotate(
+      "text", 
+      x = 50, y = 75, 
+      label = as.expression(
+        bquote(
+          "("~
+          mu[nu]~
+          " ="~
+          .(round(draws_of(nu_mean)[draw_id], digits = 2))~
+          ","~
+          sigma[nu]~
+          " ="~
+          .(round(draws_of(nu_sd)[draw_id], digits = 2))~
+          ")"
+        )
+      ), size = 2.5
+    )
+  return(p)
+}
+
+# Plot 16 PPC in a 4x4 grid
+ppc_list <- lapply(
+  1:16, 
+  function(x) {
+    ppc() +
+    theme(axis.text.x = element_blank(),
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank()) +
+    ylim(0, 80)
+  }
+)
+
+plot_grid(plotlist = ppc_list, ncol = 4)
+```
+
+```{r}
+#| label: save-prior-predictive-checks
+#| echo: false
+#| output: false
+
+# Plot in grid
+pdf(
+  file.path(figure_path, "prior-pc.pdf"),
+  height = 8, width = 8
+)
+plot_grid(plotlist = ppc_list, ncol = 4)
+dev.off()
+```
+
+Out of the sixteen prior predictive realisations in @fig-ppc, roughly twelve of them look like feasible beltwear data sets. Of the few that do not look feisible, two profiles have unreasonable scales (more than a 100mm jump in wear) and the remainder don't look feisable because of a lack of larege scale spacial corelation. This last point regarding the lack of spatial corelation is a charecteristic of the models structue, not the prior. We have not included any spacial dependance in the model for the spline coeficients, but this will be explored in future work. Considering that only two of the simulated data sets look completely unreasonable based on our understanding of the data generateing mechanism, we consider this prior to be a sufficient weekly informative prior for the analysis.
+
+## Stan models
+
+To fit the model we use the probabalistic programing language Stan @Stan_2022. Bellow I define each of the 
+
+### LM
+
+```{stan}
+#| label: stan-model-lm
+#| output.var: "fda_LM_stan_model"
+#| echo: true
+#| cache: false
+
+data{
+// data //
+int I;           // number of observations
+int N;           // number of measurement locations
+int M;           // number of spline basis
+vector[I] t;     // the set of observation times
+matrix[I, N] z;  // the set of noisy UT measurements
+matrix[N, M] B;  // the B-spline design matrix
+
+// hyper parameters for mu //
+vector[M] a_hat; // our estimate of the mean wear rate
+vector[M] b_hat; // our uncertanty of this estimate
+
+}
+parameters{
+
+vector<lower = 0>[M] mu;            // the mean wear rates of the gamma processes
+real<lower = 0> sigma;              // the standard deviation of the measurement error at UT level
+real<lower = 0> phi;                // the standard deviation of the measurement error at coef level
+matrix<lower = 0>[I, M] y_noisy;    // the filtered values of the spline coeficients
+}
+transformed parameters{
+
+matrix[I, N] z_hat;                 // smoothed UT observations (functional obs)
+matrix<lower = 0>[I, M] y;          // the filtered values of the spline coeficients
+
+// calculate the mean degradation at time t
+y = t * mu';
+y[1, ] = y[1, ] + 0.0001;
+
+// calculate value of spline at measurement locations
+z_hat = y_noisy * B';
+
+}
+model{
+
+/// priors ///
+// for process model
+// mu
+for (m in 1:M) {
+  mu[m] ~ normal(a_hat[m], b_hat[m]);
+}
+// phi
+phi ~ cauchy(0, 25);
+// sigma
+sigma ~ uniform(0, 100);
+
+/// linear model ///
+for (i in 1:I) {
+  y_noisy[i, ] ~ student_t(10, y[i, ], y[i, ]*phi);
+}
+
+
+/// data model ///
+for (i in 1:I) {
+  z[i, ] ~ normal(z_hat[i, ], sigma);
+}
+
+}
+```
+
+```{r}
+#| echo: false
+#| eval: false
+
+fda_LM_stan_model <- rstan::stan_model(
+  model_code = "
+data{
+
+// data //
+int I;           // number of observations
+int N;           // number of measurement locations
+int M;           // number of spline basis
+vector[I] t;     // the set of observation times
+matrix[I, N] z;  // the set of noisy UT measurements
+matrix[N, M] B;  // the B-spline design matrix
+
+// hyper parameters for mu //
+vector[M] a_hat; // our estimate of the mean wear rate
+vector[M] b_hat; // our uncertanty of this estimate
+
+}
+parameters{
+
+vector<lower = 0>[M] mu;            // the mean wear rates of the gamma processes
+real<lower = 0> sigma;              // the standard deviation of the measurement error at UT level
+real<lower = 0> phi;                // the standard deviation of the measurement error at coef level
+matrix<lower = 0>[I, M] y_noisy;    // the filtered values of the spline coeficients
+}
+transformed parameters{
+
+matrix[I, N] z_hat;                 // smoothed UT observations (functional obs)
+matrix<lower = 0>[I, M] y;          // the filtered values of the spline coeficients
+
+// calculate the mean degradation at time t
+y = t * mu';
+y[1, ] = y[1, ] + 0.0001;
+
+// calculate value of spline at measurement locations
+z_hat = y_noisy * B';
+
+}
+model{
+
+/// priors ///
+// for process model
+// mu
+for (m in 1:M) {
+  mu[m] ~ normal(a_hat[m], b_hat[m]);
+}
+// phi
+phi ~ cauchy(0, 25);
+// sigma
+sigma ~ uniform(0, 100);
+
+/// linear model ///
+for (i in 1:I) {
+  y_noisy[i, ] ~ student_t(10, y[i, ], y[i, ]*phi);
+}
+
+
+/// data model ///
+for (i in 1:I) {
+  z[i, ] ~ normal(z_hat[i, ], sigma);
+}
+
+}
+
+"
+)
+```
+
+### GP
+
+Below the BHM in @eq-data-model, @eq-param-model, and @eq-process-model is specified in Stan.
+
+::: callout-note
+# Parameterisation of $\nu$
+
+For computational reasons we use a reparameterisation of the student-t distribution recomended in the [Stan user manual](https://mc-stan.org/docs/stan-users-guide/reparameterization.html#reparameterizing-a-student-t-distribution).
+:::
+
+```{stan}
+#| label: stan-model-gp
+#| output.var: "fda_noisy_GP_stan_model"
+#| echo: true
+#| cache: false
+
+data{
+
+// data //
+int I;           // number of observations
+int N;           // number of measurement locations
+int M;           // number of spline basis
+vector[I] t;     // the set of observation times
+matrix[I, N] z;  // the set of noisy UT measurements
+matrix[N, M] B;  // the B-spline design matrix
+
+// hyper parameters for mu //
+vector[M] a_hat; // our estimate of the mean wear rate
+vector[M] b_hat; // our uncertanty of this estimate
+
+}
+transformed data{
+
+vector[I - 1] t_diff;              // The time steps between each observation
+
+// calculate the time steps //
+t_diff = t[2:I] - t[1:I-1];
+
+}
+parameters{
+
+vector<lower = 0>[M] mu;            // the mean wear rates of the gamma processes
+real<lower = 0> nu_a;               // reparam of t_3 prior for nu
+real<lower = 0> nu_b;               // ""
+real<lower = 0> nu_sd;              // the sd of the random effect on nu
+vector<lower = 0>[M] nu;            // CoVs of the gamma processes
+real<lower = 0> sigma;              // the standard deviation of the measurement error at UT level
+real<lower = 0> phi;                // the standard deviation of the measurement error at coef level
+matrix<lower = 0>[I - 1, M] y_diff; // the jumps in degradation of each coeficient
+matrix[I - 1, M] y_noisy;           // the noisy coeficient values
+
+}
+transformed parameters{
+
+real<lower = 0> nu_mean;             // the mean of the random effect on nu
+matrix<lower = 0>[I - 1, M] y;       // the filtered values of the spline coeficients
+matrix[I, N] z_hat;                  // smoothed UT observations (functional obs)
+
+// reparam of nu_mean
+nu_mean = nu_a / sqrt(nu_b);
+
+// calculate the coef values from the stochastic jumps
+for (m in 1:M) {
+  y[, m] = cumulative_sum(y_diff[, m]);
+}
+
+// asume the belt is flat at time zero
+for (n in 1:N){
+  z_hat[1, n] = 0;
+}
+
+// calculate value of spline at measurement locations
+z_hat[2:I, ] = y_noisy * B';
+
+}
+model{
+
+/// priors ///
+// for process model
+// nu
+nu_a ~ normal(0, 0.5);
+nu_b ~ gamma((0.5 * 3), (0.5 * 3));
+nu_sd ~ cauchy(0, 0.5);
+nu ~ normal(nu_mean, nu_sd);
+
+// mu
+for (m in 1:M) {
+  mu[m] ~ normal(a_hat[m], b_hat[m]);
+}
+
+// for data model
+sigma ~ uniform(0, 100);
+phi ~ cauchy(0, 25);
+
+/// process model ///
+// GP 
+// |the average wear rate parameter is applied in the next |
+// |step, but is equivelant to scale = 1 / (mu * nu^2)     |
+for (m in 1:M){
+  y_diff[, m] ~ gamma(t_diff / pow(nu[m], 2), 1 / (pow(nu[m], 2)));
+}
+
+// Noisy obs
+for (i in 1:(I - 1)){
+  for (m in 1:M){
+    y_noisy[i, m] ~ student_t(10, mu[m] * y[i, m], (phi * mu[m] * y[i, m]));
+  }
+}
+
+/// data model ///
+for (i in 1:I) {
+  z[i, ] ~ normal(z_hat[i, ], sigma);
+}
+
+}
+```
+
+```{r}
+#| echo: false
+#| eval: false
+
+fda_noisy_GP_stan_model <- rstan::stan_model(
+  model_code = "
+data{
+
+// data //
+int I;           // number of observations
+int N;           // number of measurement locations
+int M;           // number of spline basis
+vector[I] t;     // the set of observation times
+matrix[I, N] z;  // the set of noisy UT measurements
+matrix[N, M] B;  // the B-spline design matrix
+
+// hyper parameters for mu //
+vector[M] a_hat; // our estimate of the mean wear rate
+vector[M] b_hat; // our uncertanty of this estimate
+
+}
+transformed data{
+
+vector[I - 1] t_diff;              // The time steps between each observation
+
+// calculate the time steps //
+t_diff = t[2:I] - t[1:I-1];
+
+}
+parameters{
+
+vector<lower = 0>[M] mu;            // the mean wear rates of the gamma processes
+real<lower = 0> nu_a;               // reparam of t_3 prior for nu
+real<lower = 0> nu_b;               // 
+real<lower = 0> nu_sd;           // the sd of the random effect on nu
+vector<lower = 0>[M] nu;            // CoVs of the gamma processes
+real<lower = 0> sigma;              // the standard deviation of the measurement error at UT level
+real<lower = 0> phi;                // the standard deviation of the measurement error at coef level
+matrix<lower = 0>[I - 1, M] y_diff; // the jumps in degradation of each coeficient
+matrix[I - 1, M] y_noisy;           // the noisy coeficient values
+
+}
+transformed parameters{
+
+real<lower = 0> nu_mean;             // the mean of the random effect on nu
+matrix<lower = 0>[I - 1, M] y;       // the filtered values of the spline coeficients
+matrix[I, N] z_hat;                  // smoothed UT observations (functional obs)
+
+// reparam of nu_mean
+nu_mean = nu_a / sqrt(nu_b);
+
+// calculate the coef values from the stochastic jumps
+for (m in 1:M) {
+  y[, m] = cumulative_sum(y_diff[, m]);
+}
+
+// asume the belt is flat at time zero
+for (n in 1:N){
+  z_hat[1, n] = 0;
+}
+
+// calculate value of spline at measurement locations
+z_hat[2:I, ] = y_noisy * B';
+
+}
+model{
+
+/// priors ///
+// for process model
+// nu
+nu_a ~ normal(0, 0.5);
+nu_b ~ gamma((0.5 * 3), (0.5 * 3));
+nu_sd ~ cauchy(0, 0.25);
+nu ~ normal(nu_mean, nu_sd);
+
+// mu
+for (m in 1:M) {
+  mu[m] ~ normal(a_hat[m], b_hat[m]);
+}
+
+// for data model
+sigma ~ uniform(0, 100);
+phi ~ cauchy(0, 25);
+
+/// process model ///
+// GP:
+// the average wear rate parameter is applied in the next
+// step, but is equivelant to scale = 1 / (mu * nu^2)
+
+for (m in 1:M){
+  y_diff[, m] ~ gamma(t_diff / pow(nu[m], 2), 1 / (pow(nu[m], 2)));
+}
+
+// Noisy obs
+for (i in 1:(I - 1)){
+  for (m in 1:M){
+    y_noisy[i, m] ~ student_t(10, mu[m] * y[i, m], (phi * mu[m] * y[i, m]));
+  }
+}
+
+/// data model ///
+for (i in 1:I) {
+  z[i, ] ~ normal(z_hat[i, ], sigma);
+}
+
+}
+
+"
+)
+```
+
+## Sampling
+
+```{r}
+#| echo: false
+#| output: false
+
+Ut_matrix <- matrix(belt_wear_data[["belt_A"]]$wear,
+                    nrow = length(t),
+                    byrow = TRUE)
+
+stan_data_full <- list(
+  I = length(t),
+  N = ncol(Ut_matrix),
+  M = ncol(B),
+  t = t,
+  z = Ut_matrix,
+  B = B[2:21, ],
+  a_hat = lapply(coef_lm_fits, function(m) m["a_hat"]) %>% unlist(),
+  b_hat = lapply(coef_lm_fits, function(m) m["b_hat"]) %>% unlist() * 5
+)
+
+# Save Stan model and data for use in suplementary scrips
+saveRDS(
+  fda_noisy_GP_stan_model,
+  file = "compiled-stan-model-gp.rds"
+)
+saveRDS(
+  fda_LM_stan_model,
+  file = "compiled-stan-model-lm.rds"
+)
+saveRDS(
+  stan_data_full,
+  file = "stan-data.rds"
+)
+```
+
+Now that we have specified the model is Stan, we can used the no-U-turn MCMC sampler to obtain draws from the posterior. Below we generate X draws from the posterior using 4 chains each Xn in length with a burn in of Bn and no thinning.
+
+```{r}
+#| label: define-stan-data-8
+#| output: false
+#| warning: true
+
+# Arange data in list for Stan
+stan_data_full <- list(
+  I = length(t[1:8]),
+  N = ncol(Ut_matrix),
+  M = ncol(B),
+  t = t[1:8],
+  z = Ut_matrix[1:8, ],
+  B = B[2:21, ],
+  a_hat = lapply(coef_lm_fits, function(m) m["a_hat"]) %>% unlist(),
+  b_hat = lapply(coef_lm_fits, function(m) m["b_hat"]) %>% unlist() * 5
+)
+```
+
+::: panel-tabset
+### GP
+```{r}
+#| label: model-fitting-gp
+#| output: false
+#| warning: true
+
+stan_fit_full_gp <- sampling(
+  fda_noisy_GP_stan_model,
+  stan_data_full,
+  chains = 4,
+  iter = 4000,
+  warmup = 1000,
+  control = list(
+    adapt_delta = 0.99, 
+    max_treedepth = 14
+  )
+)
+```
+
+### LM
+```{r}
+#| label: model-fitting-lm
+#| output: false
+#| warning: true
+
+stan_fit_full_lm <- sampling(
+  fda_LM_stan_model,
+  stan_data_full,
+  chains = 4,
+  iter = 4000,
+  warmup = 1000,
+  control = list(
+    adapt_delta = 0.99, 
+    max_treedepth = 14
+  )
+)
+```
+
+:::
+
+As a first pass check, we can look at the summaries of the main parameters and some simple sampling diagnostic values such as effective sample size and $\hat{R}$ [@gelman_BDA_2013, pp. 285-287].
+
+::: panel-tabset
+### GP
+```{r}
+#| label: sampling-diags-gp
+#| echo: false
+
+summary(stan_fit_full_gp, 
+        pars = c("sigma",
+                 "phi", 
+                 "mu", 
+                 "nu",
+                 "nu_mean",
+                 "nu_sd")) %>%
+  as.data.frame() %>%
+  select(summary.mean, 
+         summary.se_mean, 
+         summary.sd,
+         summary.n_eff,
+         summary.Rhat) %>%
+  rmarkdown::paged_table()
+```
+
+### LM
+```{r}
+#| label: sampling-diags-lm
+#| echo: false
+
+summary(stan_fit_full_lm, 
+        pars = c("sigma",
+                 "phi", 
+                 "mu")) %>%
+  as.data.frame() %>%
+  select(summary.mean, 
+         summary.se_mean, 
+         summary.sd,
+         summary.n_eff,
+         summary.Rhat) %>%
+  rmarkdown::paged_table()
+```
+:::
+
+To assume that the samples sufficiently represent the target distribution the value of $\hat{R}$ should be less than $1.05$ and there should be at least $10$ effective samples per chain [@gelman_BDA_2013, pp. 287].
+
+Finaly, there was a few divergencies during sampling (about $0.9\%$ of the total number of draws). We can use a parallel coordinate plot with the divergent transitions plotted in red to see if these divergencies are a problem. If the divergent paths show a a clear structure through parameter space then this is a sign that there is degenerate behavior in the posterior. There is signs of two structures, one set that passes through values of $\nu_{sd}$ very close to zero, and another that draws a clear line through parameter space. I believe that the troublesome sampling when $\nu_{sd}$ is close to zero is a fairly typical issue with the variance of random effects when the data do not clearly demonstrate the existence of such an effect-e.g. it is possible that all spline coefficients have the same value of $\nu$, meaning that the variance of the random effect would be zero. The second clear structure through parameter space is most likely due to the same issues as in @our-paper, where there is not enough information in the data to completely separate the volatility of the gamma process and the variance of the noise; see recommendations in @our-paper on how this could be removed. But as we can see in the next section, it doesn't appear that these divergent transitions have created any multimodality in the posterior and so I do not believe they are a major issue.
+
+::: panel-tabset
+### GP
+```{r}
+#| label: fig-parcoord-diag-plot-gp
+#| fig-cap: Prallel coordinate plot for the main parameters.
+#| echo: false
+
+np_gp <- nuts_params(stan_fit_full_gp)
+
+stan_fit_full_gp %>%
+  mcmc_parcoord(
+    pars = c("sigma",
+             "phi",
+             "nu_mean",
+             "nu_sd",
+             str_c("nu[", 1:8, "]"),
+             str_c("mu[", 1:8, "]")),
+    np = np_gp,
+    transformations = function(x) {(x - mean(x)) / sd(x)}
+  )
+```
+
+### LM
+```{r}
+#| label: fig-parcoord-diag-plot-lm
+#| fig-cap: Prallel coordinate plot for the main parameters.
+#| echo: false
+
+np_lm <- nuts_params(stan_fit_full_lm)
+
+stan_fit_full_lm %>%
+  mcmc_parcoord(
+    pars = c("sigma",
+             "phi",
+             str_c("mu[", 1:8, "]")),
+    np = np_lm,
+    transformations = function(x) {(x - mean(x)) / sd(x)}
+  )
+```
+:::
+
+## Posterior
+
+The stan posterior object `stan_fit_full` contains a multidimentional posterior that holds withing it what we have learnt from the data. While it is hard to visualise the full posterior, some ways that we can visualise the posterior is by looking at the seperate marginal distribution of the parameters, the marginal distribution of intermediate(or unobservable-values), or posterior predictive distributions.
+
+### Marginal
+
+The marginal distributions of the parameters show us directly our new belief after the prior distribution for each parameter has been updated by the data. From the marginal posteriors of the $\mu_m$ in @fig-marginal-posts A, we can see that the model has identified that the "dishing out" behaviour is part of the driving underlying process. We can also see that there is not a large variation in the $\nu_m$; i.e. there is not a lot of variation in how "jumpy" the wear in different parts of the belt is-for other conveyor belts this could be very different. Lastly, the mass of $\nu_{mean}$ is reasonably far from zero, sugesting that the underlying degradation process is indeed not linear like we first suspected.
+
+::: panel-tabset
+### GP
+```{r}
+#| label: fig-marginal-posts-gp
+#| fig-cap: The marginal posterior distributions of the model parameters.
+#| echo: false
+
+# mu
+p_mu_gp <- mcmc_areas(
+  stan_fit_full_gp, 
+  pars = str_c("mu[", 1:8, "]"),
+  prob = 0.8,        # 80% intervals
+  prob_outer = 0.99, # 99%
+  point_est = "mean"
+) + 
+scale_y_discrete(
+  labels = c(
+    "mu[1]" = expression(mu[1]), 
+    "mu[2]" = expression(mu[2]),
+    "mu[3]" = expression(mu[3]),
+    "mu[4]" = expression(mu[4]),
+    "mu[5]" = expression(mu[5]),
+    "mu[6]" = expression(mu[6]),
+    "mu[7]" = expression(mu[7]),
+    "mu[8]" = expression(mu[8])
+  )
+)
+
+# var params and random effect hyper params
+p_var_gp <- mcmc_areas(
+  stan_fit_full_gp, 
+  pars = c("sigma", "phi", "nu_sd", "nu_mean"),
+  prob = 0.8,        # 80% intervals
+  prob_outer = 0.99, # 99%
+  point_est = "mean"
+) +
+scale_y_discrete(
+  labels = c(
+    "sigma" = expression(sigma), 
+    "phi" = expression(phi),
+    "nu_sd" = expression(mu[nu]),
+    "nu_mean" = expression(sigma[nu])
+  )
+)
+
+# nu
+p_nu_gp <- mcmc_areas(
+  stan_fit_full_gp, 
+  pars = str_c("nu[", 1:8, "]"),
+  prob = 0.8,        # 80% intervals
+  prob_outer = 0.99, # 99%
+  point_est = "mean"
+) + 
+scale_y_discrete(
+  labels = c(
+    "nu[1]" = expression(nu[1]), 
+    "nu[2]" = expression(nu[2]),
+    "nu[3]" = expression(nu[3]),
+    "nu[4]" = expression(nu[4]),
+    "nu[5]" = expression(nu[5]),
+    "nu[6]" = expression(nu[6]),
+    "nu[7]" = expression(nu[7]),
+    "nu[8]" = expression(nu[8])
+  )
+)
+
+plot_grid(
+  p_mu_gp, p_nu_gp, p_var_gp,
+  nrow = 1,
+  ncol = 3,
+  align = "v",
+  labels = c("(a)", "(b)", "(c)"),
+  label_fontfamily = "Times",
+  label_face = "plain"
+)
+```
+
+### LM
+```{r}
+#| label: fig-marginal-posts-lm
+#| fig-cap: The marginal posterior distributions of the model parameters.
+#| echo: false
+
+# mu
+p_mu_lm <- mcmc_areas(
+  stan_fit_full_lm, 
+  pars = str_c("mu[", 1:8, "]"),
+  prob = 0.8,        # 80% intervals
+  prob_outer = 0.99, # 99%
+  point_est = "mean"
+) + 
+scale_y_discrete(
+  labels = c(
+    "mu[1]" = expression(mu[1]), 
+    "mu[2]" = expression(mu[2]),
+    "mu[3]" = expression(mu[3]),
+    "mu[4]" = expression(mu[4]),
+    "mu[5]" = expression(mu[5]),
+    "mu[6]" = expression(mu[6]),
+    "mu[7]" = expression(mu[7]),
+    "mu[8]" = expression(mu[8])
+  )
+)
+
+# var params and random effect hyper params
+p_var_lm <- mcmc_areas(
+  stan_fit_full_lm, 
+  pars = c("sigma", "phi"),
+  prob = 0.8,        # 80% intervals
+  prob_outer = 0.99, # 99%
+  point_est = "mean"
+) +
+scale_y_discrete(
+  labels = c(
+    "sigma" = expression(sigma), 
+    "phi" = expression(phi)
+  )
+)
+
+plot_grid(
+  p_mu_lm, p_var_lm,
+  nrow = 1, ncol = 2,
+  align = "v",
+    labels = c("(a)", "(b)"),
+  label_fontfamily = "Times",
+  label_face = "plain"
+)
+```
+:::
+
+```{r}
+#| label: save-marginal-posts
+#| echo: false
+#| output: false
+
+pdf(
+  file.path(figure_path, "marginal_post_gp.pdf"),
+  height = 5, width = 8
+)
+plot_grid(
+  p_mu_gp, p_nu_gp, p_var_gp,
+  nrow = 1,
+  ncol = 3,
+  align = "v",
+  labels = c("(a)", "(b)", "(c)"),
+  label_fontfamily = "Times",
+  label_face = "plain"
+)
+dev.off()
+
+pdf(
+  file.path(figure_path, "marginal_post_lm.pdf"),
+  height = 5, width = 8
+)
+plot_grid(
+  p_mu_lm, p_var_lm,
+  nrow = 1, ncol = 2,
+  align = "v",
+    labels = c("(a)", "(b)"),
+  label_fontfamily = "Times",
+  label_face = "plain"
+)
+dev.off()
+```
+
+We can also plot the marginal posteriors and overlay the prior to see how much updating has occured. Doing so, we can also check for signs that the data have not informed the parameter or if there is conflicting information between the prior and the data.
+
+::: panel-tabset
+# $\mu$
+
+```{r}
+#| label: fig-post-prior-comp-mu
+#| fig-cap: Comparison of the marginal prior and posterior for $\mu$.
+#| echo: false
+
+stan_fit_full_gp %>%
+as_draws_rvars() %>%
+spread_rvars(mu[m]) %>%
+mutate(
+  prior = dist_normal(mu = stan_data_full$a_hat, 
+                      sigma = stan_data_full$b_hat),
+  m = as.factor(m)
+) %>%
+as.data.frame() %>%
+ggplot(aes(y = m)) +
+stat_dist_slab(
+  aes(dist = mu), 
+  normalize = FALSE,
+  scale = 2.5,
+  fill = "lightblue",
+  color = "darkblue"
+) +
+stat_dist_slab(
+  aes(dist = prior),
+  normalize = FALSE,
+  fill = NA,
+  color = "#e41a1c",
+  scale = 2.5
+) +
+xlim(0, 30) + 
+scale_y_discrete(
+  labels = c("1" = expression(mu[1]), 
+             "2" = expression(mu[2]),
+             "3" = expression(mu[3]),
+             "4" = expression(mu[4]),
+             "5" = expression(mu[5]),
+             "6" = expression(mu[6]),
+             "7" = expression(mu[7]),
+             "8" = expression(mu[8]))
+) +
+xlab("") +
+ylab("")
+```
+
+# $\nu$ hyperparams
+
+```{r}
+#| label: fig-post-prior-comp-nu
+#| fig-cap:
+#|  Comparison of the marginal prior and posterior for the hyper parameters of 
+#|  $\nu$.
+#| echo: false
+
+stan_fit_full_gp %>%
+as_draws_rvars() %>%
+gather_rvars(c(nu_mean, nu_sd)) %>%
+mutate(
+  prior = c(
+    dist_student_t(
+      df = 3, 
+      mu = 0, 
+      sigma = 0.5
+    ),
+    dist_cauchy(
+      location = 0,
+      scale = 0.25
+    )
+  )
+) %>%
+as.data.frame() %>%
+ggplot(aes(y = .variable)) +
+stat_dist_slab(
+  aes(dist = .value),
+  normalize = FALSE,
+  fill = "lightblue",
+  color = "darkblue",
+  scale = 0.07
+) +
+stat_dist_slab(
+  aes(dist = prior), 
+  normalize = FALSE,
+  fill = NA,
+  color = "#e41a1c",
+  scale = 0.15
+) +
+xlim(0, 2) +
+scale_y_discrete(
+  labels = c("nu_mean" = expression(nu[mean]))
+) +
+xlab("") +
+ylab("")
+```
+
+# $\sigma$ and $\phi$
+
+```{r}
+#| label: fig-post-prior-comp-var
+#| fig-cap: 
+#|  Comparison of the marginal prior and posterior for $\sigma$ and $\phi$.
+#| echo: false
+
+stan_fit_full_gp %>%
+as_draws_rvars() %>%
+gather_rvars(c(sigma, phi)) %>%
+mutate(
+  prior = c(dist_uniform(0, 100),
+            dist_cauchy(0, 25))) %>%
+as.data.frame() %>%
+ggplot(aes(y = .variable)) +
+stat_dist_slab(
+  aes(dist = .value),
+  normalize = FALSE,
+  fill = "lightblue",
+  color = "darkblue",
+  scale = 0.05
+) +
+stat_dist_slab(
+  aes(dist = prior), 
+  normalize = FALSE,
+  fill = NA,
+  color = "#e41a1c",
+  scale = 3
+) +
+xlim(0, 3) +
+scale_y_discrete(
+  labels = c("sigma" = expression(sigma),
+             "phi" = expression(phi))
+) +
+xlab("") +
+ylab("")
+```
+:::
+
+### Intermediate values
+
+Bayesian computation (MCMC sampling) treets missing or unobservable quantities the same as parameters. Therefore the full posterior also contains posterior samples for the unobservable $y_{i, m}$ and $y^*_{i, m}$. The marginal posterior of the $y^*_{i, m}$-the filtered values of the spline coeficients-give us a good insight into the variability of the underlying fitted Gamma processes which are suposedly driving the evolution of the wear profile. We can visualise this distribution in two ways; we can look at the values of the coeficients directly, or we can visualise the smooth mean wear profiles that result from the coeficient values.
+
+#### Filtered spline coefs
+
+@gif-filtered-spline-coef below is a gif cycling through one hundred draws from the posterior distribution of the $y^*_{i, m}$. Essentialy it is showing us the different posible filterd coeficient pathways. The gray siloets in the background are the other 99 draws that we are cycling through.
+
+::: panel-tabset
+### GP
+```{r}
+#| label: gif-filtered-spline-coef-gp
+#| fig-cap: 
+#|  An animation of 100 different samples of the filtered spline 
+#|  coeficient paths. The colours corespond to the basis functions
+#|  in @fig-B-spline-demo.
+#| echo: false
+#| eval: false
+
+random_draws <- sample(1:3000*4, 100)
+
+df_gp <- stan_fit_full_gp %>%
+    as_draws_df() %>%
+    spread_draws(y[i, m], mu[m]) %>%
+    mutate(y = y * mu) %>%
+    full_join(data.frame(i = 1:7, t = t[2:8]), by = c("i")) %>%
+    filter(.draw %in% random_draws) %>%
+    mutate(m = factor(m))
+
+df_gp  <- df_gp %>%
+rbind(
+  df_gp %>%
+  select(m, .chain, .iteration, .draw) %>%
+  unique() %>%
+  mutate(
+    i = 0, 
+    y = 0,
+    t = t[1]
+  )
+)
+
+coef_names <- list(
+  'm: 1' = expression(y^"*" ~ ""[i~","~m~"="~1]),
+  'm: 2' = expression(y^"*" ~ ""[i~","~m~"="~2]),
+  'm: 4' = expression(y^"*" ~ ""[i~","~m~"="~4]),
+  'm: 5' = expression(y^"*" ~ ""[i~","~m~"="~5]),
+  'm: 3' = expression(y^"*" ~ ""[i~","~m~"="~3]),
+  'm: 6' = expression(y^"*" ~ ""[i~","~m~"="~6]),
+  'm: 7' = expression(y^"*" ~ ""[i~","~m~"="~7]),
+  'm: 8' = expression(y^"*" ~ ""[i~","~m~"="~8])
+)
+coef_labeller <- function(variable,value){
+  return(coef_names[value])
+}
+
+p_gp <- df_gp %>%
+  ggplot(aes(x = t, y = y, col = m)) +
+  geom_line(aes(group = .draw)) +
+  facet_wrap(~ m, labeller = coef_labeller, nrow = 1) +
+  transition_states(.draw, 0, 1) +
+  shadow_mark(past = TRUE, future = TRUE, alpha = 1/20, color = "gray50") +
+  scale_color_manual(
+    values = c(hue_pal()(8)[2:8],
+               hue_pal()(8)[1])
+  ) +
+  theme(legend.position = "none")
+
+coefgif_gp <- animate(
+  p_gp, 
+  nframes = 100, 
+  fps = 2.5, 
+  width = 1000, 
+  height = 480, 
+  res = 100, 
+  type = "cairo",
+  renderer=gifski_renderer(loop=FALSE)
+)
+
+coefgif_gp
+```
+
+### LM
+```{r}
+#| label: gif-filtered-spline-coef-lm
+#| fig-cap: 
+#|  An animation of 100 different samples of the filtered spline 
+#|  coeficient paths. The colours corespond to the basis functions
+#|  in @fig-B-spline-demo.
+#| echo: false
+#| eval: false
+
+df_lm <- stan_fit_full_lm %>%
+    as_draws_df() %>%
+    spread_draws(y[i, m]) %>%
+    full_join(data.frame(i = 1:8, t = t[1:8]), by = c("i")) %>%
+    filter(.draw %in% random_draws) %>%
+    mutate(m = factor(m))
+
+coef_names <- list(
+  'm: 1' = expression(y^"*" ~ ""[i~","~m~"="~1]),
+  'm: 2' = expression(y^"*" ~ ""[i~","~m~"="~2]),
+  'm: 4' = expression(y^"*" ~ ""[i~","~m~"="~4]),
+  'm: 5' = expression(y^"*" ~ ""[i~","~m~"="~5]),
+  'm: 3' = expression(y^"*" ~ ""[i~","~m~"="~3]),
+  'm: 6' = expression(y^"*" ~ ""[i~","~m~"="~6]),
+  'm: 7' = expression(y^"*" ~ ""[i~","~m~"="~7]),
+  'm: 8' = expression(y^"*" ~ ""[i~","~m~"="~8])
+)
+coef_labeller <- function(variable,value){
+  return(coef_names[value])
+}
+
+p_lm <- df_lm %>%
+  ggplot(aes(x = t, y = y, col = m)) +
+  geom_line(aes(group = .draw)) +
+  facet_wrap(~ m, labeller = coef_labeller, nrow = 1) +
+  transition_states(.draw, 0, 1) +
+  shadow_mark(past = TRUE, future = TRUE, alpha = 1/20, color = "gray50") +
+  scale_color_manual(
+    values = c(hue_pal()(8)[2:8],
+               hue_pal()(8)[1])
+  ) +
+  theme(legend.position = "none")
+
+coefgif_lm <- animate(
+  p_lm, 
+  nframes = 100, 
+  fps = 2.5, 
+  width = 1000, 
+  height = 480, 
+  res = 100, 
+  type = "cairo",
+  renderer=gifski_renderer(loop=FALSE)
+)
+
+coefgif_lm
+```
+:::
+@gif-filtered-spline-coef does a good job at demonstrainting that while an average filtered path (like the one included in the paper) may look smooth, there are some fairly jumpy processes in the posterior.
+
+```{r}
+#| label: fig-filtered-spline-coef
+#| echo: false
+#| output: false
+
+p_ppd_y_gp <- df_gp %>%
+  ggplot(aes(x = t, y = y)) +
+  geom_line(
+    aes(group = .draw), 
+    color = "darkgray",
+    alpha = 0.3
+  ) +
+  geom_line(
+    data = df_gp %>% 
+      group_by(i, m) %>%
+      summarise(
+        y = mean(y),
+        t = unique(t),
+        .draw = NA
+      ) %>%
+      ungroup(),
+    aes(col = m),
+    size = 0.7
+  ) +
+  facet_wrap(
+    ~ m, 
+    labeller = coef_labeller, 
+    nrow = 1
+  ) +
+  theme(legend.position = "none") +
+  ylab(expression(y^"*")) +
+  xlab("tonnes") +
+  scale_color_manual(
+    values = c(hue_pal()(8)[2:8],
+               hue_pal()(8)[1])
+  )
+p_ppd_y_lm <- df_lm %>%
+  ggplot(aes(x = t, y = y)) +
+  geom_line(
+    aes(group = .draw), 
+    color = "darkgray",
+    alpha = 0.3
+  ) +
+  geom_line(
+    data = df_lm %>% 
+      group_by(i, m) %>%
+      summarise(
+        y = mean(y),
+        t = unique(t),
+        .draw = NA
+      ) %>%
+      ungroup(),
+    aes(col = m),
+    size = 0.7
+  ) +
+  facet_wrap(
+    ~ m, 
+    labeller = coef_labeller, 
+    nrow = 1
+  ) +
+  theme(legend.position = "none") +
+  ylab(expression(y^"*")) +
+  xlab("tonnes") +
+  scale_color_manual(
+    values = c(hue_pal()(8)[2:8],
+               hue_pal()(8)[1])
+  )
+
+pdf(
+  file.path(figure_path, "post_y_belt_wear.pdf"),
+  height = 6, width = 8
+)
+  plot_grid(
+    p_ppd_y_gp, p_ppd_y_lm,
+    ncol = 1,
+    nrow = 2,
+    labels = c("(a)", "(b)"),
+    label_fontfamily = "Times",
+    label_face = "plain",
+    label_x = -0.01
+  )
+dev.off()
+```
+
+#### Mean wear profiles
+
+Alternatively, we can calculate the set of smooth spline function for each draw of the $\{y^*_{i, m}\}^{I, M}_{i = 1, m = 1}$ by applying the coeficients to the B-spline basis functions and then calculateing the value of the smooth wear profile across the width of the belt. What we see is a gradual monotonic growth of the profile with a reasonable amount of uncertainty around wat is the average profile along the length of the belt at each observation time.
+
+::: panel-tabset
+### GP
+```{r}
+#| label: fig-average-wear-profile-gp
+#| fig-cap: The mean wear profile of the belt at each observation time.
+#| echo: false
+
+mean_wear_post_gp <- stan_fit_full_gp %>%
+as_draws_rvars() %>%
+spread_rvars(y[i, m], mu[m], phi) %>%
+mutate(y = y * mu) %>%
+as.data.frame()
+
+mean_wear_ut_gp <- mean_wear_post_gp %>%
+group_by(i) %>%
+summarise(z_mean = y %**% t(fine_basis_mat))
+
+mean_wear_ut_gp$z_mean %>%
+as.data.frame() %>%
+pivot_longer(cols = everything()) %>%
+mutate(
+  n = rep(seq(0, 21, length.out = nrow(fine_basis_mat)), 7),
+  t = factor(rep(round(t[2:8], 2), each = nrow(fine_basis_mat)))
+) %>%
+ggplot(aes(x = n, dist = value, col = t, fill = t)) +
+stat_dist_lineribbon(.width = c(0.98)) +
+scale_colour_brewer(palette = "YlOrRd") +
+scale_fill_manual(
+  values = alpha(
+    brewer.pal(n = 8, name = "YlOrRd"), 
+    0.3
+  )
+) +
+guides(fill = "none")
+```
+
+### LM
+```{r}
+#| label: fig-average-wear-profile-lm
+#| fig-cap: The mean wear profile of the belt at each observation time.
+#| echo: false
+
+mean_wear_post_lm <- stan_fit_full_lm %>%
+as_draws_rvars() %>%
+spread_rvars(y[i, m], phi) %>%
+as.data.frame()
+
+mean_wear_ut_lm <- mean_wear_post_lm %>%
+group_by(i) %>%
+summarise(z_mean = y %**% t(fine_basis_mat))
+
+mean_wear_ut_lm$z_mean %>%
+as.data.frame() %>%
+pivot_longer(cols = everything()) %>%
+mutate(
+  n = rep(seq(0, 21, length.out = nrow(fine_basis_mat)), 8),
+  t = factor(rep(round(t[1:8], 2), each = nrow(fine_basis_mat)))
+) %>%
+ggplot(aes(x = n, dist = value, col = t, fill = t)) +
+stat_dist_lineribbon(.width = c(0.98)) +
+scale_colour_brewer(palette = "YlOrRd") +
+scale_fill_manual(
+  values = alpha(
+    brewer.pal(n = 8, name = "YlOrRd"), 
+    0.3
+  )
+) +
+guides(fill = "none")
+```
+:::
+### Posterior predictive distributions
+
+Even though for this particular aplication we are not interested in predicting the value of new measurements at the same time or locations as the observations, posterior predictive distributions (PPD) are a means of sense checking our fitted model. In this BHM, there are two different levels that we can generate a PPD; either the distribution of new UT measurements at the same time and location along the length of the belt; or new functional observations at the same times but at alternative locations along the length of the belt.
+
+#### PPD of UT measurements
+
+From the lowest level of the heirarchical posterior we can generate the predictive distribution for new UT measurements across the width of the belt at the same time and location along its length as the observed data. This essentialy shows us the fitted wear profile for each of the functional observations and the measurement uncertainty around the UT measurements that make up those profiles. The PPD of new UT measurements is generated by first extracting the noisy spline coeficient draws, the $y_{i, m}$, and the draws of $\sigma$ from the posterior and then pushing the values back through the data model. That is, calculating the values of the B-spline at the measurement locations and then adding measurement noise by simulating from $z_{i, n} \sim N(f_i(n), \sigma)$ for every set of posterior draws.
+
+::: panel-tabset
+### GP
+```{r}
+#| label: ppd-ut-gp
+#| fig-cap: 
+#|  The posterior predictive distribution of new UT measurements taken
+#|  at the same time and location along the length fo the belt.
+#| echo: false
+
+rvar_rTruncNorm <- rfun(rTruncNorm)
+
+wear_post_gp <- stan_fit_full_gp %>%
+as_draws_rvars() %>%
+spread_rvars(y_noisy[i, m], sigma) %>%
+as.data.frame()
+
+wear_ut_gp <- wear_post_gp %>%
+rbind(
+  data.frame(
+    y_noisy = rep(rvar(rep(0,3000*4), nchains = 4), 8),
+    i = 0,
+    m = 1:8,
+    sigma = rep(unique(wear_post_gp$sigma), 8)
+  )
+) %>%
+arrange(m, i) %>%
+group_by(i) %>%
+summarise(z_smoothed = y_noisy %**% t(fine_basis_mat))
+
+p_fda_ppd_gp <- wear_ut_gp$z_smoothed %>%
+as.data.frame() %>%
+pivot_longer(cols = everything()) %>%
+mutate(
+  n = rep(seq(0, 21, length.out = nrow(fine_basis_mat)), 8),
+  t = factor(rep(round(t[1:8], 2), each = nrow(fine_basis_mat))),
+  sd_ut = unique(wear_post_gp$sigma),
+  z_noisy = rvar_rTruncNorm(1, 
+                            mean = value,
+                            sd = sd_ut,
+                            lb = -5)
+) %>%
+ggplot(aes(x = n, dist = z_noisy, col = t, fill = t)) +
+stat_dist_lineribbon(.width = c(0.95)) +
+scale_colour_brewer(palette = "YlOrRd") +
+scale_fill_manual(
+  values = alpha(
+    brewer.pal(n = 8, name = "YlOrRd"), 
+    0.3
+  )
+) +
+geom_point(
+  data = belt_wear_data[["belt_A"]] %>% 
+  filter(tonnes < 1) %>%
+  mutate(
+    n = rep(1:20, 8),
+    t = as.factor(round(tonnes, 2)),
+    z_noisy = wear
+  ),
+  aes(y = z_noisy)
+) +
+ylim(-2, 30) +
+xlab("measurement location") +
+ylab("wear (mm)") +
+labs(col = "tonnes of operation") +
+guides(fill = "none")
+
+p_fda_ppd_gp
+```
+
+### LM
+```{r}
+#| label: ppd-ut-lm
+#| fig-cap: 
+#|  The posterior predictive distribution of new UT measurements taken
+#|  at the same time and location along the length fo the belt.
+#| echo: false
+
+wear_post_lm <- stan_fit_full_lm %>%
+as_draws_rvars() %>%
+spread_rvars(y_noisy[i, m], sigma) %>%
+as.data.frame()
+
+wear_ut_lm <- wear_post_lm  %>%
+arrange(m, i) %>%
+group_by(i) %>%
+summarise(z_smoothed = y_noisy %**% t(fine_basis_mat))
+
+p_fda_ppd_lm <- wear_ut_lm$z_smoothed %>%
+as.data.frame() %>%
+pivot_longer(cols = everything()) %>%
+mutate(
+  n = rep(seq(0, 21, length.out = nrow(fine_basis_mat)), 8),
+  t = factor(rep(round(t[1:8], 2), each = nrow(fine_basis_mat))),
+  sd_ut = unique(wear_post_lm$sigma),
+  z_noisy = rvar_rTruncNorm(1, 
+                            mean = value,
+                            sd = sd_ut,
+                            lb = -5)
+) %>%
+ggplot(aes(x = n, dist = z_noisy, col = t, fill = t)) +
+stat_dist_lineribbon(.width = c(0.95)) +
+scale_colour_brewer(palette = "YlOrRd") +
+scale_fill_manual(
+  values = alpha(
+    brewer.pal(n = 8, name = "YlOrRd"), 
+    0.3
+  )
+) +
+geom_point(
+  data = belt_wear_data[["belt_A"]] %>% 
+  filter(tonnes < 1) %>%
+  mutate(
+    n = rep(1:20, 8),
+    t = as.factor(round(tonnes, 2)),
+    z_noisy = wear
+  ),
+  aes(y = z_noisy)
+) +
+ylim(-2, 30) +
+xlab("measurement location") +
+ylab("wear (mm)") +
+labs(col = "tonnes of operation") +
+guides(fill = "none")
+
+p_fda_ppd_lm
+```
+:::
+
+The PPD shows that the model is reasonably flexible, enough to fit the observed profiles and the $98\%$ uncertainty bands appear well calebrated; sinse most of observed UT data sits withing the bands.
+
+#### PPD wear profiles
+
+Alternatively we can generate the posterior predictive distribution of new functional observations at different locations along the length of the belt but at the same times as the observed data. To generate this second type of PPD we extract the posterior draws of the filtered spline coefficients, $y^*_{i, m}$, and of $\phi$. We then simulate new noisy spline coeficients by passing the draws back through the noisy component of the noisy gamma process; $y_{i, m} \sim t_{10}(y^*_{i, m}, \phi y^*_{i, m})$. This gives us a predictive distributions for the $y_{i, m}$ which we can then tern into a distribution of new functional observations through $f_i(.) = \sum^M_{m = 1}y_{i, m}b_m(.)$.
+
+::: panel-tabset
+### GP
+```{r}
+#| label: ppd-fda-gp
+#| fig-cap: 
+#|  The posterior predictive distributions of new functional observations taken
+#|  at the same time but at different location along the length fo the belt.
+#| echo: false
+
+rvar_rTruncT <- rfun(rTruncT)
+
+mean_wear_ut_gp <- mean_wear_post_gp %>%
+mutate(
+  y_noisy = rvar_rTruncT(
+    n = 1,
+    nu = 10,
+    mean = y,
+    sd = (phi * y),
+    lb = -5
+  )
+) %>%
+group_by(i) %>%
+summarise(z_mean = y_noisy %**% t(fine_basis_mat))
+
+p_wear_prof_ppd_gp <- mean_wear_ut_gp$z_mean %>%
+as.data.frame() %>%
+pivot_longer(cols = everything()) %>%
+mutate(
+  n = rep(seq(0, 21, length.out = nrow(fine_basis_mat)), 7),
+  t = factor(rep(round(t[2:8], 2), each = nrow(fine_basis_mat)))
+) %>%
+ggplot(aes(x = n, dist = value, col = t, fill = t)) +
+stat_dist_lineribbon(.width = c(0.95)) +
+scale_colour_manual(
+  values = brewer.pal(n = 8, name = "YlOrRd")[2:8]
+) +
+scale_fill_manual(
+  values = alpha(
+    brewer.pal(n = 8, name = "YlOrRd")[2:8], 
+    0.3
+  )
+) +
+geom_point(
+  data = belt_wear_data[["belt_A"]] %>% 
+  filter((tonnes < 1) & (tonnes > 0))%>%
+  mutate(
+    n = rep(1:20, 7),
+    t = as.factor(round(tonnes, 2)),
+    z_noisy = wear,
+    value = NA
+  ),
+  aes(y = z_noisy)
+) +
+ylim(-2, 30) +
+xlab("measurement location") +
+ylab("wear (mm)") +
+labs(col = "tonnes of operation") +
+guides(fill = "none") +
+facet_wrap(~ t, ncol = 1) + 
+theme(
+  strip.background = element_blank(),
+  strip.text.x = element_blank()
+)
+
+p_wear_prof_ppd_gp
+```
+
+### LM
+```{r}
+#| label: ppd-fda-lm
+#| fig-cap: 
+#|  The posterior predictive distributions of new functional observations taken
+#|  at the same time but at different location along the length fo the belt.
+#| echo: false
+
+mean_wear_ut_lm <- mean_wear_post_lm %>%
+mutate(
+  y_noisy = rvar_rTruncT(
+    n = 1,
+    nu = 10,
+    mean = y,
+    sd = (phi * y),
+    lb = -5
+  )
+) %>%
+group_by(i) %>%
+summarise(z_mean = y_noisy %**% t(fine_basis_mat))
+
+p_wear_prof_ppd_lm <- mean_wear_ut_lm$z_mean %>%
+as.data.frame() %>%
+pivot_longer(cols = everything()) %>%
+mutate(
+  n = rep(seq(0, 21, length.out = nrow(fine_basis_mat)), 8),
+  t = factor(rep(round(t[1:8], 2), each = nrow(fine_basis_mat)))
+) %>%
+filter(t != 0) %>%
+ggplot(aes(x = n, dist = value, col = t, fill = t)) +
+stat_dist_lineribbon(.width = c(0.95)) +
+scale_colour_manual(
+  values = brewer.pal(n = 8, name = "YlOrRd")[2:8]
+) +
+scale_fill_manual(
+  values = alpha(
+    brewer.pal(n = 8, name = "YlOrRd")[2:8], 
+    0.3
+  )
+) +
+geom_point(
+  data = belt_wear_data[["belt_A"]] %>% 
+  filter((tonnes < 1) & (tonnes > 0))%>%
+  mutate(
+    n = rep(1:20, 7),
+    t = as.factor(round(tonnes, 2)),
+    z_noisy = wear,
+    value = NA
+  ),
+  aes(y = z_noisy)
+) +
+ylim(-2, 30) +
+xlab("measurement location") +
+ylab("wear (mm)") +
+labs(col = "tonnes of operation") +
+guides(fill = "none") +
+facet_wrap(~ t, ncol = 1) + 
+theme(
+  strip.background = element_blank(),
+  strip.text.x = element_blank()
+)
+
+p_wear_prof_ppd_lm
+```
+:::
+
+From the PPD of the functional observations, we can see the growth in uncertainty over time. This makes sense, sinse the variability in the profiles along the length of the belt should increase with time sinse the wear of the belt at each location occures from the cyclic loading of ore onto that part of the belt and the loading is not homogenious.
+
+```{r}
+#| echo: false
+#| output: false
+
+p_1 <- p_fda_ppd_gp +
+ylim(-2, 20) +
+theme(legend.position = "none")
+
+p_2 <- p_wear_prof_ppd_gp +
+theme(
+  axis.text.y = element_blank(),
+  #axis.ticks.y = element_blank(),
+  axis.title.y = element_blank(),
+  legend.position = "none"
+) +
+ylim(-2, 22)
+
+p_3 <- p_fda_ppd_lm +
+ylim(-2, 20) +
+theme(legend.position = "none")
+
+p_4 <- p_wear_prof_ppd_lm +
+theme(
+  axis.text.y = element_blank(),
+  #axis.ticks.y = element_blank(),
+  axis.title.y = element_blank(),
+  legend.position = "none"
+) +
+ylim(-2, 22)
+
+p_row_1 <- plot_grid(
+  p_1, p_2,
+  p_3, p_4,
+  ncol = 2,
+  nrow = 2,
+  rel_widths = c(1.1, 1), 
+  labels = c("(a)", "(b)", "(c)", "(d)"),
+  label_fontfamily = "Times",
+  label_face = "plain",
+  label_x = -0.01
+)
+
+legend_bot <- ggpubr::get_legend(
+  p_fda_ppd_gp +
+  theme(legend.position = "bottom")
+)
+
+pdf(
+  file.path(figure_path, "post_pred_belt_wear.pdf"),
+  height = 9, width = 8
+)
+plot_grid(
+  p_row_1,
+  ggpubr::as_ggplot(legend_bot),
+  ncol = 1,
+  nrow = 2,
+  rel_heights = c(1, 0.1)
+)
+dev.off()
+```
+
+## Forecast
+
+Using the posterior draws we can generate a forecast of the belts wear by stepping the gamma process forward from the most recent fitted observation. The code below produces a forecast at $t_9$ from the fitted observations up to $t_8$.
+
+::: panel-tabset
+### GP
+```{r}
+#| label: single-forecast-gp
+#| fig-cap: 
+#|  The forecasted belt wear profile at $t_9$.
+#| echo: true
+
+p_forecast_gp <- stan_fit_full_gp %>%
+as_draws_rvars() %>%
+spread_rvars(y[i, m], mu[m], nu[m], phi) %>%
+filter(i == max(i)) %>%
+mutate(
+  t_step = t[9] - t[8],
+  y_jump = rvar_rgamma(
+    8, 
+    shape = (t_step / nu^2), 
+    rate = (1 / nu^2)
+  ),
+  y_forecast_std = y + y_jump,
+  y_forecast = y_forecast_std * mu ,
+  y_forecast_noisy = rvar_rTruncT(
+    8,
+    nu = 10,
+    mean = y_forecast,
+    sd = phi * y_forecast,
+    lb = 0
+  )
+) %>% 
+summarise(z_forecast = y_forecast_noisy %**% t(fine_basis_mat)) %>% 
+.$z_forecast %>%
+as.data.frame() %>%
+pivot_longer(everything()) %>%
+mutate(
+  n = seq(0, 21, length.out = nrow(fine_basis_mat))
+) %>%
+ggplot(aes(x = n, dist = value)) +
+stat_dist_lineribbon() +
+scale_fill_brewer() +
+geom_point(
+  data = data.frame(
+    n = 1:20,
+    y_true = Ut_matrix[9, ],
+    value = NA
+  ),
+  aes(y = y_true)
+) +
+ylim(0, 30)  +
+xlab("measurement location") +
+ylab("wear (mm)")
+
+p_forecast_gp
+```
+
+### LM
+```{r}
+#| label: single-forecast-lm
+#| fig-cap: 
+#|  The forecasted belt wear profile at $t_9$.
+#| echo: true
+
+p_forecast_lm <- stan_fit_full_lm %>%
+as_draws_rvars() %>%
+spread_rvars(mu[m], phi) %>%
+mutate(
+  t = t[9],
+  y_forecast = t * mu,
+  y_forecast_noisy = rvar_rTruncT(
+    8,
+    nu = 10,
+    mean = y_forecast,
+    sd = phi * y_forecast,
+    lb = 0
+  )
+) %>% 
+summarise(z_forecast = y_forecast_noisy %**% t(fine_basis_mat)) %>% 
+.$z_forecast %>%
+as.data.frame() %>%
+pivot_longer(everything()) %>%
+mutate(
+  n = seq(0, 21, length.out = nrow(fine_basis_mat))
+) %>%
+ggplot(aes(x = n, dist = value)) +
+stat_dist_lineribbon() +
+scale_fill_brewer() +
+geom_point(
+  data = data.frame(
+    n = 1:20,
+    y_true = Ut_matrix[9, ],
+    value = NA
+  ),
+  aes(y = y_true)
+) +
+ylim(0, 30)  +
+xlab("measurement location") +
+ylab("wear (mm)")
+
+p_forecast_lm
+```
+:::
+
+```{r}
+#| label: save-forcast-figs
+
+legend_bot <- ggpubr::get_legend(
+  p_forecast_gp +
+  theme(legend.position = "bottom")
+)
+
+p_forecasts_gp_lm <- plot_grid(
+  p_forecast_gp +
+    theme(legend.position = "none"),
+  p_forecast_lm +
+    theme(legend.position = "none"),
+  ncol = 2,
+  nrow = 1,
+  labels = c("(a)", "(b)"),
+  label_fontfamily = "Times",
+  label_face = "plain",
+  label_x = -0.01
+)
+
+pdf(
+  file.path(figure_path, "belt_wear_forecasts.pdf"),
+  height = 4, width = 8
+)
+plot_grid(
+  p_forecasts_gp_lm,
+  ggpubr::as_ggplot(legend_bot),
+  ncol = 1,
+  nrow = 2,
+  rel_heights = c(1, 0.1)
+)
+dev.off()
+```
+
+## Failure time CDF
+
+Using the posterior we can also generate a failure time distribution for the belt conditioned on the degradation observations. Since there is no closed form in this case, we must calculate the CDF numerical which is constitutionally heavy and so we do this in another R file (`ft-cdf.R`) but visualise the distributions here.
+
+```{r}
+#| label: ft-cdfs-gp
+#| fig-cap: 
+#|  The failure time CDFs for the belt when the gamma process model is fit to observations A) 1 to 8 and B) 1 to 9.
+#| echo: false
+
+p_ft_list <- lapply(
+  c(
+    "ft-7-obs-gp.rds",
+    "ft-8-obs-gp.rds"
+  ),
+  function(ft_file) {
+    ft_dist <- readRDS(ft_file)
+
+    p <- ft_dist %>% 
+      arrange(.draw, ft) %>%
+      mutate(
+        CDF = seq(0, 1, length.out = n())
+      ) %>%
+      group_by(CDF) %>%
+      median_qi(.width = c(0.5, 0.8)) %>%
+      ggplot(aes(x = ft, y = CDF, xmin = .lower, xmax = .upper)) +
+      geom_lineribbon() +
+      scale_fill_brewer() +
+      #xlim(0, 1.4) +
+      ylim(0, 1.05) +
+      theme(legend.position = "bottom")
+    
+    return(p)
+  }
+)
+
+legend <- ggpubr::get_legend(p_ft_list[[1]])
+
+p_ft_list <- lapply(p_ft_list, function(p) p + theme(legend.position = "none"))
+
+p_ft <- plot_grid(
+  plotlist = p_ft_list,
+  nrow = 1,
+  ncol = 2,
+  labels = c("(a)", "(b)"),
+  label_fontfamily = "Times",
+  label_x = -0.01
+)
+
+pdf(
+  file.path(figure_path, "belt_wear_failuretime_CDF_gp.pdf"),
+  height = 4, width = 8
+)
+plot_grid(
+  p_ft,
+  ggpubr::as_ggplot(legend),
+  ncol = 1,
+  nrow = 2,
+  rel_heights = c(1, 0.1)
+)
+dev.off()
+```
+
+```{r}
+#| label: ft-cdfs-lm
+#| fig-cap: 
+#|  The failure time CDFs for the belt when the linear general path model is fit to observations A) 1 to 8 and B) 1 to 9.
+#| echo: false
+
+p_ft_list <- lapply(
+  c(
+    "ft-7-obs-lm.rds",
+    "ft-8-obs-lm.rds"
+  ),
+  function(ft_file) {
+    ft_dist <- readRDS(ft_file)
+
+    p <- ft_dist %>% 
+      arrange(.draw, ft) %>%
+      mutate(
+        CDF = seq(0, 1, length.out = n())
+      ) %>%
+      group_by(CDF) %>%
+      median_qi(.width = c(0.5, 0.8)) %>%
+      ggplot(aes(x = ft, y = CDF, xmin = .lower, xmax = .upper)) +
+      geom_lineribbon() +
+      scale_fill_brewer() +
+      #xlim(0, 1.4) +
+      ylim(0, 1.05) +
+      theme(legend.position = "bottom")
+    
+    return(p)
+  }
+)
+
+legend <- ggpubr::get_legend(p_ft_list[[1]])
+
+p_ft_list <- lapply(p_ft_list, function(p) p + theme(legend.position = "none"))
+
+p_ft <- plot_grid(
+  plotlist = p_ft_list,
+  nrow = 1,
+  ncol = 2,
+  labels = c("(a)", "(b)"),
+  label_fontfamily = "Times",
+  label_x = -0.01
+)
+
+pdf(
+  file.path(figure_path, "belt_wear_failuretime_CDF_lm.pdf"),
+  height = 4, width = 8
+)
+plot_grid(
+  p_ft,
+  ggpubr::as_ggplot(legend),
+  ncol = 1,
+  nrow = 2,
+  rel_heights = c(1, 0.1)
+)
+dev.off()
+```

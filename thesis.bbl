@@ -832,35 +832,7 @@ Hamada%
 Hamada%
 \ \protect \BOthers {.}}{%
 {\protect \APACyear {2008}}%
-{\protect \APACexlab {{\protect \BCnt {1}}}}}]{%
-hamada2008}
-\APACinsertmetastar {%
-hamada2008}%
-\begin{APACrefauthors}%
-Hamada, M\BPBI S.%
-, Wilson, A\BPBI G.%
-, Reese, C\BPBI S.%
-\BCBL {}\ \BBA {} Martz, H\BPBI F.%
-\end{APACrefauthors}%
-\unskip\
-\newblock
-\APACrefYear{2008{\protect \BCnt {1}}}.
-\newblock
-\APACrefbtitle {Bayesian Reliability} {Bayesian reliability}.
-\newblock
-\APACaddressPublisher{}{Springer New York, NY}.
-\PrintBackRefs{\CurrentBib}
-
-\bibitem [\protect \citeauthoryear {%
-Hamada%
-, Wilson%
-, Reese%
-\BCBL {}\ \BBA {} Martz%
-}{%
-Hamada%
-\ \protect \BOthers {.}}{%
-{\protect \APACyear {2008}}%
-{\protect \APACexlab {{\protect \BCnt {2}}}}}]{%
+}]{%
 hamada_2008}
 \APACinsertmetastar {%
 hamada_2008}%
@@ -872,7 +844,7 @@ Hamada, M\BPBI S.%
 \end{APACrefauthors}%
 \unskip\
 \newblock
-\APACrefYear{2008{\protect \BCnt {2}}}.
+\APACrefYear{2008}.
 \newblock
 \APACrefbtitle {Bayesian Reliability} {Bayesian reliability}.
 \newblock
@@ -2262,6 +2234,38 @@ stan_user_guide2024}%
   \end{APACrefURL}
 \newblock
 \APACrefnote{Chapter: Censored Data}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Talts%
+, Betancourt%
+, Simpson%
+, Vehtari%
+\BCBL {}\ \BBA {} Gelman%
+}{%
+Talts%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2020}}%
+}]{%
+talts2020}
+\APACinsertmetastar {%
+talts2020}%
+\begin{APACrefauthors}%
+Talts, S.%
+, Betancourt, M.%
+, Simpson, D.%
+, Vehtari, A.%
+\BCBL {}\ \BBA {} Gelman, A.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2020}{}{}.
+\newblock
+\APACrefbtitle {Validating Bayesian Inference Algorithms with Simulation-Based
+  Calibration.} {Validating bayesian inference algorithms with simulation-based
+  calibration.}
+\newblock
+\begin{APACrefURL} \url{https://arxiv.org/abs/1804.06788} \end{APACrefURL}
 \PrintBackRefs{\CurrentBib}
 
 \bibitem [\protect \citeauthoryear {%

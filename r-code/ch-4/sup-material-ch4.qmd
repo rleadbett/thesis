@@ -752,7 +752,7 @@ png(
   height = 5,
   width = 8,
   units = "in",
-  res = 50
+  res = 500
 )
 p_parcoord
 dev.off()

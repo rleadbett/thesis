@@ -947,10 +947,12 @@ p_pairs_pp_mu_sub_list[[16]] <- p_pairs_pp_mu_sub_list[[16]] +
 # regenerate gridplot
 p_pairs_pp_mu_sub <- bayesplot_grid(plots = p_pairs_pp_mu_sub_list)
 
-pdf(
-  file.path(figure_path, "plot-pp-mu-pairs.pdf"),
+png(
+  file.path(figure_path, "plot-pp-mu-pairs.png"),
   height = 6,
-  width = 6
+  width = 6,
+  units = "in",
+  res = 500
 )
 p_pairs_pp_mu_sub
 dev.off()
@@ -999,11 +1001,12 @@ p_parcoord_pp_mu
 #| label: save-fig-parcoord-pp-mu
 #| echo: false
 #| output: false
-
-pdf(
-  file.path(figure_path, "plot-pp-mu-parcoord.pdf"),
+png(
+  file.path(figure_path, "plot-pp-mu-parcoord.png"),
   height = 4,
-  width = 6
+  width = 6,
+  units = "in",
+  res = 500
 )
 p_parcoord_pp_mu
 dev.off()
@@ -1539,11 +1542,12 @@ p_parcoord_pp_nu
 #| label: save-fig-parcoord-pp-nu
 #| echo: false
 #| output: false
-
-pdf(
-  file.path(figure_path, "plot-pp-nu-parcoord.pdf"),
+png(
+  file.path(figure_path, "plot-pp-nu-parcoord.png"),
   height = 4,
-  width = 6
+  width = 6,
+  units = "in",
+  res = 500
 )
 p_parcoord_pp_nu
 dev.off()
