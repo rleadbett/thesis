@@ -37,3 +37,6 @@
 thesis.pdf
 *.rds
 .DS_Store
+
+# folders
+co-author-signatures/
