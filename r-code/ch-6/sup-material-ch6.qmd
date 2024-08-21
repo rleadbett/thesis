@@ -1792,12 +1792,7 @@ Bayesian computation (MCMC sampling) treets missing or unobservable quantities t
 ### GP
 ```{r}
 #| label: gif-filtered-spline-coef-gp
-#| fig-cap: 
-#|  An animation of 100 different samples of the filtered spline 
-#|  coeficient paths. The colours corespond to the basis functions
-#|  in @fig-B-spline-demo.
 #| echo: false
-#| eval: false
 
 random_draws <- sample(1:3000*4, 100)
 
@@ -1820,7 +1815,16 @@ rbind(
     t = t[1]
   )
 )
+```
 
+```{r}
+#| label: fig-filtered-spline-coef-gp
+#| fig-cap: 
+#|  An animation of 100 different samples of the filtered spline 
+#|  coeficient paths. The colours corespond to the basis functions
+#|  in @fig-B-spline-demo.
+#| echo: false
+#| eval: false
 coef_names <- list(
   'm: 1' = expression(y^"*" ~ ""[i~","~m~"="~1]),
   'm: 2' = expression(y^"*" ~ ""[i~","~m~"="~2]),
@@ -1864,12 +1868,7 @@ coefgif_gp
 ### LM
 ```{r}
 #| label: gif-filtered-spline-coef-lm
-#| fig-cap: 
-#|  An animation of 100 different samples of the filtered spline 
-#|  coeficient paths. The colours corespond to the basis functions
-#|  in @fig-B-spline-demo.
 #| echo: false
-#| eval: false
 
 df_lm <- stan_fit_full_lm %>%
     as_draws_df() %>%
@@ -1903,6 +1902,16 @@ p_lm <- df_lm %>%
                hue_pal()(8)[1])
   ) +
   theme(legend.position = "none")
+```
+
+```{r}
+#| label: fig-filtered-spline-coef-lm
+#| fig-cap: 
+#|  An animation of 100 different samples of the filtered spline 
+#|  coeficient paths. The colours corespond to the basis functions
+#|  in @fig-B-spline-demo.
+#| echo: false
+#| eval: false
 
 coefgif_lm <- animate(
   p_lm, 
