@@ -90,7 +90,7 @@ where $\hat{a}$ and $\hat{b}$ are estimated from historic data. More details are
 The gamma process model $10(= M + 2)$ more parameters than the simpler linear path model, which are the $\nu_m$ and their hyperparameters. For the coefficient of variation parameters $\nu_m$ in the gamma process model, I use the hierarchical prior
 \begin{align*}
   \nu_m      \sim & \mbox{N}(\mu_\nu, \sigma_\nu) \\
-  \mu_\nu    \sim & \mbox{t}_3(0, 0.5)            \\
+  \mu_\nu    \sim & t_3(0, 0.5)            \\
   \sigma_\nu \sim & \mbox{Cauchy}^{+}(0, 0.25),
 \end{align*}
 defined in the same way as the unit-to-unit variability model in Sec.~\ref{subsec:partial-pooling}. The hierarchical prior partially pools information among the $\nu_m$ of the gamma processes for each spline coefficient (because they all belong to the same belt I expect them to be similar) while still allowing them to vary.
@@ -260,13 +260,13 @@ The original motivation for forecasting the belt's wear was to inform a practiti
         \State Starting from most recent filtered spline coefficients.
         \State $\Delta t \gets 0.001$, $t \gets t_I$, $y^*_m \gets y^*_{m, I}$
         \State Average over the variability along the length of belt.
-        \State $y_m \sim \mbox{t}_{10}\left(y^*_m, y^*_m \phi\right)$
+        \State $y_m \sim t_{10}\left(y^*_m, y^*_m \phi\right)$
         \State Calculate the value of B-spline by multiplying the design matrix by column vector of coefficients.
         \State $\{z_n\}^N_{n = 1} \gets B \cdot \{y_m\}^M_{1 = m}$
         \While {$Max\left(\{z_n\}^N_{n = 1}\right) < 25$}
           \State $\Delta y^*_m \sim Ga\left(\frac{\Delta t}{\nu_m^2}, \frac{1}{\nu_m^2 \mu_m}\right)$
           \State $t \gets t + \Delta t$, $y^*_m \gets y^*_m + \Delta y^*_m$
-          \State $y_m \sim \mbox{t}_{10}\left(y^*_m, y^*_m \phi\right)$
+          \State $y_m \sim t_{10}\left(y^*_m, y^*_m \phi\right)$
           \State $\{z_n\}^N_{n = 1} \gets B \cdot \{y_m\}^M_{1 = m}$
         \EndWhile
         \State $FT[j] \gets t$
