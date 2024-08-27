@@ -14,12 +14,12 @@ format:
   html:
     embed-resources: true
     toc: true
-    theme: 
+    theme:
       light: flatly
       dark: darkly
 editor: visual
 execute: 
-  cache: true
+  cache: false
   message: false 
   warning: false
   error: false
@@ -30,7 +30,7 @@ title-block-banner: "#FFFFFF"
 title-block-banner-color: "#000000"
 ---
 
-This markdown contains the code to reproduce the main analysis in Chap. 2. In it I first show my developement on @kaminskiy2005 method for constructing a joint prior for the two Weibull parameters. I then simulate a dataset that emulates the observation process of the idler-frames and demonstrate the method for imputing the partialy observed lifetimes and missing truncation times acording the the method described in Sec. 2.2 of the Thesis. Lastly, I summarise the results of experiments that explore the method under different values of the simulation parameters, these experiments were run of a virtual machine do to the amount of memory and compute needed.
+This markdown contains the code to reproduce the main analysis in Chap. 2. In it I first show my developement on the method of @kaminskiy2005 for constructing a joint prior for the two Weibull parameters. I then simulate a dataset that emulates the observation process of the idler-frames and demonstrate the method for imputing the partialy observed lifetimes and missing truncation times acording the the method described in Sec. 2.2 of the Thesis. Lastly, I summarise the results of simulation experiments that explore the method under different values of the simulation parameters, these experiments were run of a virtual machine do to the amount of memory and compute needed.
 
 ```{r}
 #| label: set-up-chunk
@@ -136,11 +136,11 @@ eta <- 1
 
 # Informative prior demonstration
 
-Using the methods of keminskey we can encode a joint prior for the Weibull parameters by eliciting information about the CDF. This is much more intuitive than eliciting information about the parameters directly. The result is covariance in the joint posterior that encodes where we are uncertain. This is usefull in cases where the data are uninformative about some areas of the CDF but we do not want to impose a strong prior on the areas that the data are able to inform; for example right censoring masks longer lifetimes and so we can inject information through the joint prior to inform the upper tail of the distribution while still allowing the data to update the lower tail.
+Using the methods of @kaminskiy2005 we can encode a joint prior for the Weibull parameters by eliciting information about the CDF. This is much more intuitive than eliciting information about the parameters directly. The result is covariance in the joint prior that encodes where we are uncertain. This is usefull in cases where the likelihood is uninformative about some areas of the CDF but we do not want to impose a strong prior on the areas that the data are able to inform: for example, right censoring masks longer lifetimes and so we can inject information through the joint prior to inform the upper tail of the distribution while still allowing the data to update the lower tail. @fig-joint-priors shows three different versions of a joint prior constructed around the same truth ($\beta = 1.1$ and $\eta = 1$). Note that here, I am using a truncated-normal distribution to simulate draws of the CDF at $t_1$ and $t_2$ rather than beta distributions like in @kaminskiy2005.
 
 ```{r}
 #| label: fig-joint-priors
-#| fig-cap: "Three different informative joint priors constructed using the method of @kaminskiy2005. The joint draws of the parameters are shown in the top row---(a), (b), and (c)---and the corresponding uncertainty in the CDF is shown in the bottom---(d), (e), and (f). (a) and (d) show a prior where information is elicited around the t_1 = 0.07 and t_2 = 0.26 (the 0.05 and 0.20 quantiles of the true distribution Weibull(1.1, 1), (b) and (e) show a prior where information is elicited around the t_1 = 0.46 and t_2 = 1.04 (the 0.35 and 0.65 quantiles), and (c) and (f) show a prior elicited at t_1 = 1.54 and t_2 = 2.71 (the 0.80 and 0.95 quantiles)."
+#| fig-cap: "Three different informative joint priors constructed using the method of @kaminskiy2005. The joint draws of the parameters are shown in the top row---(a), (b), and (c)---and the corresponding uncertainty in the CDF is shown in the bottom---(d), (e), and (f). (a) and (d) show a prior where information is elicited around the $t_1 = 0.07$ and $t_2 = 0.26$ (the 0.05 and 0.20 quantiles of the true distribution Weibull(1.1, 1), (b) and (e) show a prior where information is elicited around the $t_1 = 0.46$ and $t_2 = 1.04$ (the 0.35 and 0.65 quantiles), and (c) and (f) show a prior elicited at $t_1 = 1.54$ and $t_2 = 2.71$ (the 0.80 and 0.95 quantiles)."
 set.seed(567)
 pp1s <- c(0.05, 0.35, 0.80)
 pp2s <- c(0.20, 0.65, 0.95)
@@ -251,9 +251,11 @@ p_joint_priors
 dev.off()
 ```
 
+I implement the prior in the `Stan` models bellow, which means the draws fromt the prior are properly filteres through the likelihood. @sec-app-A demonstrates how this is not the case for the method presented in @kaminskiy2005.
+
 # Simulated data
 
-I simulate data in a way that emulates the repeated replacement of set of units (say idler-frames) where the replacement time records are only available for a recent window of time. To do this, I sample many lifetimes (the exact number depends on the values of the simulation parameters) from a known Weibull distribution with shape $\beta = 1.1$ and scale $\eta = 1$ and assign them equaly to ten units. I then take the cumulative value of the lifetimes of each unit so that the values are now the replacement times, rather than lifetimes. I then impose some window of observaiton with begining `t_start` and end `t_end` and any replacement records that are not at least partialy observed in this window are discarded. @tbl-sim-data shows the simulated dataset when `t_start = 5` and `t_end = 6` and @fig-sim-data plots the data.
+In Sec. 2.5 of the main chapter, I demonstrate the methods for imputing left truncated lifetimes whith unkown exposure history and encoding information through an informative joint prior on a simulated dataset. I simulate data in a way that emulates the repeated replacement of set of units (say idler-frames) where the replacement time records are only available for a recent window of time. To do this, I sample many lifetimes (the exact number depends on the values of the simulation parameters) from a known Weibull distribution with shape $\beta = 1.1$ and scale $\eta = 1$ and assign them equaly to ten units. I then take the cumulative value of the lifetimes of each unit so that the values are now the replacement times, rather than lifetimes. I then impose some window of observaiton with begining `t_start` and end `t_end` and any replacement records that are not at least partialy observed in this window are discarded. @tbl-sim-data shows the simulated dataset when `t_start = 5` and `t_end = 6` and @fig-sim-data plots the data.
 
 ```{r}
 #| label: define-sim-params
@@ -316,11 +318,12 @@ SimData <- function(
 
   return(small_sim)
 }
+
 ```
 
 ```{r}
-#| label: tbl-sim-data
-#| tbl-cap: "The simulated data from a Weibull distribution with beta = 1.1 and eta = 1."
+#| label: sim-data
+# Simulate the data
 set.seed(549)
 sim_df <- SimData(
   beta = beta,
@@ -329,6 +332,12 @@ sim_df <- SimData(
   t_start = t_start,
   t_end = t_end
 )
+```
+
+```{r}
+#| label: tbl-sim-data
+#| tbl-cap: "The simulated data from a Weibull distribution with beta = 1.1 and eta = 1."
+#| echo: false
 
 sim_df %>%
   kbl() %>%
@@ -372,6 +381,7 @@ sim_df_latex %>%
 ```{r}
 #| label: fig-sim-data
 #| fig-cap: "The simulated data from a Weibull distribution with beta = 1.1 and eta = 1."
+#| echo: false
 p_sim_data <- sim_df %>%
   mutate(i = 1:n()) %>%
   ggplot() +
@@ -414,6 +424,7 @@ Before moving on, I prepare the data to be parsed to `Stan`.
 
 ```{r}
 #| label: prep-stan-data
+# split data up into O, RC, LT, and LT+RC
 sim_df_obs <- sim_df %>%
   filter(!(right_censored | int_censored))
 sim_df_rc <- sim_df %>%
@@ -423,6 +434,7 @@ sim_df_lt <- sim_df %>%
 sim_df_lt_rc <- sim_df %>%
   filter(right_censored & int_censored)
 
+# Define the stan data when LT are fully observed
 stan_data_full <- list(
   N_obs = nrow(sim_df_obs),
   N_rc = nrow(sim_df_rc),
@@ -436,6 +448,7 @@ stan_data_full <- list(
   t_lt_rc = sim_df_lt_rc$install_time_obs - sim_df_lt_rc$install_time
 )
 
+# Define the stan data when LT are discarded
 stan_data_no_lt <- list(
   N_obs = nrow(sim_df_obs),
   N_rc = nrow(sim_df_rc),
@@ -443,6 +456,7 @@ stan_data_no_lt <- list(
   y_rc = sim_df_rc$failure_time_obs - sim_df_rc$install_time
 )
 
+# Define the stan data when LT are imputed
 stan_data_unkown_lt <- list(
   N_obs = nrow(sim_df_obs),
   N_rc = nrow(sim_df_rc),
@@ -626,7 +640,7 @@ t_lt_rc_st ~ uniform(0, 1);
 
 ### Sampling
 
-I draw $2000$ sample from the posteriors of each model, using four chains with a burn in of $500$ samples and no thinning. @fig-join-posts shows the posteiror draws of the parameters from the three models as well as the coresponding uncertainty in the Weibull CDF.
+I draw $2000$ sample from the posteriors of each model, using $4$ chains with a burn in of $500$ samples and no thinning. @fig-join-posts shows the posteiror draws of the parameters from the three models as well as the coresponding uncertainty in the Weibull CDF.
 
 ::: panel-tabset
 #### Known truncation times
@@ -669,6 +683,7 @@ stan_fit_unknown_lt_rc <- sampling(
 ```{r}
 #| label: fig-join-posts
 #| fig-cap: "The draws from the joint posteriors conditioned on the simulated dataset when the left-truncated lifetimes are fully observed (a), discarded (b), or imputed (c) and a weakly informative prior is used. (d), (e), and (f) show the corresponding uncertainty around the CDF (in the form of the 0.5 and 0.8 uncertain intervals) that result from (a), (b), and (c), respectively. The true parameter values and CDF are shown in red."
+#| echo: false
 p_full <- stan_fit_lt_r_imputed %>%
   mcmc_scatter(pars = c("beta", "eta")) +
   geom_point(x = beta, y = eta, colour = "red") +
@@ -1030,6 +1045,7 @@ stan_fit_unknown_lt_rc_inf <- sampling(
 ```{r}
 #| label: fig-join-posts-inf
 #| fig-cap: "The draws from the joint posteriors conditioned on the simulated dataset when the left-truncated lifetimes are fully observed (a), discarded (b), or imputed (c) and a weakly informative prior is used. (d), (e), and (f) show the corresponding uncertainty around the CDF (in the form of the 0.5 and 0.8 uncertain intervals) that result from (a), (b), and (c), respectively. The true parameter values and CDF are shown in red."
+#| echo: false
 p_full_inf <- stan_fit_lt_r_imputed_inf %>%
   mcmc_scatter(pars = c("beta", "eta")) +
   geom_point(x = beta, y = eta, colour = "red") +
@@ -1087,11 +1103,11 @@ p_joint_posts_inf
 dev.off()
 ```
 
-To demonstrate that my implementation of the method proposed by @kaminskiy2005 properly filters the prior through the likelihood, @fig-prior-post-comparison compares the prior and posterior of the CDF at the two elicitation times $t_1$ and $t_2$. In all three models, the prior belief about the CDF at both times has been updated in the posterior after conditioning on the data. This is not the case in the original method proposed by @kaminskiy2005, as I show in Appendix-A of this document.
+To demonstrate that my implementation of the method proposed by @kaminskiy2005 properly filters the prior through the likelihood, @fig-prior-post-comparison compares the prior and posterior of the CDF at the two elicitation times $t_1$ and $t_2$. In all three models, the prior belief about the CDF at both times has been updated in the posterior after conditioning on the data. This is not the case in the original method proposed by @kaminskiy2005, as I show in @sec-app-A of this document.
 
 ```{r}
 #| label: fig-prior-post-comparison
-#| fig-cap: "Comparison of the marginal prior and posterior for F_t1 and F_t2 when left-truncated lifetimes are fully observed (a), discarded (b), or imputed (c) to show how both the elicited distributions have been updated in the posterior."
+#| fig-cap: "Comparison of the marginal prior and posterior for $F(t_1)$ and $F(t_2)$ when left-truncated lifetimes are fully observed (a), discarded (b), or imputed (c) to show how both the elicited distributions have been updated in the posterior."
 p1 <- stan_fit_lt_r_imputed_inf %>%
   as_draws_rvars() %>%
   gather_rvars(t1CDF, t2CDF) %>%
@@ -1111,7 +1127,7 @@ p1 <- stan_fit_lt_r_imputed_inf %>%
     )
   ) +
   ylab("") +
-  xlab(expression(F(t[i]))) +
+  xlab(expression(F(t))) +
   xlim(0, 1) +
   theme_minimal()
 p2 <- stan_fit_no_lt_inf %>%
@@ -1133,7 +1149,7 @@ p2 <- stan_fit_no_lt_inf %>%
     )
   ) +
   ylab("") +
-  xlab(expression(F(t[i]))) +
+  xlab(expression(F(t))) +
   xlim(0, 1) +
   theme_minimal()
 p3 <- stan_fit_unknown_lt_rc_inf %>%
@@ -1155,7 +1171,7 @@ p3 <- stan_fit_unknown_lt_rc_inf %>%
     )
   ) +
   ylab("") +
-  xlab(expression(F(t[i]))) +
+  xlab(expression(F(t))) +
   xlim(0, 1) +
   theme_minimal()
 
@@ -1199,7 +1215,7 @@ The simulation study was run on a vertual machine on the [Nimbus](https://pawsey
 #### $\beta = 1.1$
 ```{r}
 #| label: load-sim-results
-experiment_results_df <- readRDS("LT_experiment_results_df.rds")
+experiment_results_df <- readRDS("LT_experiment_results_df_1.1.rds")
 
 GetFactorValue <- function(x) as.numeric(as.character(x))
 ModelLabeller <- function(name_string) {
@@ -1270,7 +1286,8 @@ experiment_results_df %>%
 
 ```{r}
 #| label: fig-sim-result-factor-plots-means
-#| fig-cap: "..."
+#| fig-cap: "The simulation results when the shape parameter equals $1.1$, summarised by the mean of the one hundred repetitions for each factor combination. The columns show the three levels of $t_{end} - t_{start}$, and the rows show the levels of $t_{start}$ and $N$. The Bayesian $p$-values of shape and scale are reported on the horizontal and vertical axis, respectively, and the colours of the points show the treatment of the left-truncated samples, and the shape shows the prior."
+#| echo: false
 p_sim_result_plot <- experiment_results_df %>%
   mutate(
     model = lapply(
@@ -1338,7 +1355,8 @@ dev.off()
 
 ```{r}
 #| label: fig-sim-result-elppd-plots
-#| fig-cap: "..."
+#| fig-cap: "The elppd${}_{100}$ simulation results when the shape parameter equals $1.1$ for each factor combination. The columns show the different levels of $t_{end} - t_{start}$ and rows the different levels of $t_{start}$. The number of units $N$ is shown on the horizontal axis, and the average elppd${}_{100}$ score is shown on the vertical axis. The colours of the points show the treatment of the left-truncated samples and the shape shows the prior."
+#| echo: false
 experiment_results_df %>%
   mutate(
     model_name = lapply(
@@ -1382,7 +1400,8 @@ experiment_results_df %>%
 
 ```{r}
 #| label: fig-sim-result-elppd-plots-means
-#| fig-cap: "..."
+#| fig-cap: "The elppd${}_{100}$ simulation results when the shape parameter equals $1.1$ for each factor combination summarised by the mean of the one hundred repetitions."
+#| echo: false
 p_sim_res_elppd <- experiment_results_df %>%
   mutate(
     model = lapply(
@@ -1456,7 +1475,8 @@ experiment_results_df_0.8 <- readRDS("LT_experiment_results_df_0.8.rds")
 
 ```{r}
 #| label: fig-sim-result-factor-plots-means-0.8
-#| fig-cap: "..."
+#| fig-cap: "The simulation results when the shape parameter equals $0.8$, summarised by the mean of the one hundred repetitions for each factor combination. The columns show the three levels of $t_{end} - t_{start}$, and the rows show the levels of $t_{start}$ and $N$. The Bayesian $p$-values of shape and scale are reported on the horizontal and vertical axis, respectively, and the colours of the points show the treatment of the left-truncated samples, and the shape shows the prior."
+#| echo: false
 p_sim_result_plot_0.8 <- experiment_results_df_0.8 %>%
   mutate(
     model = lapply(
@@ -1510,21 +1530,9 @@ p_sim_result_plot_0.8
 ```
 
 ```{r}
-#| label: save-fig-sim-result-factor-plots-means-0.8
-#| echo: false
-#| output: false
-pdf(
-  file.path(fig_path, "sim-results-pvalues-0.8.pdf"),
-  height = 15,
-  width = 10
-)
-p_sim_result_plot_0.8
-dev.off()
-```
-
-```{r}
 #| label: fig-sim-result-elppd-plot-0.8
-#| fig-cap: "..."
+#| fig-cap: "The elppd${}_{100}$ simulation results when the shape parameter equals $0.8$ for each factor combination. The columns show the different levels of $t_{end} - t_{start}$ and rows the different levels of $t_{start}$. The number of units $N$ is shown on the horizontal axis, and the average elppd${}_{100}$ score is shown on the vertical axis. The colours of the points show the treatment of the left-truncated samples and the shape shows the prior."
+#| echo: false
 experiment_results_df_0.8 %>%
   mutate(
     model_name = lapply(
@@ -1568,8 +1576,9 @@ experiment_results_df_0.8 %>%
 
 ```{r}
 #| label: fig-sim-result-elppd-plots-means-0.8
-#| fig-cap: "..."
-p_sim_res_elppd <- experiment_results_df_0.8 %>%
+#| fig-cap: "The elppd${}_{100}$ simulation results when the shape parameter equals $0.8$ for each factor combination summarised by the mean of the one hundred repetitions."
+#| echo: false
+p_sim_res_elppd_0.8 <- experiment_results_df_0.8 %>%
   mutate(
     model = lapply(
       experiment_results_df_0.8$model,
@@ -1620,19 +1629,6 @@ p_sim_res_elppd <- experiment_results_df_0.8 %>%
 p_sim_res_elppd_0.8
 ```
 
-```{r}
-#| label: save-fig-sim-result-elppd-plots-means-0.8
-#| echo: false
-#| output: false
-pdf(
-  file.path(fig_path, "sim-results-elppd-0.8.pdf"),
-  height = 8.,
-  width = 8
-)
-p_sim_res_elppd_0.8
-dev.off()
-```
-
 #### $\beta = 2.0$
 
 ```{r}
@@ -1642,7 +1638,8 @@ experiment_results_df_2.0 <- readRDS("LT_experiment_results_df_2.rds")
 
 ```{r}
 #| label: fig-sim-result-factor-plots-means-2.0
-#| fig-cap: "..."
+#| fig-cap: "The simulation results when the shape parameter equals $2.0$, summarised by the mean of the one hundred repetitions for each factor combination. The columns show the three levels of $t_{end} - t_{start}$, and the rows show the levels of $t_{start}$ and $N$. The Bayesian $p$-values of shape and scale are reported on the horizontal and vertical axis, respectively, and the colours of the points show the treatment of the left-truncated samples, and the shape shows the prior."
+#| echo: false
 p_sim_result_plot_2.0 <- experiment_results_df_2.0 %>%
   mutate(
     model = lapply(
@@ -1696,21 +1693,9 @@ p_sim_result_plot_2.0
 ```
 
 ```{r}
-#| label: save-fig-sim-result-factor-plots-means-2.0
-#| echo: false
-#| output: false
-pdf(
-  file.path(fig_path, "sim-results-pvalues-2.0.pdf"),
-  height = 15,
-  width = 10
-)
-p_sim_result_plot_2.0
-dev.off()
-```
-
-```{r}
 #| label: fig-sim-result-elppd-plot-2.0
-#| fig-cap: "..."
+#| fig-cap: "The elppd${}_{100}$ simulation results when the shape parameter equals $2.0$ for each factor combination. The columns show the different levels of $t_{end} - t_{start}$ and rows the different levels of $t_{start}$. The number of units $N$ is shown on the horizontal axis, and the average elppd${}_{100}$ score is shown on the vertical axis. The colours of the points show the treatment of the left-truncated samples and the shape shows the prior."
+#| echo: false
 experiment_results_df_2.0 %>%
   mutate(
     model_name = lapply(
@@ -1754,8 +1739,9 @@ experiment_results_df_2.0 %>%
 
 ```{r}
 #| label: fig-sim-result-elppd-plots-means-2.0
-#| fig-cap: "..."
-p_sim_res_elppd <- experiment_results_df_2.0 %>%
+#| fig-cap: "The elppd${}_{100}$ simulation results when the shape parameter equals $2.0$ for each factor combination summarised by the mean of the one hundred repetitions."
+#| echo: false
+p_sim_res_elppd_2.0 <- experiment_results_df_2.0 %>%
   mutate(
     model = lapply(
       experiment_results_df_2.0$model,
@@ -1806,29 +1792,16 @@ p_sim_res_elppd <- experiment_results_df_2.0 %>%
 p_sim_res_elppd_2.0
 ```
 
-```{r}
-#| label: save-fig-sim-result-elppd-plots-means-2.0
-#| echo: false
-#| output: false
-pdf(
-  file.path(fig_path, "sim-results-elppd-2.0.pdf"),
-  height = 8.,
-  width = 8
-)
-p_sim_res_elppd_2.0
-dev.off()
-```
-
 :::
 
-# Appendix - A
+# Appendix - A {#sec-app-A}
 
 In this appendix I demonstrate how the joint posterior of $\beta$ and $\eta$ derived using the method originaly proposed in @kaminskiy2005 depends on the analysts choise of $t_1$ or $t_2$ when regenerating the posterior draws after updataing the distribution of the CDF at time $t_3$.
 @fig-kamiskiy-original-demo (a) shows the joint posterior when the distributions at $t_3$ and $t_2$ are used to generate the posterior draws and (b) shows the joint posterior when the distributions at $t_3$ and $t_1$ are used. The two joint distributions in @fig-kamiskiy-original-demo are very clearly diferent.
 
 ```{r}
 #| label: fig-kamiskiy-original-demo
-#| fig-cal: "The joint posterior of $\beta$ and $\eta$ when (a) the distributions at $t_3$ and $t_2$ are used to generate the posterior draws and (b) shows the joint posterior when the distributions at $t_3$ and $t_1$ are used."
+#| fig-cap: "The joint posterior of shape and scale when (a) the distributions at $t_3$ and $t_2$ are used to generate the posterior draws and (b) shows the joint posterior when the distributions at $t_3$ and $t_1$ are used."
 CalcBetaParams <- function(m, v) {
   a = ((m^2 - m^3) / v) - m
   b = (a / m) - a

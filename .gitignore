@@ -30,13 +30,16 @@
 
 # For Quarto
 *_cache*
-*_files*
+#*_files*
 *.rmarkdown
 
 # Output
 thesis.pdf
 *.rds
 .DS_Store
+
+# CS code
+settings.json
 
 # folders
 co-author-signatures/

@@ -12,11 +12,10 @@ number-sections: true
 bibliography: ../../references.bib
 format:
   html:
-    embed-resources: true
+    embed-resources: false
     toc: true
     theme: 
       light: flatly
-      dark: darkly
 editor: visual
 execute: 
   cache: false
@@ -30,7 +29,7 @@ title-block-banner: "#FFFFFF"
 title-block-banner-color: "#000000"
 ---
 
-This Quarto document contains the main analysis for the paper \_\_\_\_\_\_\_. When compiled, it also generates all the figures used in the main publication. This document acts as suplimentary material to the main text for readers who are interested in reproducing the analysis or just want to take a closer look at the the more technical aspects of the data, model fitting, diagnostics, and model evaluation.
+This Quarto document contains an adapted version of the sumplementary material for the manuscript *Functional degradation modelling of the wearing surface of conveyor belting using Bayesian hierarchical modelling and Gamma processes.* to produce the code in Chap. 6: *Conveyor belt wear forecasting*. This document acts as suplimentary material to the main text for readers who are interested in reproducing the analysis or just want to take a closer look at the the more technical aspects of the data, model fitting, diagnostics, and model evaluation.
 
 ```{r}
 #| label: load-libraries
@@ -72,9 +71,9 @@ table_path <- file.path("..", "..", "tables", "ch-6")
 
 ## Belt wear data
 
-The data we use are ultrasonic thickness (UT) measurements used to monitor the wear of the top coat on an overland conveyor belt. We use data from three belts all installed on the same overland conveyor at different points in time at one of our industry partners mine sites. @fig-scematic below shows a typical overland conveyorbelt on the left and a scematic of the belts on the right. The structural component on of the belt is the carcas, which is protected by a tob and bottom coat of rubber. Typicaly the top-coat wears much faster than the bottom-coat because it is constantly being loaded with ore. To monitor the thickness of the topcoat, and therefore ensure the protection of the carcas, the thickness of the topcoat is monitored through UT testing. To demonstrate what the raw data looks like, on the cross section of the belt shown in the figure bellow, we have overlayed three sets of UT thickness measurements on the topcoat. Light blue is the earliest measurement and dark blue is the most recent. From the three wear profiles we can see the fairly typical "dishing out" of the topcoat as it is worn away by the ore over time.
+The data we use are ultrasonic thickness (UT) measurements used to monitor the wear of the top coat on an overland conveyor belt. We use data from three belts all installed on the same overland conveyor at different points in time at one of our industry partners mine sites. @fig-scematic below shows a typical overland conveyorbelt on the left and a scematic of the belts on the right. The structural component on of the belt is the carcas, which is protected by a tob and bottom coat of rubber. Typicaly the top-coat wears much faster than the bottom-coat because it is constantly being loaded with ore. To monitor the thickness of the topcoat, and therefore ensure the protection of the carcas, the thickness of the topcoat is monitored through UT testing. To demonstrate what the raw data looks like, on the cross section of the belt shown in the figure below, we have overlayed three sets of UT thickness measurements on the topcoat. Light blue is the earliest measurement and dark blue is the most recent. From the three wear profiles we can see the fairly typical "dishing out" of the topcoat as it is worn away by the ore over time.
 
-![Example of conveyor belt condition monitoring](suplimentary-figures/belt-cm-example.PNG){#fig-scematic}
+![Example of conveyor belt condition monitoring](belt-cm-example.PNG){#fig-scematic}
 
 The main belt that we will analise is `Belt_A`, the most recent belt. However, we use the data from historic belts `Belt_B` and `Belt_C` to construct an informative prior for some of the parameters in our model. Below we plot the raw data and show the UT data in a table below. Note that these data data are recorded in *mm* of wear, rather than remaining thickness like in the cross section of the belt shown in @fig-scematic.
 
@@ -429,7 +428,7 @@ Information about the notation as well as the intricasies regarding Bayesian hei
 
 ### B-spline design matrix
 
-In the first level of the hierarchical models (in @eq-data-model-gp and @eq-data-model-gp-lm), we takes a functional interpretation of the UT measurements across the surface of the belt. That is, we asssume that the measurements are noisy observations of a smooth underlying function. We describe this smooth function using a B-spline. @fig-B-spline-demo-1 shows the functional interpretation for the fith observation of `Belt_A`. The B-spline is composed of the weighted sum of a set of B-spline basis functions, we can see the weighted basis functions is @fig-B-spline-demo-2 and the unweighted basis functions in @fig-B-spline-demo-3.
+In the first level of the hierarchical models (in @eq-data-model-gp and @eq-data-model-lm), we takes a functional interpretation of the UT measurements across the surface of the belt. That is, we asssume that the measurements are noisy observations of a smooth underlying function. We describe this smooth function using a B-spline. @fig-B-spline-demo-1 shows the functional interpretation for the fith observation of `Belt_A`. The B-spline is composed of the weighted sum of a set of B-spline basis functions, we can see the weighted basis functions is @fig-B-spline-demo-2 and the unweighted basis functions in @fig-B-spline-demo-3.
 
 ```{r}
 #| label: B-spline-demo
@@ -602,7 +601,7 @@ We have dropped some basis functions at the edges. We do this because we wish to
 
 ### Informative prior {#sec-informative-priors}
 
-The two process models in @eq-process-model-gp and @eq-process-model-lm are set up so that we can encode information about the mean wear rate of spline coefficients by placing informative priors on the $\mu_m$. This means that we can supliment the analysis with past data or domain expert knowledge. We have two previouse belt lives--`Belt_B` and `Belt_C`-- which we can use to construct an informative prior for the $\mu_m$. We can crudely estemate the mean degradation of the coeficients by fitting splines to each of the observations from the two historic belts and then fitting linear models to the relationship between the ceofficients values and tonnes. @fig-estimated-coefs bellow shows the estimated linear fits.
+The two process models in @eq-process-model-gp and @eq-process-model-lm are set up so that we can encode information about the mean wear rate of spline coefficients by placing informative priors on the $\mu_m$. This means that we can supliment the analysis with past data or domain expert knowledge. We have two previouse belt lives--`Belt_B` and `Belt_C`-- which we can use to construct an informative prior for the $\mu_m$. We can crudely estemate the mean degradation of the coeficients by fitting splines to each of the observations from the two historic belts and then fitting linear models to the relationship between the ceofficients values and tonnes. @fig-estimated-coefs below shows the estimated linear fits.
 
 ```{r}
 #| label: fig-estimated-coefs
@@ -683,7 +682,7 @@ The prior for the $\mu_m$ are normaly distributed. Therefore to compose a mildly
 
 ### Prior predictive checks
 
-Now that we have specified the full prior model in the form of a group of marginal distributions, each of the marginal priors make sense on their own, but it is important to make sure that the prior we have specified encodes what we intended in the space of the data. To check this we can use prior predictive checking @gabry_2019. Using the informative prior developed for $\mu_m$ in the previous section and the specified priors for the other parameters in @eq-param-model, we can simulate data from our Bayesian model and then visualise this data to check that our specified priors encode what we originaly intended.
+Now that we have specified the full prior model in the form of a group of marginal distributions, each of the marginal priors make sense on their own, but it is important to make sure that the prior we have specified encodes what we intended in the space of the data. To check this we can use prior predictive checking @gabry_vis_2019. Using the informative prior developed for $\mu_m$ in the previous section and the specified priors for the other parameters in @eq-param-model-gp and @eq-param-model-lm, we can simulate data from our Bayesian model and then visualise this data to check that our specified priors encode what we originaly intended.
 
 The priors that we have specified for the varinace parameters are extreemly vaigue, and so we only perform prior predictive checks for the "non-noisy" wear profiles. In @fig-ppc below, we simulate sixteen fictitious belt wear data sets from the prior.
 
@@ -914,7 +913,7 @@ Out of the sixteen prior predictive realisations in @fig-ppc, roughly twelve of 
 
 ## Stan models
 
-To fit the model we use the probabalistic programing language Stan @Stan_2022. Bellow I define each of the 
+To fit the model we use the probabalistic programing language Stan [@Stan2022]. Bellow I define each of the 
 
 ### LM
 
@@ -1058,7 +1057,7 @@ for (i in 1:I) {
 
 ### GP
 
-Below the BHM in @eq-data-model, @eq-param-model, and @eq-process-model is specified in Stan.
+Below the BHM in @eq-data-model-gp, @eq-param-model-gp, and @eq-process-model-gp is specified in Stan.
 
 ::: callout-note
 # Parameterisation of $\nu$
@@ -1320,7 +1319,7 @@ saveRDS(
 )
 ```
 
-Now that we have specified the model is Stan, we can used the no-U-turn MCMC sampler to obtain draws from the posterior. Below we generate X draws from the posterior using 4 chains each Xn in length with a burn in of Bn and no thinning.
+Now that we have specified the model is Stan, we can used the no-U-turn MCMC sampler to obtain draws from the posterior. Below we generate X draws from the posterior using 4 chains each 3000 iterations in length with a burn in of 1000 and no thinning.
 
 ```{r}
 #| label: define-stan-data-8
@@ -1381,7 +1380,7 @@ stan_fit_full_lm <- sampling(
 
 :::
 
-As a first pass check, we can look at the summaries of the main parameters and some simple sampling diagnostic values such as effective sample size and $\hat{R}$ [@gelman_BDA_2013, pp. 285-287].
+As a first pass check, we can look at the summaries of the main parameters and some simple sampling diagnostic values such as effective sample size and $\hat{R}$ [@BDA2020, pp. 285-287].
 
 ::: panel-tabset
 ### GP
@@ -1424,9 +1423,9 @@ summary(stan_fit_full_lm,
 ```
 :::
 
-To assume that the samples sufficiently represent the target distribution the value of $\hat{R}$ should be less than $1.05$ and there should be at least $10$ effective samples per chain [@gelman_BDA_2013, pp. 287].
+To assume that the samples sufficiently represent the target distribution the value of $\hat{R}$ should be less than $1.05$ and there should be at least $10$ effective samples per chain [@BDA2020, pp. 287].
 
-Finaly, there was a few divergencies during sampling (about $0.9\%$ of the total number of draws). We can use a parallel coordinate plot with the divergent transitions plotted in red to see if these divergencies are a problem. If the divergent paths show a a clear structure through parameter space then this is a sign that there is degenerate behavior in the posterior. There is signs of two structures, one set that passes through values of $\nu_{sd}$ very close to zero, and another that draws a clear line through parameter space. I believe that the troublesome sampling when $\nu_{sd}$ is close to zero is a fairly typical issue with the variance of random effects when the data do not clearly demonstrate the existence of such an effect-e.g. it is possible that all spline coefficients have the same value of $\nu$, meaning that the variance of the random effect would be zero. The second clear structure through parameter space is most likely due to the same issues as in @our-paper, where there is not enough information in the data to completely separate the volatility of the gamma process and the variance of the noise; see recommendations in @our-paper on how this could be removed. But as we can see in the next section, it doesn't appear that these divergent transitions have created any multimodality in the posterior and so I do not believe they are a major issue.
+Finaly, there was a few divergencies during sampling (about $0.9\%$ of the total number of draws). We can use a parallel coordinate plot with the divergent transitions plotted in red to see if these divergencies are a problem. If the divergent paths show a a clear structure through parameter space then this is a sign that there is degenerate behavior in the posterior. There is signs of two structures, one set that passes through values of $\nu_{sd}$ very close to zero, and another that draws a clear line through parameter space. I believe that the troublesome sampling when $\nu_{sd}$ is close to zero is a fairly typical issue with the variance of random effects when the data do not clearly demonstrate the existence of such an effect-e.g. it is possible that all spline coefficients have the same value of $\nu$, meaning that the variance of the random effect would be zero. The second clear structure through parameter space is most likely due to the same issues as in @leadbetter2024, where there is not enough information in the data to completely separate the volatility of the gamma process and the variance of the noise; see recommendations in @leadbetter2024 on how this could be removed. But as we can see in the next section, it doesn't appear that these divergent transitions have created any multimodality in the posterior and so I do not believe they are a major issue.
 
 ::: panel-tabset
 ### GP
@@ -1475,7 +1474,7 @@ The stan posterior object `stan_fit_full` contains a multidimentional posterior 
 
 ### Marginal
 
-The marginal distributions of the parameters show us directly our new belief after the prior distribution for each parameter has been updated by the data. From the marginal posteriors of the $\mu_m$ in @fig-marginal-posts A, we can see that the model has identified that the "dishing out" behaviour is part of the driving underlying process. We can also see that there is not a large variation in the $\nu_m$; i.e. there is not a lot of variation in how "jumpy" the wear in different parts of the belt is-for other conveyor belts this could be very different. Lastly, the mass of $\nu_{mean}$ is reasonably far from zero, sugesting that the underlying degradation process is indeed not linear like we first suspected.
+The marginal distributions of the parameters show us directly our new belief after the prior distribution for each parameter has been updated by the data. From the marginal posteriors of the $\mu_m$ in @fig-marginal-posts-gp and @fig-marginal-posts-lm A, we can see that the models have identified that the "dishing out" behaviour is part of the driving underlying process. In the gamma process model (@fig-marginal-posts-gp), we can also see that there is not a large variation in the $\nu_m$; i.e. there is not a lot of variation in how "jumpy" the wear in different parts of the belt is-for other conveyor belts this could be very different. Lastly, the mass of $\nu_{mean}$ is reasonably far from zero, sugesting that the underlying degradation process is indeed not linear like we first suspected.
 
 ::: panel-tabset
 ### GP
@@ -1642,7 +1641,7 @@ plot_grid(
 dev.off()
 ```
 
-We can also plot the marginal posteriors and overlay the prior to see how much updating has occured. Doing so, we can also check for signs that the data have not informed the parameter or if there is conflicting information between the prior and the data.
+We can also plot the marginal posteriors and overlay the prior to see how much updating has occured. Doing so, we can also check for signs that the data have not informed the parameter or if there is conflicting information between the prior and the data. I do this in below for the gamma process model.
 
 ::: panel-tabset
 # $\mu$
@@ -1786,7 +1785,7 @@ Bayesian computation (MCMC sampling) treets missing or unobservable quantities t
 
 #### Filtered spline coefs
 
-@gif-filtered-spline-coef below is a gif cycling through one hundred draws from the posterior distribution of the $y^*_{i, m}$. Essentialy it is showing us the different posible filterd coeficient pathways. The gray siloets in the background are the other 99 draws that we are cycling through.
+@fig-filtered-spline-coef-gp and @fig-filtered-spline-coef-lm below show a gif cycling through one hundred draws from the posterior distribution of the $y^*_{i, m}$ from each model. Essentialy it is showing us the different posible filterd coeficient pathways. The gray siloets in the background are the other 99 draws that we are cycling through.
 
 ::: panel-tabset
 ### GP
@@ -1821,7 +1820,7 @@ rbind(
 #| label: fig-filtered-spline-coef-gp
 #| fig-cap: 
 #|  An animation of 100 different samples of the filtered spline 
-#|  coeficient paths. The colours corespond to the basis functions
+#|  coeficient paths from the gamma process model. The colours corespond to the basis functions
 #|  in @fig-B-spline-demo.
 #| echo: false
 #| eval: false
@@ -1864,6 +1863,8 @@ coefgif_gp <- animate(
 
 coefgif_gp
 ```
+
+![An animation of 100 different samples of the filtered spline coeficient paths from the gamma process model. The colours corespond to the basis functions in @fig-B-spline-demo.](animation_gp.gif){#fig-filtered-spline-coef-gp}
 
 ### LM
 ```{r}
@@ -1908,7 +1909,7 @@ p_lm <- df_lm %>%
 #| label: fig-filtered-spline-coef-lm
 #| fig-cap: 
 #|  An animation of 100 different samples of the filtered spline 
-#|  coeficient paths. The colours corespond to the basis functions
+#|  coeficient paths from the general path model. The colours corespond to the basis functions
 #|  in @fig-B-spline-demo.
 #| echo: false
 #| eval: false
@@ -1926,8 +1927,11 @@ coefgif_lm <- animate(
 
 coefgif_lm
 ```
+
+![An animation of 100 different samples of the filtered spline coeficient paths from the general path model. The colours corespond to the basis functions in @fig-B-spline-demo.](animation_lm.gif){#fig-filtered-spline-coef-lm}
+
 :::
-@gif-filtered-spline-coef does a good job at demonstrainting that while an average filtered path (like the one included in the paper) may look smooth, there are some fairly jumpy processes in the posterior.
+@fig-filtered-spline-coef-gp does a good job at demonstrainting that while the posterior mean of each filtered path from the gamma process (like the one included in the paper) may look smooth, there are some fairly jumpy processes in the posterior. Whereas, for the linear general path model in @fig-filtered-spline-coef-lm, all of the draws are perfectly strait (as one would expect).
 
 ```{r}
 #| label: fig-filtered-spline-coef
@@ -2015,13 +2019,13 @@ dev.off()
 
 #### Mean wear profiles
 
-Alternatively, we can calculate the set of smooth spline function for each draw of the $\{y^*_{i, m}\}^{I, M}_{i = 1, m = 1}$ by applying the coeficients to the B-spline basis functions and then calculateing the value of the smooth wear profile across the width of the belt. What we see is a gradual monotonic growth of the profile with a reasonable amount of uncertainty around wat is the average profile along the length of the belt at each observation time.
+Alternatively, we can calculate the set of smooth spline function for each draw of the $\{y^*_{i, m}\}^{I, M}_{i = 1, m = 1}$ by applying the coeficients to the B-spline basis functions and then calculateing the value of the smooth wear profile across the width of the belt. These distributions are shown in @fig-average-wear-profile-gp and @fig-average-wear-profile-lm for the gamma process and general path models, respectively. What we see is a gradual monotonic growth of the profile with a reasonable amount of uncertainty around what is the average profile along the length of the belt at each observation time.
 
 ::: panel-tabset
 ### GP
 ```{r}
 #| label: fig-average-wear-profile-gp
-#| fig-cap: The mean wear profile of the belt at each observation time.
+#| fig-cap: The mean wear profile of the belt at each observation time from the fitted gamma process model.
 #| echo: false
 
 mean_wear_post_gp <- stan_fit_full_gp %>%
@@ -2056,7 +2060,7 @@ guides(fill = "none")
 ### LM
 ```{r}
 #| label: fig-average-wear-profile-lm
-#| fig-cap: The mean wear profile of the belt at each observation time.
+#| fig-cap: The mean wear profile of the belt at each observation time from the fitted general path model.
 #| echo: false
 
 mean_wear_post_lm <- stan_fit_full_lm %>%
@@ -2427,7 +2431,7 @@ dev.off()
 
 ## Forecast
 
-Using the posterior draws we can generate a forecast of the belts wear by stepping the gamma process forward from the most recent fitted observation. The code below produces a forecast at $t_9$ from the fitted observations up to $t_8$.
+Using the posterior draws we can generate a forecast of the belts wear by stepping the process models forward from the most recent fitted observation. The code below produces a forecast at $t_9$ from the fitted observations up to $t_8$.
 
 ::: panel-tabset
 ### GP
@@ -2532,6 +2536,8 @@ p_forecast_lm
 
 ```{r}
 #| label: save-forcast-figs
+#| echo: false
+#| output: false
 
 legend_bot <- ggpubr::get_legend(
   p_forecast_gp +
@@ -2570,10 +2576,9 @@ dev.off()
 Using the posterior we can also generate a failure time distribution for the belt conditioned on the degradation observations. Since there is no closed form in this case, we must calculate the CDF numerical which is constitutionally heavy and so we do this in another R file (`ft-cdf.R`) but visualise the distributions here.
 
 ```{r}
-#| label: ft-cdfs-gp
+#| label: fig-ft-cdfs-gp
 #| fig-cap: 
 #|  The failure time CDFs for the belt when the gamma process model is fit to observations A) 1 to 8 and B) 1 to 9.
-#| echo: false
 
 p_ft_list <- lapply(
   c(
@@ -2613,7 +2618,14 @@ p_ft <- plot_grid(
   label_fontfamily = "Times",
   label_x = -0.01
 )
+p_ft
+```
 
+
+```{r}
+#| label: save-fig-ft-cdfs-gp
+#| echo: false
+#| output: false
 pdf(
   file.path(figure_path, "belt_wear_failuretime_CDF_gp.pdf"),
   height = 4, width = 8
@@ -2629,10 +2641,9 @@ dev.off()
 ```
 
 ```{r}
-#| label: ft-cdfs-lm
+#| label: fig-ft-cdfs-lm
 #| fig-cap: 
 #|  The failure time CDFs for the belt when the linear general path model is fit to observations A) 1 to 8 and B) 1 to 9.
-#| echo: false
 
 p_ft_list <- lapply(
   c(
@@ -2673,6 +2684,13 @@ p_ft <- plot_grid(
   label_x = -0.01
 )
 
+p_ft
+```
+
+```{r}
+#| label: save-fig-ft-cdfs-lm
+#| echo: false
+#| output: false
 pdf(
   file.path(figure_path, "belt_wear_failuretime_CDF_lm.pdf"),
   height = 4, width = 8

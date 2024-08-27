@@ -16,7 +16,6 @@ format:
     toc: true
     theme: 
       light: flatly
-      dark: darkly
 editor: visual
 execute: 
   cache: true
@@ -671,7 +670,7 @@ unit3_ft_dist_cp
 
 ```{r}
 #| label: post-pred-check-cp
-
+#| echo: false
 # extract posterior draws
 ppc_post <- as_draws_df(stan_fit_cp) %>%
   spread_draws(mu, nu)
@@ -693,7 +692,6 @@ p_ppc_cp <- PlotPriorPredictiveCheck(
   mu_ppc,
   nu_ppc
 )
-p_ppc_cp
 ```
 
 # Varying $\mu$ {#sec-pp-mu}
@@ -1231,7 +1229,7 @@ dev.off()
 
 ```{r}
 #| label: post-pred-check-pp-mu
-
+#| echo: false
 # extract posterior draws
 ppc_post <- as_draws_df(stan_fit_pp_mu) %>%
   spread_draws(mu_mean, mu_sd, nu)
@@ -1257,7 +1255,6 @@ p_ppc_pp_mu <- PlotPriorPredictiveCheck(
   mu_ppc,
   nu_ppc
 )
-p_ppc_pp_mu
 ```
 
 # Varying $\nu$ {#sec-pp-nu}
@@ -1668,7 +1665,7 @@ unit3_ft_dist_pp_nu
 
 ```{r}
 #| label: post-pred-check-pp-nu
-
+#| echo: false
 # extract posterior draws
 ppc_post <- as_draws_df(stan_fit_pp_nu) %>%
   spread_draws(mu, nu_mean, nu_sd)
@@ -1694,7 +1691,6 @@ p_ppc_pp_nu <- PlotPriorPredictiveCheck(
   mu_ppc,
   nu_ppc
 )
-p_ppc_pp_nu
 ```
 
 # Partial pooling on both mu and nu {#sec-pp-both}
@@ -2069,6 +2065,7 @@ unit3_ft_dist_pp_both
 
 ```{r}
 #| label: post-pred-check-pp-both
+#| echo: false
 
 # extract posterior draws
 ppc_post <- as_draws_df(stan_fit_pp_both) %>%
@@ -2098,7 +2095,43 @@ p_ppc_pp_both <- PlotPriorPredictiveCheck(
   mu_ppc,
   nu_ppc
 )
-p_ppc_pp_both
+```
+
+## Posterior predictive checking
+
+It is dificult to understand the practical differences between the models based on their posteiror distributions and posterior predictive distribuitons for the obaserved data. So, in @fig-post-pc I plot three simulated datasets from each model (posterior predictive checks).
+
+```{r}
+#| label: fig-post-pc
+#| fig-cap: Posterior three predictive simulations from (a) the complete pooling model, (b) the varying mean wear rate model, (c) the varying ceoficient of variation model, and (d) the model where both parameters vary from unit-to-unit.
+#| echo: false
+plot_grid(
+  p_ppc_cp +
+    ylim(0, 0.8) +
+    theme(legend.position = "none") +
+    xlab("Hundreds of thousands of cycles") +
+    ylab("cumulative degradation"),
+  p_ppc_pp_mu +
+    ylim(0, 0.8) +
+    theme(legend.position = "none") +
+    xlab("Hundreds of thousands of cycles") +
+    ylab("cumulative degradation"),
+  p_ppc_pp_nu +
+    ylim(0, 0.8) +
+    theme(legend.position = "none") +
+    xlab("Hundreds of thousands of cycles") +
+    ylab("cumulative degradation"),
+  p_ppc_pp_both +
+    ylim(0, 0.8) +
+    theme(legend.position = "none") +
+    xlab("Hundreds of thousands of cycles") +
+    ylab("cumulative degradation"),
+  nrow = 2,
+  ncol = 2,
+  labels = c("(a)", "(b)", "(c)", "(d)"),
+  label_fontfamily = "Times",
+  label_face = "plain"
+)
 ```
 
 ```{r}

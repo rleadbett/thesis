@@ -145,27 +145,27 @@ data.frame(
     rep(7, 2),
     rep(8, 1)
   ),
-  `$I + 1$` = c(
+  `$I + N$` = c(
     6:9,
     7:9,
     8:9,
     9
   ),
-  `$\\mbox{ELS}_{\\textit{gamma process}}$` = round(unlist(elppd_gp), 3),
-  `$\\mbox{ELS}_{\\textit{linear path}}$` = round(unlist(elppd_lm), 3),
+  `$\\mbox{els}_{\\textit{gamma process}}$` = round(unlist(elppd_gp), 3),
+  `$\\mbox{els}_{\\textit{linear path}}$` = round(unlist(elppd_lm), 3),
   check.names = FALSE
 ) %>% 
 bind_rows(
   .,
   tibble(
-    `$\\mbox{ELS}_{\\textit{gamma process}}$` = sum(.[["$\\mbox{ELS}_{\\textit{gamma process}}$"]]),
-    `$\\mbox{ELS}_{\\textit{linear path}}$` = sum(.[["$\\mbox{ELS}_{\\textit{linear path}}$"]]),
+    `$\\mbox{els}_{\\textit{gamma process}}$` = sum(.[["$\\mbox{els}_{\\textit{gamma process}}$"]]),
+    `$\\mbox{els}_{\\textit{linear path}}$` = sum(.[["$\\mbox{els}_{\\textit{linear path}}$"]]),
   )
 ) %>% 
   kbl(
     booktabs = T,
     format = "latex",
-    caption = "The expected log score ($ELS$) for each model when fitting to a portion of the data and predicting n-steps ahead. $I$ is the maximum observation that the model was fit to and $I + 1$ is the withheld observation that the forecast is generated for. The summation of the elppd scores are displayed at the bottom of the table.",
+    caption = "The expected log score (els) for each model when fitting to a portion of the data and predicting $N$-steps ahead. $I$ is the maximum observation that the model was fit to and $I + N$ is the withheld observation that the forecast is generated for. The summation of the els scores are displayed at the bottom of the table.",
     escape = FALSE,
     label = "elppd-beltwear"
   ) %>%

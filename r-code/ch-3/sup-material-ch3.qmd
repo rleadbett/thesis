@@ -16,7 +16,6 @@ format:
     toc: true
     theme: 
       light: flatly
-      dark: darkly
 editor: visual
 execute: 
   cache: false
@@ -94,10 +93,11 @@ fn <- function(x) {
 }
 ```
 
-Here I analyse the idler-frame failure time data from an overland iron ore conveyor.
+This markdown contains the code to reproduce the main analysis in Chap. 3. Here, I analyse the idler-frame failure time data from an overland iron ore conveyor. The first five rows of the data are shown in @tbl-load-data.
 
 ```{r}
 #| label: tbl-load-data
+#| tbl-cap: The first five rows of the idler frame failures dataset.
 idler_data <- readRDS(
   file.path("..", "..", "data", "idler_frame_life_example.RDS")
 )
@@ -181,6 +181,7 @@ summary_df %>%
 ```{r}
 #| label: fig-frame-lifetimes
 #| fig-cap: The idler frame lifetimes. The frame number that the lifetime belongs to is on the horizontal axes and the log lifetime is plotted on the virtical axis. Fully observed lifetimes are shown in red while the lifetimes that are only partialy observed are shown in blue. Those lifetimes that are also left-truncated are indicated by tryangles.
+#| echo: false
 p_idler_lifetimes <- idler_data %>%
   mutate(
     frame_number = as.numeric(frame_number),
@@ -244,6 +245,7 @@ We know that the average lifetime is around five years, and that almost all idle
 #|   - "The joint draws of the shape and scale."
 #|   - "The resulting uncertainty in the CDF."
 #| layout-ncol: 2
+#| echo: false
 set.seed(956)
 # specify prior information
 t_1 <- 5 * 365
@@ -428,6 +430,8 @@ t_lt_rc_st ~ uniform(0, 1);
 )
 ```
 
+Before sampling, I prepare the data to pass to Stan.
+
 ```{r}
 #| label: prepare-stan-data
 df_obs <- idler_data %>%
@@ -453,7 +457,7 @@ idler_frame_stan_data <- list(
 )
 ```
 
-To sample draws from the posterior I use four chains each 2000 draws long and with a burn in of 500 iterations and no thinning.
+To sample draws from the posterior I use 4 chains each 2000 draws long and with a burn in of 500 iterations and no thinning.
 
 ```{r}
 #| label: sample-from-posterior
@@ -480,6 +484,8 @@ idler_stan_fit <- sampling(
 
 ```{r}
 #| label: tbl-stan-summary
+#| tbl-cap: Summary of sampling and joint posterior of beta and eta.
+#| echo: false
 rownames_to_column(
   as.data.frame(
     summary(
@@ -528,7 +534,7 @@ stan_summary %>%
   kbl(
     booktabs = T,
     format = "latex",
-    caption = "Summary of sampling for $\\beta$ and $\\eta$.",
+    caption = "Summary of sampling and joint posterior of $\\beta$ and $\\eta$.",
     escape = FALSE,
     label = "idler-frame-posterior-summary"
   ) %>%
@@ -587,6 +593,7 @@ PlotPostCDF <- function(stan_fit, x_range = c(0, 5), res = 0.05) {
 #|   - "Plotted with the same axis scales as @fig-informative-prior."
 #|   - "Zoomed in."
 #| layout-ncol: 2
+#| echo: false
 # create plot of joint dist
 p_joint_post <- idler_stan_fit %>%
   mcmc_scatter(pars = c("beta", "eta")) +
@@ -667,6 +674,7 @@ dev.off()
 ```{r}
 #| label: fig-posterior-cdf
 #| fig-cap: "The posterior uncertainty about the CDF."
+#| echo: false
 # create plot of cdf
 p_cdf_post <- PlotPostCDF(
   idler_stan_fit,
@@ -698,6 +706,7 @@ The posterior samples also provide draws of the imputed values of the censored l
 #| fig-subcap: 
 #|   - "Frames 1-72."
 #|   - "Frames 73-143."
+#| echo: false
 # get the posterior draws of the imputed lifetimes
 rc_post <- idler_stan_fit %>%
   as_draws_rvars() %>%
@@ -783,6 +792,7 @@ Using the predictive draws of the RUL for each of the frames, I also construct a
 ```{r}
 #| label: fig-E-n-failures-draws
 #| fig-cap: "Ten example draws of the cumulative failures in days following the end of observation."
+#| echo: false
 # extract draws of the right censored lifetimes and filter to only those still
 # under test
 set.seed(549)
@@ -855,6 +865,7 @@ From the distribution of step functions, I can calculate predictive distribution
 ```{r}
 #| label: fig-E-n-failures-dists
 #| fig-cap: "The expected number of failures in the next one (a), three (b), and six (c) months after the end of the observation period."
+#| echo: false
 # calculate the number of failures within 1, 3, and 6 months for each draw
 E_failures <- draws_FTs %>%
   group_by(.draw) %>%
@@ -991,6 +1002,7 @@ E_N_reactive_maintenance <- mapply(
 ```{r}
 #| label: fig-cost-function
 #| fig-cap: "The predictive distribution of cost per unit time for the diferent choices of fixed time replacement interval."
+#| echo: false
 CostFunction <- function(
   t_p,        # fixed time preplacement interval
   K_rm,        # expected reactive replacement in t_p
@@ -1057,9 +1069,10 @@ E_N_failures_df %>%
 dev.off()
 ```
 
-
 ```{r}
 #| label: tbl-cost-function
+#| echo: false
+#| output: false
 
 E_N_failures_df %>%
   filter(shut <= 10) %>%

@@ -8,7 +8,7 @@ load(
 belt_ut_data <- example_belts[["belt_A"]]
 
 pdf(
-  file.path("..", "..", "figures", "belt_wear_ut.pdf"),
+  file.path("..", "..", "figures", "ch-1", "belt_wear_ut.pdf"),
   height = 6,
   width = 8
 )
@@ -36,8 +36,3 @@ p_belt_ut_data <- belt_ut_data %>%
 p_belt_ut_data
 
 dev.off()
-
-saveRDS(
-  p_belt_ut_data,
-  file.path("..", "..", "figures", "belt_wear_ut.RDS")
-)
