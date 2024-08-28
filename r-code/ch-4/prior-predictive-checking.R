@@ -1,76 +1,63 @@
-library(dplyr)
-library(ggplot2)
+# This R script generates the prior predictive simulations for Figure 3.1 in
+# the manuscript Leadbetter, R.L, Gonzalez Caceres, G. J. and Phatak, A. (2024)
+# `Fitting noisy gamma processes using RStan'
+
+library(tidyverse)
+library(tidybayes)
 library(cowplot)
+library(bayesplot)
 
-set.seed(111)
-N_itr <- 100
-ppd_df <- data.frame(
-  t = rep(1:20, each = N_itr),
-  itr = rep(1:N_itr, 20),
-  rate_1 = rep(rgamma(N_itr, shape = 1, rate = 0.001), 20),
-  shape_1 = rep(rgamma(N_itr, shape = 1, rate = 0.001), 20),
-  rate_2 = rep(rgamma(N_itr, shape = 0.001, rate = 0.001), 20),
-  shape_2 = rep(rgamma(N_itr, shape = 0.001, rate = 0.001), 20),
-  mu = rep(rnorm(N_itr, 1, 0.5), 20),
-  nu = rep(abs(rt(N_itr, df = 3)), 20)
-) %>%
-  mutate(
-    jumps_1 = rgamma(n(), shape = shape_1, rate = rate_1),
-    jumps_2 = rgamma(n(), shape = shape_2, rate = rate_2),
-    jumps_3 = rgamma(n(), shape = 1 / (nu^2), rate = 1 / (mu * nu^2))
-  ) %>%
-  group_by(itr) %>%
-  mutate(
-    GP_1 = cumsum(jumps_1),
-    GP_2 = cumsum(jumps_2),
-    GP_3 = cumsum(jumps_3)
-  )
+theme_set(theme_tidybayes() + panel_border())
 
-p_ppd_1 <- ppd_df %>%
-  ggplot() +
-  geom_line(
-    aes(x = t, y = GP_1, group = itr),
-    alpha = 0.2
-  ) +
-  xlim(0, 20) +
-  ylim(0, 50) +
-  xlab("time (arbitrary)") +
-  ylab("degradation (arbitrary)") +
-  theme_minimal()
-  
-p_ppd_2 <- ppd_df %>%
-  ggplot() +
-  geom_line(
-    aes(x = t, y = GP_2, group = itr),
-    alpha = 0.2
-  ) +
-  xlim(0, 20) +
-  ylim(0, 50) +
-  xlab("time (arbitrary)") +
-  ylab("degradation (arbitrary)") +
-  theme_minimal()
+# Generate the simulations for the three alternative priors
+set.seed(509480983)
 
-p_ppd_3 <- ppd_df %>%
-  ggplot() +
-  geom_line(
-    aes(x = t, y = GP_3, group = itr),
-    alpha = 0.2
-  ) +
-  xlim(0, 20) +
-  ylim(0, 50) +
-  xlab("time (arbitrary)") +
-  ylab("degradation (arbitrary)") +
-  theme_minimal()
+## Ga(1, 0.001) for shape and rate
+time <- 0:11
+I <- length(time)
+N <- 100
+beta <- 1; xi <- 0.001
+shape_rate <- matrix(rgamma(2 * N, shape = beta, rate = xi), ncol = 2)
+jumps <- apply(shape_rate, 1, function(x) rgamma(I - 1, shape = x[1], rate = x[2]))
+trace1 <- rbind(0, apply(jumps, 2, cumsum))
 
+## Ga(0.001, 0.001) for shape and rate
+time <- 0:11
+I <- length(time)
+N <- 100
+beta <- 0.001; xi <- 0.001
+shape_rate <- matrix(rgamma(2 * 100, shape = beta, rate = xi), ncol = 2)
+jumps <- apply(shape_rate, 1, function(x) rgamma(I - 1, shape = x[1], rate = x[2]))
+trace2 <- rbind(0, apply(jumps, 2, cumsum))
+
+## mu ~ N(1, 0.5); nu ~ trunc_T(3)
+time <- 0:11
+I <- length(time)
+N <- 100
+mu <- rnorm(N, mean = 1, sd = 0.5)
+nu <- abs(rt(N, df = 3))
+beta <- 1/(nu^2); xi <- 1/(mu * nu^2)
+shape_rate <- cbind(beta, xi)
+jumps <- apply(shape_rate, 1, function(x) rgamma(I - 1, shape = x[1], rate = x[2]))
+trace3 <- rbind(0, apply(jumps, 2, cumsum))
+
+# generate plot
 pdf(
   file.path("..", "..", "figures", "ch-4", "PPCs.pdf"),
   height = 4, width = 10
 )
-plot_grid(
-  p_ppd_1, p_ppd_2, p_ppd_3,
-  labels = c("(a)", "(b)", "(c)"),
-  label_fontfamily = "Times",
-  label_face = "plain",
-  nrow = 1
-)
+par(mfrow = c(1, 3))
+par(cex = 1.1)
+matplot(time, trace1, type = "l", lty = 1, col = scales::alpha("black", 0.2),
+        xlab = "time (arbitrary)", ylab = "degradation (arbitrary)",
+        ylim = c(0, 35))
+text(0.1, 32.5, "(a)", adj = 0)
+matplot(time, trace2, type = "l", lty = 1, col = scales::alpha("black", 0.2),
+        xlab = "time (arbitrary)", ylab = "degradation (arbitrary)",
+        ylim = c(0, 35))
+text(0.1, 32.5, "(b)", adj = 0)
+matplot(time, trace3, type = "l", lty = 1, col = scales::alpha("black", 0.2),
+        xlab = "time (arbitrary)", ylab = "degradation (arbitrary)",
+        ylim = c(0, 35))
+text(0.1, 32.5, "(c)", adj = 0)
 dev.off()
