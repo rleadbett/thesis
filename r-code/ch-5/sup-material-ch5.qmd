@@ -712,6 +712,118 @@ $$
 
 In `Stan` code this is
 
+```{r}
+pp_mu_pooling_model <- stan_model(
+  model_code = "
+functions {
+  real normal_trunc_rng(real a, real b) {
+    real p_lb = normal_cdf(0, a, b);
+    real u = uniform_rng(p_lb, 1);
+    real y = a + b * inv_Phi(u);
+    return y;
+  }
+}
+
+data{
+  int I;           // number of observations
+  int N;           // number of units
+  vector[I] t;     // the set of observation times
+  matrix[I, N] y;  // the set of noisy measurements
+}
+
+transformed data{
+  vector[I-1] t_diff; // the differences of the observation times
+
+  // t_diff[1] = t[1];
+  t_diff = t[2:I] - t[1:I-1];
+}
+
+parameters{
+  real<lower = 0> sigma;            // sd of measurement error
+  real<lower = 0> mu_mean;          // mean hyper parameter of the mu_n
+  real<lower = 0> mu_sd;            // sd hyper parameter of the mu_n
+  vector<lower = ((0 - mu_mean) / mu_sd)>[N] mu_nc;       // the mean of the gamma process
+  real<lower = 0> nu_a;
+  real<lower = 0> nu_b;
+  matrix<lower = 0>[I-1, N] z_diff;   // the jumps
+}
+
+transformed parameters{
+  vector<lower = 0>[N] mu;
+  real<lower = 0> nu;               // coefficient of variation
+  matrix<lower = 0>[I-1, N] z;      // filtered observations
+
+  for (n in 1:N){
+    mu[n] = (mu_nc[n] * mu_sd) + mu_mean;
+  }
+  
+  nu = nu_a / sqrt(nu_b);
+
+// jumps
+  for(n in 1:N){
+    z[,n] = cumulative_sum(z_diff[,n] * mu[n]);
+  }
+}
+
+model{
+
+// priors //
+//// for process model
+//!! Because everything is a real that means that every unit
+//!! has has the same parameters and and so each unit is an
+//!! observation of the same gamma process.
+////
+
+  mu_mean ~ normal(0.5, 0.2);
+  mu_sd ~ cauchy(0, 1);
+  mu_nc ~ normal(0, 1);
+  nu_a ~ normal(0, 1);
+  nu_b ~ gamma((0.5 * 3), (0.5 * 3));
+  sigma ~ uniform(0, 10);
+
+// process model //
+  for(n in 1:N){
+    z_diff[, n] ~ gamma(t_diff / pow(nu, 2), 1 / (pow(nu, 2)));
+  }
+
+// data model //  
+  for (n in 1:N){
+    y[2:I, n] ~ normal(z[, n], sigma);
+  }
+}
+
+generated quantities{
+  matrix[I, N] zplot;
+  matrix[I, N] y_pred;
+
+  real mu_ppd;
+  real nu_ppd;
+  vector[N] mu_i_ppd;
+  vector[N] nu_i_ppd;
+
+// generate posterior predictive samples
+  for(n in 1:N){
+    y_pred[1, n] = 0;
+    zplot[1, n] = 0;
+    for(i in 2:I){
+      y_pred[i, n] = normal_rng(z[i-1, n], sigma);
+      zplot[i, n] = z[i-1,n];
+    }
+  }
+
+// parameter PPDs for model comparison
+  mu_ppd = normal_trunc_rng(mu_mean, mu_sd);
+  nu_ppd = nu;
+  for(n in 1:N){
+    mu_i_ppd[n] = mu[n];
+    nu_i_ppd[n] = nu;
+  }
+}
+
+"
+)
+```
+
 ```{stan}
 #| label: define-pp-mu-model
 #| output.var: pp_mu_pooling_model
@@ -1022,12 +1134,44 @@ plotMarginals(stan_fit_pp_mu)
 #| echo: false
 #| output: false
 
-pdf(
-  file.path(figure_path, "plot-pp-mu-marg-post-1.pdf"),
+p_mu <- stan_fit_pp_mu %>%
+    mcmc_areas(regex_pars = "mu\\[|mu_mean|mu_sd|^mu$") + 
+    scale_y_discrete(
+      labels = c(
+        "mu_mean" = expression(mu[mu]),
+        "mu_sd" = expression(sigma[mu]),
+        "mu[1]" = expression(mu[1]),
+        "mu[2]" = expression(mu[2]),
+        "mu[3]" = expression(mu[3]),
+        "mu[4]" = expression(mu[4]),
+        "mu[5]" = expression(mu[5]),
+        "mu[6]" = expression(mu[6]),
+        "mu[7]" = expression(mu[7]),
+        "mu[8]" = expression(mu[8]),
+        "mu[9]" = expression(mu[9]),
+        "mu[10]" = expression(mu[10])
+      )
+    )
+p_nu <- stan_fit_pp_mu %>%
+    mcmc_areas(regex_pars = "nu\\[|nu_mean|nu_sd|^nu$") + 
+    scale_y_discrete(
+      labels = c("nu" = expression(nu))
+    )
+p_sigma <- stan_fit_pp_mu %>%
+    mcmc_areas(regex_pars = "sigma") + 
+    scale_y_discrete(
+      labels = c("sigma" = expression(sigma))
+    )
+p_bottom <- plot_grid(p_mu, p_nu, nrow = 1)
+
+png(
+  file.path(figure_path, "plot-pp-mu-marg-post-1.png"),
   height = 6,
-  width = 6
+  width = 6,
+  units = "in",
+  res = 500
 )
-plotMarginals(stan_fit_pp_mu)
+plot_grid(p_sigma, p_bottom, ncol = 1, rel_heights = c(1, 5))
 dev.off()
 ```
 
@@ -2180,9 +2324,9 @@ dev.off()
 data.frame(
   model = c(
     "complete pooling",
-    "partial pooling mu",
-    "partial pooling nu",
-    "partial pooling mu and nu"
+    "partial pooling $\\mu$",
+    "partial pooling $\\nu$",
+    "partial pooling $\\mu$ and $\\nu$"
   ),
   "number of divergent transitions" = lapply(
     c(stan_fit_cp, stan_fit_pp_mu, stan_fit_pp_nu, stan_fit_pp_both),
