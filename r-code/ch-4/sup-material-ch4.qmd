@@ -187,7 +187,7 @@ sim_data_df_tbl %>%
   kbl(
     booktabs = T,
     format = "latex",
-    caption = "The twenty simulated noisy degradation observation that make up the `big' data set.",
+    caption = "The twenty simulated noisy degradation observation that make up the `large' data set.",
     escape = FALSE,
     label = "big_df",
     digits = 2
