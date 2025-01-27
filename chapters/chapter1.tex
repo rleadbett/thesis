@@ -130,9 +130,9 @@ If divergent transitions are present, then visually plotting the divergent traje
 
 Once we have postulated the model, generated samples from the posterior, and are confident that the samples sufficiently represent the posterior, we can use the posterior samples to perform inference and inform decisions. The result of fitting the model with MCMC methods is that we obtain $S$ simulations of the parameters $\theta$ from their posterior distribution,
 \begin{equation}
-  \theta_s \sim p(\theta|y).
+  \theta_s \sim p(\theta|y),
 \end{equation}
-Using the posterior draws of the parameters, we can find not only the estimated expected values of the parameters and credible intervals but also posterior predictive distributions for new data and uncertainty estimates for new functions of the parameters, such as failure time distributions.
+where $s = 1, \dots, S$. Using the posterior draws of the parameters, we can find not only the estimated expected values of the parameters and credible intervals but also posterior predictive distributions for new data and uncertainty estimates for new functions of the parameters, such as failure time distributions.
 
 Posterior predictive checking \citep{BDA2020} is a visual method for evaluating if the model has fit the data. After obtaining the posterior distribution, we can simulate replications of the data conditioned on the observed data. The predictive distribution for which these replicated datasets arise is the posterior predictive distribution. If the model fits the data, then the replications under the fitted model $\tilde{y}$ should look similar to the observed data $y$ \citep[pp.~143]{BDA2020}. Put another way, the observed data should be plausible under the posterior predictive distribution. The posterior predictive distribution can be expressed as
 \begin{equation}
