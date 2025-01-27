@@ -100,7 +100,7 @@ Surrounding Bayesian inference is a larger workflow of good statistical practice
 
 \paragraph*{Model specification}
 
-The first step of any Bayesian analysis is to postulate a joint probability distribution of the model components. For complicated processes, this first step can be simplified by using a Bayesian Hierarchical (multi-level) Modelling approach, which uses the fundamental notion of the \textit{the law of total probability}, $p(A, B, C) = p(A|B, C) p(B|C) p(C)$, to decompose a complicated joint probability into a sequence of simpler conditional probabilities \citep[p.~13]{wikle_2019}. \citet{Berliner_1996} proposed Bayesian Hierarchical Modelling (BHM) as a way of studying an underlying latent process by breaking the joint probability of the data, process, and parameters down into three sub-models:
+The first step of any Bayesian analysis is to postulate a joint probability distribution of the model components. For complicated processes, this first step can be simplified by using a Bayesian Hierarchical (multi-level) Modelling approach, which uses the fundamental notion of the \textit{the chain rule}, $p(A, B, C) = p(A|B, C) p(B|C) p(C)$, to decompose a complicated joint probability into a sequence of simpler conditional probabilities \citep[p.~13]{wikle_2019}. \citet{Berliner_1996} proposed Bayesian Hierarchical Modelling (BHM) as a way of studying an underlying latent process by breaking the joint probability of the data, process, and parameters down into three sub-models:
 \begin{align*}
  p(\text{data}, \text{process}, \text{parameter}) = & p(\text{data}| \text{process}, \text{parameter}) && \text{data model} \\
  & p(\text{process}| \text{parameter}) && \text{process model} \\
