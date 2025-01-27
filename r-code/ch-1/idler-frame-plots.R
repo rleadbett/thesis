@@ -38,7 +38,7 @@ p_idler_eCDF <- idler_lifetime_data %>%
   ggplot(aes(x = lifetime, y = eCDF, shape = censored, col = censored)) +
   geom_point() +
   theme_minimal() +
-  ylab("density") +
+  ylab("empirical cumulative distribution") +
   xlab("lifetime (days)") +
   labs("censored lifetime") +
   theme(
