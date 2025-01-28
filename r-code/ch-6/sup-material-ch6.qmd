@@ -197,6 +197,9 @@ pdf(
   p_belt_A_wear_prof +
     geom_hline(yintercept = 25, 
               linetype = "dashed") +
+    annotate(geom="text", x=13, y=25,
+             label="Soft failure threshold",
+             vjust=-1) +
     ylim(-2, 30)
     
 dev.off()
@@ -365,16 +368,13 @@ plot_grid(
 )
 dev.off()
 ```
-
 :::
 
 For both of these linear approaches to forecasting wear, we can see that the future measurements have been over-predicted. But even more importantly, because we do not understand the distribution of these measurements, we have no way of quantifying our prediction uncertainty. In the remainder of this markdaown document we introduce a method that uses the entire wear profile to inform a pricipled model for belt wear, which allows us to properly quantify our uncertainty when forecasting the wear profile.
 
 ## Our models
 
-The Bayesian hierarchical models for belt wear, which we implement and fit in the probabalistic programing language `Stan`, are
-**Gamma process**
-$$
+The Bayesian hierarchical models for belt wear, which we implement and fit in the probabalistic programing language `Stan`, are **Gamma process** $$
 \begin{align*}
 z_{i, n}|\underline{y}_{i}, \sigma \sim & N(f_i(n), \sigma)               && \text{Data model: FDA} \\ 
 f_i(n) =                                & \sum^{M}_{i = 1}b_m(n)y_{i, m}                            \\
@@ -400,9 +400,7 @@ $$
 \end{align*}
 $$ {#eq-param-model-gp}
 
-where $\Delta y^*_{i, m} = y^*_{i, m} - y^*_{i - 1, m}$ and $\Delta t_{i} = t_{i} - t_{i - 1}$ and
-**Linear path**
-$$
+where $\Delta y^*_{i, m} = y^*_{i, m} - y^*_{i - 1, m}$ and $\Delta t_{i} = t_{i} - t_{i - 1}$ and **Linear path** $$
 \begin{align*}
 z_{i, n}|\underline{y}_{i}, \sigma \sim & N(f_i(n), \sigma)               && \text{Data model: FDA} \\ 
 f_i(n) =                                & \sum^{M}_{i = 1}b_m(n)y_{i, m}
@@ -913,7 +911,7 @@ Out of the sixteen prior predictive realisations in @fig-ppc, roughly twelve of 
 
 ## Stan models
 
-To fit the model we use the probabalistic programing language Stan [@Stan2022]. Bellow I define each of the 
+To fit the model we use the probabalistic programing language Stan [@Stan2022]. Bellow I define each of the
 
 ### LM
 
@@ -1341,6 +1339,7 @@ stan_data_full <- list(
 
 ::: panel-tabset
 ### GP
+
 ```{r}
 #| label: model-fitting-gp
 #| output: false
@@ -1360,6 +1359,7 @@ stan_fit_full_gp <- sampling(
 ```
 
 ### LM
+
 ```{r}
 #| label: model-fitting-lm
 #| output: false
@@ -1377,13 +1377,13 @@ stan_fit_full_lm <- sampling(
   )
 )
 ```
-
 :::
 
 As a first pass check, we can look at the summaries of the main parameters and some simple sampling diagnostic values such as effective sample size and $\hat{R}$ [@BDA2020, pp. 285-287].
 
 ::: panel-tabset
 ### GP
+
 ```{r}
 #| label: sampling-diags-gp
 #| echo: false
@@ -1405,6 +1405,7 @@ summary(stan_fit_full_gp,
 ```
 
 ### LM
+
 ```{r}
 #| label: sampling-diags-lm
 #| echo: false
@@ -1429,6 +1430,7 @@ Finaly, there was a few divergencies during sampling (about $0.9\%$ of the total
 
 ::: panel-tabset
 ### GP
+
 ```{r}
 #| label: fig-parcoord-diag-plot-gp
 #| fig-cap: Prallel coordinate plot for the main parameters.
@@ -1450,6 +1452,7 @@ stan_fit_full_gp %>%
 ```
 
 ### LM
+
 ```{r}
 #| label: fig-parcoord-diag-plot-lm
 #| fig-cap: Prallel coordinate plot for the main parameters.
@@ -1478,6 +1481,7 @@ The marginal distributions of the parameters show us directly our new belief aft
 
 ::: panel-tabset
 ### GP
+
 ```{r}
 #| label: fig-marginal-posts-gp
 #| fig-cap: The marginal posterior distributions of the model parameters.
@@ -1554,6 +1558,7 @@ plot_grid(
 ```
 
 ### LM
+
 ```{r}
 #| label: fig-marginal-posts-lm
 #| fig-cap: The marginal posterior distributions of the model parameters.
@@ -1789,6 +1794,7 @@ Bayesian computation (MCMC sampling) treets missing or unobservable quantities t
 
 ::: panel-tabset
 ### GP
+
 ```{r}
 #| label: gif-filtered-spline-coef-gp
 #| echo: false
@@ -1867,6 +1873,7 @@ coefgif_gp
 ![An animation of 100 different samples of the filtered spline coeficient paths from the gamma process model. The colours corespond to the basis functions in @fig-B-spline-demo.](animation_gp.gif){#fig-filtered-spline-coef-gp}
 
 ### LM
+
 ```{r}
 #| label: gif-filtered-spline-coef-lm
 #| echo: false
@@ -1929,8 +1936,8 @@ coefgif_lm
 ```
 
 ![An animation of 100 different samples of the filtered spline coeficient paths from the general path model. The colours corespond to the basis functions in @fig-B-spline-demo.](animation_lm.gif){#fig-filtered-spline-coef-lm}
-
 :::
+
 @fig-filtered-spline-coef-gp does a good job at demonstrainting that while the posterior mean of each filtered path from the gamma process (like the one included in the paper) may look smooth, there are some fairly jumpy processes in the posterior. Whereas, for the linear general path model in @fig-filtered-spline-coef-lm, all of the draws are perfectly strait (as one would expect).
 
 ```{r}
@@ -2023,6 +2030,7 @@ Alternatively, we can calculate the set of smooth spline function for each draw 
 
 ::: panel-tabset
 ### GP
+
 ```{r}
 #| label: fig-average-wear-profile-gp
 #| fig-cap: The mean wear profile of the belt at each observation time from the fitted gamma process model.
@@ -2058,6 +2066,7 @@ guides(fill = "none")
 ```
 
 ### LM
+
 ```{r}
 #| label: fig-average-wear-profile-lm
 #| fig-cap: The mean wear profile of the belt at each observation time from the fitted general path model.
@@ -2091,6 +2100,7 @@ scale_fill_manual(
 guides(fill = "none")
 ```
 :::
+
 ### Posterior predictive distributions
 
 Even though for this particular aplication we are not interested in predicting the value of new measurements at the same time or locations as the observations, posterior predictive distributions (PPD) are a means of sense checking our fitted model. In this BHM, there are two different levels that we can generate a PPD; either the distribution of new UT measurements at the same time and location along the length of the belt; or new functional observations at the same times but at alternative locations along the length of the belt.
@@ -2101,6 +2111,7 @@ From the lowest level of the heirarchical posterior we can generate the predicti
 
 ::: panel-tabset
 ### GP
+
 ```{r}
 #| label: ppd-ut-gp
 #| fig-cap: 
@@ -2169,6 +2180,7 @@ p_fda_ppd_gp
 ```
 
 ### LM
+
 ```{r}
 #| label: ppd-ut-lm
 #| fig-cap: 
@@ -2235,6 +2247,7 @@ Alternatively we can generate the posterior predictive distribution of new funct
 
 ::: panel-tabset
 ### GP
+
 ```{r}
 #| label: ppd-fda-gp
 #| fig-cap: 
@@ -2301,6 +2314,7 @@ p_wear_prof_ppd_gp
 ```
 
 ### LM
+
 ```{r}
 #| label: ppd-fda-lm
 #| fig-cap: 
@@ -2435,6 +2449,7 @@ Using the posterior draws we can generate a forecast of the belts wear by steppi
 
 ::: panel-tabset
 ### GP
+
 ```{r}
 #| label: single-forecast-gp
 #| fig-cap: 
@@ -2488,6 +2503,7 @@ p_forecast_gp
 ```
 
 ### LM
+
 ```{r}
 #| label: single-forecast-lm
 #| fig-cap: 
@@ -2620,7 +2636,6 @@ p_ft <- plot_grid(
 )
 p_ft
 ```
-
 
 ```{r}
 #| label: save-fig-ft-cdfs-gp
