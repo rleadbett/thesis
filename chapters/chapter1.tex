@@ -138,7 +138,7 @@ Posterior predictive checking \citep{BDA2020} is a visual method for evaluating 
 \begin{equation}
  p(\tilde{y}|y) = \int p(\tilde{y}|\theta)p(\theta|y)d\theta
 \end{equation}
-where $\theta$ is the set of parameters and latent variables in the model. Computationally, we obtain draws from $p(\tilde{y}|y)$ by simulating from the data model conditional on the posterior draws of the parameters,
+where $\theta$ is the set of parameters and latent variables in the model, so long the heirarchical model is specified so that new observations are independent of the observed data given the parameters $\theta$. Computationally, we obtain draws from $p(\tilde{y}|y)$ by simulating from the data model conditional on the posterior draws of the parameters,
 \begin{equation}
  \tilde{y}^s|y, \theta^s \sim p(\tilde{y}|\theta^s)
 \end{equation}
