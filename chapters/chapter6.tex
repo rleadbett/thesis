@@ -30,7 +30,7 @@ The method is not limited to conveyor belt wear. It can be used for any degradin
 I begin in Sec.~\ref{sec:belt-wear-fda} by providing a brief overview of functional data analysis and showing how it can be used for the data model. Two process models are defined for the degradation of the belt in Sec.~\ref{sec:belt-wear-process}: a noisy gamma process and a linear general path. The prior distributions for these two process models are defined in Sec.~\ref{sec:belt_wear_priors}. Historic belt wear datasets are used to construct an informative prior and its plausibility is evaluated through prior predictive simulation. Section~\ref{sec:belt-wear-fitting} describes sampling and investigates the posterior distribution of each model by examining the marginal posterior distributions of the parameters, the posterior distribution of the intermediate quantities in each model that describe the underlying wear process, and the posterior predictive distributions for replications of the data in Fig.~\ref{fig:ut-example}. In Sec.~\ref{sec:belt-wear-forecast}, I describe how to generate forecasts for the belt's wear profile using the two different models and demonstrate the method by predicting the ninth wear profile after fitting the two models using the first eight. I then evaluate and compare the two models based on their ability to predict the degradation of the belt at future time points in Sec.~\ref{sec:belt-wear-comparison}. Lastly, Sec.~\ref{sec:belt-wear-ft} demonstrates how to construct failure time distributions from the two models given the current condition of the belt. I finish in Sec.~\ref{sec:belt-wear-discussion} by revisiting the main results and pointing out areas of future work.
 
 \section{Data model: functional data analysis} \label{sec:belt-wear-fda}
-In functional data analysis, the data in each observation are considered as arising from a smooth underlying random function instead of being a scalar or vector-valued random variable \citep[p. 512]{BDA2020}. 
+In functional data analysis, the data in each observation are considered as arising from a smooth underlying random function instead of being a scalar or vector-valued random variable \citep[p.~512]{BDA2020}. 
 For the belt wear data, at each observation time $t_i$, $i = 1, 2, \dots, I$,(which is the anonymised cumulative tonnes (a proxy for utilization)) the UT measurements $z_{i,n}$ are noisy observations of the smooth underlying profile $f_i(.)$ across the width of the belt at the discrete locations $n = 1, 2, \dots, N$ at which thickness is measured. Therefore, I write the data model as
 \begin{equation}
   z_{i, n}|f_i(n),\sigma \sim N(f_i(n), \sigma).
@@ -39,7 +39,7 @@ For the belt wear data, at each observation time $t_i$, $i = 1, 2, \dots, I$,(wh
 In proposing this functional structure, I am assuming that given $\sigma$, the standard deviation of the measurement uncertainty, and $f_i(n)$, the value of the profile at $t_i$ and location $n$, the $z_{i,n}$ are independent of one another. The function $f_i(n)$ describes a smooth wear profile across the width of the belt at time $t_i$ and some random location along the belts length. The aim of a functional data analysis is, therefore, to model the collection of functions $\{f_i(.)\}^I_{i = 1}$. To do so requires the analyst to choose a functional form for $f_i(.)$, a decision on which the model is implicitly conditioned. In this analysis, I use a B-spline to model the wear profiles of the conveyor belt.
 
 \paragraph{B-splines}
-B-splines are piecewise continuous functions \citep[p. 33-38]{ramsay_2009} that are constructed as the weighted sum of a set of $M$ locally defined polynomial B-spline basis functions. A functional observation of the wear profile at $t_i$ can be expressed as the B-spline
+B-splines are piecewise continuous functions \citep[p.~33-38]{ramsay_2009} that are constructed as the weighted sum of a set of $M$ locally defined polynomial B-spline basis functions. A functional observation of the wear profile at $t_i$ can be expressed as the B-spline
 \begin{equation}
  f_i(n) = \sum_{m = 1}^{M} y_{i, m}b_m(n),
  \label{eq:spline}
@@ -54,7 +54,7 @@ where $y_{i, m}$ is the weight of the $m^{th}$ basis function, $b_m(.)$, for the
 \end{figure}
 
 \paragraph{Functional time series}
-Before moving on, I note that modelling the evolution of spline coefficients through time is not new. Functional time series analysis models how time-ordered functional observations evolve \citep{hormann_2012}. It has also been done in a Bayesian context \citep{kowal_2017}. Usually, these methods use functional PCA \citep[p. 16]{ramsay_2009} and, for the most part, autoregressive processes to model the evolution of the eigenweights (the coefficients of the eigenfunctions). Using functional PCA first reduces the number of coefficients to model. Furthermore, because the eigenfunctions are orthonormal, the eigenweights can be modelled independently. This dimension reduction is helpful where many basis functions are needed to fit the data because, in these cases, modelling the basis coefficients directly would require a very large covariance matrix. However, in the case at hand, the number of functional observations of the belt is too small to perform PCA reliably, and furthermore, the degradation process is not stationary. Instead, I use a degradation model to model the spline coefficients directly and, for the moment, assume that the coefficients are independent of one another. In this way, the approach may be more along the lines of the spatio-temporal models in \citet[p. 218-224]{wikle_2019}.
+Before moving on, I note that modelling the evolution of spline coefficients through time is not new. Functional time series analysis models how time-ordered functional observations evolve \citep{hormann_2012}. It has also been done in a Bayesian context \citep{kowal_2017}. Usually, these methods use functional PCA \citep[p.~16]{ramsay_2009} and, for the most part, autoregressive processes to model the evolution of the eigenweights (the coefficients of the eigenfunctions). Using functional PCA first reduces the number of coefficients to model. Furthermore, because the eigenfunctions are orthonormal, the eigenweights can be modelled independently. This dimension reduction is helpful where many basis functions are needed to fit the data because, in these cases, modelling the basis coefficients directly would require a very large covariance matrix. However, in the case at hand, the number of functional observations of the belt is too small to perform PCA reliably, and furthermore, the degradation process is not stationary. Instead, I use a degradation model to model the spline coefficients directly and, for the moment, assume that the coefficients are independent of one another. In this way, the approach may be more along the lines of the spatio-temporal models in \citet[p.~218-224]{wikle_2019}.
 
 \section{Process models} \label{sec:belt-wear-process}
 \vspace*{-20pt}
@@ -82,13 +82,13 @@ Because I have used the mean/coefficient of variation parameterisation of the ga
   \sigma \sim & \mbox{U}(0, 100)         \\
   \phi   \sim & \mbox{Cauchy}^{+}(0, 25),
 \end{align*}
-based on the justifications presented in Sec.~\ref{sec:GP_priors} \citep[chap.~17]{BDA2020}. For the mean wear rate of the different spline coefficients, I now use the prior 
+based on the justifications presented in Sec.~\ref{sec:GP_priors} \citep[Chap.~17]{BDA2020}. For the mean wear rate of the different spline coefficients, I now use the prior 
 \begin{equation*}
   \mu_m \sim \mbox{N}(\hat{a}, \hat{b}),
 \end{equation*}
 where $\hat{a}$ and $\hat{b}$ are estimated from historic data. More details are provided below, but first, I define the remaining priors for the gamma process.
 
-The gamma process model $10(= M + 2)$ more parameters than the simpler linear path model, which are the $\nu_m$ and their hyperparameters. For the coefficient of variation parameters $\nu_m$ in the gamma process model, I use the hierarchical prior
+The gamma process model has $10(= M + 2)$ more parameters than the simpler linear path model, which are the $\nu_m$ and their hyperparameters. For the coefficient of variation parameters $\nu_m$ in the gamma process model, I use the hierarchical prior
 \begin{align*}
   \nu_m      \sim & \mbox{N}(\mu_\nu, \sigma_\nu) \\
   \mu_\nu    \sim & t_3(0, 0.5)            \\
