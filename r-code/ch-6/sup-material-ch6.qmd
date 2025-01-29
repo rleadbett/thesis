@@ -1969,7 +1969,8 @@ p_ppd_y_gp <- df_gp %>%
     labeller = coef_labeller, 
     nrow = 1
   ) +
-  theme(legend.position = "none") +
+  theme(legend.position = "none",
+       strip.text = element_text(size = 14)) +
   ylab(expression(y^"*")) +
   xlab("tonnes") +
   scale_color_manual(
@@ -2000,7 +2001,8 @@ p_ppd_y_lm <- df_lm %>%
     labeller = coef_labeller, 
     nrow = 1
   ) +
-  theme(legend.position = "none") +
+  theme(legend.position = "none",
+       strip.text = element_text(size = 14)) +
   ylab(expression(y^"*")) +
   xlab("tonnes") +
   scale_color_manual(
