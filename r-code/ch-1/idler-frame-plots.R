@@ -11,17 +11,18 @@ p_idler_lifetimes <- idler_lifetime_data %>%
   mutate(
     frame_number = as.numeric(frame_number),
     censored = ((censored_at_start + censored_at_end) > 0),
-    log_lifetime = log(as.numeric(lifetime))
+    lifetime = as.numeric(lifetime)
   ) %>%
-  ggplot(aes(x = frame_number, y = log_lifetime, col = censored, shape = censored)) +
+  ggplot(aes(x = frame_number, y = lifetime, col = censored, shape = censored)) +
   geom_point() +
   theme_minimal() +
   theme(
     legend.position = "none",
     plot.margin = margin(1, 1, 1, 1, "cm")
   ) +
+  scale_y_log10() +
   xlab("frame number") +
-  ylab("lifetime (log(days))")
+  ylab("lifetime (days)")
 
 # Plot the empirical CDF of the idler frames
 p_idler_eCDF <- idler_lifetime_data %>%

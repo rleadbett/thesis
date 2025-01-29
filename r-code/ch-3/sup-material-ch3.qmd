@@ -186,12 +186,12 @@ p_idler_lifetimes <- idler_data %>%
   mutate(
     frame_number = as.numeric(frame_number),
     censored = ((censored_at_start + censored_at_end) > 0),
-    log_lifetime = log(as.numeric(lifetime))
+    lifetime = as.numeric(lifetime)
   ) %>%
   ggplot(
     aes(
       x = frame_number,
-      y = log_lifetime,
+      y = lifetime,
       col = censored,
     shape = censored_at_start)
   ) +
@@ -201,8 +201,9 @@ p_idler_lifetimes <- idler_data %>%
     legend.position = "none",
     plot.margin = margin(1, 1, 1, 1, "cm")
   ) +
+  scale_y_log10() +
   xlab("frame number") +
-  ylab("lifetime (log(days))")
+  ylab("lifetime (days)")
 p_idler_lifetimes
 ```
 
@@ -333,8 +334,7 @@ dev.off()
 
 # Fitting the model in Stan
 
-In this section I fit the Stan model for imputing partialy observed lifetimes and missing truncation times from Chapter 2 to the idler-frame data. I define the model and then prepare the data for stan. Since the conveyor has been in operation for 21 years I set t_start to 15.
-Given that the t_start is fifteen years.
+In this section I fit the Stan model for imputing partialy observed lifetimes and missing truncation times from Chapter 2 to the idler-frame data. I define the model and then prepare the data for stan. Since the conveyor has been in operation for 21 years I set t_start to 15. Given that the t_start is fifteen years.
 
 ```{r}
 #| label: define-stan-model
@@ -933,8 +933,8 @@ dev.off()
 
 # Cost functions
 
-The posterior draws can also be used to propogate the uncertainty in the analysis through utility functions, such as cost functions, that inform long term management decisions. Here I show an example of choosing a suitable fixed time interval to preventatively replace the idlers to avoid large unplanned maintenance costs and downtime. The details of the cost function are provided in Sec. 3.4.3 of the main thesis chapter and an explanation of the code is provided in Alg. 1 in the section.
-Here I calculate the predictive distributions for fixed time replacement intervals every 1-44 shutdowns of the mine, these distributions are shown in @fig-cost-function.
+The posterior draws can also be used to propogate the uncertainty in the analysis through utility functions, such as cost functions, that inform long term management decisions. Here I show an example of choosing a suitable fixed time interval to preventatively replace the idlers to avoid large unplanned maintenance costs and downtime. The details of the cost function are provided in Sec. 3.4.3 of the main thesis chapter and an explanation of the code is provided in Alg. 1 in the section. Here I calculate the predictive distributions for fixed time replacement intervals every 1-44 shutdowns of the mine, these distributions are shown in @fig-cost-function.
+
 ```{r}
 #| label: sim-expected-K-rm
 rvar_pweibull <- rfun(pweibull)
