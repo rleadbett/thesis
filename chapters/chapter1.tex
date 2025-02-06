@@ -47,7 +47,7 @@ Statistical degradation models can be divided into general path models and stoch
 
 In this thesis, I show two examples of industry problems. Both problems relate to the components of an overland iron ore conveyor. One example is a preventative maintenance problem, and the other is a condition-based one. In Part~\ref{part:one} of the thesis, I look at the preventative replacement of idlers, whereas in Part~\ref{part:two} I focus on forecasting the degradation of a conveyor's belting to inform condition-based decisions. The two components are shown in Fig.~\ref{fig:belt_and_frame}.
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=1\textwidth]{./figures/ch-1/cvr_example_edit_annotation.jpg}
   \caption{An annotated image of an overland iron ore conveyor \citep{australianmining2020} showing the belting, idlers, and idler frames.}
@@ -58,7 +58,7 @@ In this thesis, I show two examples of industry problems. Both problems relate t
 
 Idlers (sometimes called rollers) support the weight of the belt and ore. They are relatively cheap components, and there can be hundreds or thousands of them on a single conveyor. Idlers are organised in frames, usually consisting of three idlers: one central idler directly under the belt and two wing idlers supporting the sides of the belt to create the cupped shape. The idlers and idler frames are shown in Fig.~\ref{fig:belt_and_frame}. Idlers are mechanical components and, therefore, wear out with operation. When an idler fails, it does not cause a direct impact on production; however, failed idlers can damage the belt, and damage to the belt results in major downtime. Therefore, if an idler fails in a way that threatens to damage the belt, it must be replaced as soon as possible, causing an unplanned maintenance event. Reliability engineers need to manage the replacement of the idlers to minimise the risk of them failing and damaging the belt while simultaneously minimising the maintenance cost. It is not yet financially viable to monitor the condition of all idlers on a single conveyor, let alone all conveyors on a mine site. Therefore, a preventative maintenance strategy is used.
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=1\textwidth]{./figures/ch-1/idler_data_desc.pdf}
   \caption{The idler frame lifetime dataset. (a) shows the lifetimes on a log scale for each frame plotted along the length of the conveyor and (b) the empirical cumulative distribution function (eCDF) of lifetimes. The blue points show the lifetimes that were only partially observed.}
@@ -73,7 +73,7 @@ The belt of an overland conveyor is much more costly to replace, both in terms o
 
 Engineers use these UT measurements to estimate the soft failure time of the belt and plan its replacement, i.e. forecast when the top coat will no longer be thick enough to protect the belt. However, forecasting the wear of the belt to inform replacement decisions requires principled statistical modelling to properly quantify the many different sources of uncertainty, which can be done in the Bayesian framework.
 
-\begin{figure}[h]
+\begin{figure}[t]
   \centering
   \includegraphics[width=1\textwidth]{./figures/ch-1/belt_wear_ut.pdf}
   \caption{The conveyor belt wear degradation dataset. The lines show the wearing surface across the width of a conveyor's belt. The colour scale indicates the cumulative tonnes (standardised) or iron ore throughput that the belt has moved (effectively the utilisation time).}
@@ -138,7 +138,7 @@ Posterior predictive checking \citep{BDA2020} is a visual method for evaluating 
 \begin{equation}
  p(\tilde{y}|y) = \int p(\tilde{y}|\theta)p(\theta|y)d\theta
 \end{equation}
-where $\theta$ is the set of parameters and latent variables in the model, so long the heirarchical model is specified so that new observations are independent of the observed data given the parameters $\theta$. Computationally, we obtain draws from $p(\tilde{y}|y)$ by simulating from the data model conditional on the posterior draws of the parameters,
+under the assumeption that $\tilde{y}$ and $y$ are independent given $\theta$ and $\theta$ is the set of parameters and latent variables in the model. Computationally, we obtain draws from $p(\tilde{y}|y)$ by simulating from the data model conditional on the posterior draws of the parameters,
 \begin{equation}
  \tilde{y}^s|y, \theta^s \sim p(\tilde{y}|\theta^s)
 \end{equation}

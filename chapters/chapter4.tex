@@ -66,7 +66,7 @@ Substituting $\mu$ and $\nu$ in the expression for the distribution of the incre
 \end{equation}
 I use this reparameterisation in the remainder of this thesis. \citet{kallen2005} also use the shape and coefficient of variation, pointing out that it can be easier for a plant engineer to interpret them. They do not, however, exploit their orthogonality, preferring to fix the value of $\nu$ in their analysis instead of estimating it.
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=0.95\textwidth]{./figures/ch-4/SimData.pdf}
   \caption{A simulated degradation trace (black) generated from a gamma process with parameters $\mu = 10$ and $\nu = 1.119$ and the simulated noisy observations (red) of the trace.}
@@ -79,7 +79,7 @@ The prior distribution in the parameter model summarises our beliefs about the p
 
 In the degradation modelling literature, a gamma distribution is often used as the prior distribution for the rate parameter $\xi$ of the gamma process \citep{lawless2004} and also for the shape parameter \citep{rodriguez-picon2018}. It is well known that a gamma prior on the rate parameter is conditionally conjugate \citep{pradhan2011}, and its use leads to analytically tractable results, as \cite{lawless2004} show. Nevertheless, little work has been done to assess whether other prior distributions might be more appropriate. The gamma distribution has a heavy tail, and its use can lead to MCMC chains that converge very slowly or that are highly autocorrelated; moreover, it can lead to physically implausible realisations of the gamma process, as I demonstrate below. Using the new parameterisation of the gamma process in terms of $\mu$ and $\nu$, conditional conjugacy no longer exists, and so there is even less motivation for a gamma prior.
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=0.9\textwidth]{./figures/ch-4/PPCs.pdf}
   \caption{One hundred realizations from prior predictive distributions of a noise-free gamma process with mean degradation rate of 1 unit per unit time and different prior distributions for parameters: (a) shape, rate $\sim \mbox{Ga}(1, 0.001)$, (b) shape, rate $\sim \mbox{Ga}(0.001, 0.001)$, and (c) parameterization mean/coefficient of variation---see text for details.}
@@ -104,7 +104,7 @@ where the superscript $(+)$ denotes a truncated distribution whose lower bound i
 
 To fully specify the model, I also need to specify a prior for the standard deviation of the measurement error, $\sigma$. Following the recommendations of \citet[Chap.~17]{gelman_workflow_2020}, I use a vague $\hbox{Uniform}(0, A)$ prior for $\sigma$, where $A$ is chosen to be large relative to the expected scale of $\sigma$. I use such a vague prior for demonstration purposes. However, in practice, an analyst should have a reasonable grasp of the scale of the measurement error and should be able to specify a weakly informative prior; I do exactly this in Sec.~\ref{sec:comp-sols}. Because our initial prior on $\sigma$ is so vague, I do not include the measurement error in the prior predictive checking in Fig.~\ref{fig:ppc}. The complete model is shown in Fig.~\ref{fig:ngp-full-model}.
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \begin{align*}
     y_i|z_i, \sigma & \sim \mbox{N}(z_i, \sigma)  && \mbox{data model} \\
@@ -130,7 +130,7 @@ The single path example that I present here shows that the noisy gamma process i
 
 I generated the degradation trace in Fig.~\ref{fig:sim-data}, which I refer to as the `large' dataset, by first sampling twenty time increments from a $\mbox{Unif}(0.8, 1.3)$ distribution. Next, twenty jumps in degradation are sampled from $\mbox{Ga}(\Delta t_i/\nu^2, 1/\mu\nu^2)$, using $\mu = 10$ and $\nu = 1.119$. I then calculate the cumulative sum of the jumps to obtain the underlying, noise-free degradation trace $z_i$, where $z_0 = 0$ at $t_0 = 0$. Finally, I add Gaussian noise with standard deviation $\sigma = 4$ to the underlying degradation path to get the noisy observations. The `large' dataset is described in Table~\ref{tab:big_df}. To create the second, smaller data set, ten of the twenty noisy observations are randomly selected. The selected degradation observations that make up the `small' data set are highlighted in red in Fig.~\ref{fig:sim-data-small} and displayed in Table~\ref{tab:small_df}.
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=0.95\textwidth]{./figures/ch-4/SimData_big_small.pdf}
   \caption{The simulated degradation trace from Fig.~\ref{fig:sim-data} with the subset of observations selected for the `small' dataset highlighted in red.}
@@ -147,7 +147,7 @@ To sample from the posteriors of the noisy gamma process model conditioned on th
 
 Despite increasing \textit{adapt delta} and \textit{maximum tree depth}, 80 divergent transitions occur while fitting the model to the `small' data set, whereas only 4 occur when sampling from the posterior conditioned on the larger data set. The divergences signify incomplete exploration of the target distribution, which I explore in the next section. In addition to evaluating sampling through divergent transitions, energy diagnostics can be used to quantify the heaviness of the tails of the posterior distribution and thus can identify inefficient sampling \citep{bayesplot}. The chain energy plots in Fig.~\ref{fig:nuts-energies} compare the marginal energy distribution, $\pi_E$, with the first differenced distribution, $\pi_{\Delta E}$, for each chain. These plots are similar to those in \citet{betancourt_2017} that compare the energy transition distribution (equivalent to $\pi_{\Delta E}$) with the marginal energy distribution (equivalent to $\pi_E$). Ideally, these two overlaid distributions should look the same. However, if the distribution of $\pi_{\Delta E}$ is much narrower than that of $\pi_E$, like it is in Fig~\ref{fig:nuts-energies}~(b), this indicates slow exploration of the target distribution. The energy diagnostics from fitting the model to the `small' data set in Fig.~\ref{fig:nuts-energies}~(b) show that exploration of the posterior is very inefficient, whereas when fitting the model to the `large' dataset, Fig.~\ref{fig:nuts-energies}~(a), sampling is much more efficient---although it is not perfect. The number of flagged divergent transitions and the energy plots are warning signs of an issue with the model, but they do not diagnose the issue. Section~\ref{sec:noisy-GP-results} looks more closely at the posterior draws and divergent transitions to properly identify the issues with the model.
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=0.95\textwidth]{./figures/ch-4/nuts_energy.pdf}
   \caption{The chain energy diagnostics for each chain when sampling from the posterior of the `large' data set (left) and `small' data set. Each plot compares the marginal energy distribution, $\pi_E$, with the first differenced distribution, $\pi_{\Delta E}$.}
@@ -161,7 +161,7 @@ My objective here is to investigate how the size of the dataset affects inferenc
 \paragraph*{Marginal densities}
 Figure~\ref{fig:marginal-post} shows the marginal distributions of the parameters $\mu$, $\nu$, and $\sigma$ conditioned on the `small' and `large' data sets as well as the true values of the parameters. For each marginal density, the median and 66\% and 95\% credible intervals are shown. It is clear that when the model is fitted to the smaller data set, it fails to recover the true parameter values, but when fitted to the larger dataset, it successfully recovers the true values. The marginal posterior densities of the parameters conditioned on all twenty degradation observations are centred around the true values of the parameters, whereas the marginal posteriors of $\sigma$ and $\nu$ conditioned on the subset of observations are centred around fifteen and zero, respectively. Furthermore, the marginal posterior of $\sigma$ conditioned on the subset of the data appears to have some multimodality. To understand the implication of these parameter estimates as well as the effect of how they covary with one another in the posterior I look at their joint effect on the outcome variables, which in this case is the predictive distribution of the filtered degradation path.
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=0.95\textwidth]{./figures/ch-4/marginal-posterior_a.pdf}
   \caption{The marginal posterior distributions of the parameters $\sigma$, $\mu$, and $\nu$ when the BHM for the noisy gamma process is fitted to the `large' and `small' simulated data in Fig.~\ref{fig:sim-data}. The points and intervals shown in each distribution represent, respectively, the median and $95\%$ and $66\%$ credible intervals. The values used to simulate the data are shown in the top row.}
@@ -171,7 +171,7 @@ Figure~\ref{fig:marginal-post} shows the marginal distributions of the parameter
 \paragraph*{Posterior predictive density}
 Figure~\ref{fig:ppd-z} shows the posterior predictive distribution of the underlying degradation trace, the $z_i$, for the two posteriors with the true degradation trace and noisy observations overlaid. The thick grey line in each plot is the median of the posterior predictive distribution; additional quantiles are shown in different shades of blue. Clearly, in Fig.~\ref{fig:ppd-z}~(a), the model has been able to recover the underlying degradation from the noisy degradation observations when fitted to all twenty observations: the median path follows the actual path almost exactly, with uncertainty bands that are narrow enough to be useful. However, as was the case with parameter values, the median path derived from the posterior distribution conditioned on the subset of the data has not recovered the true path (Fig.~\ref{fig:ppd-z}~(b)). In Fig.~\ref{fig:ppd-z}~(b), the median path is a nearly straight line through the data points. In addition, the uncertainty intervals are much wider.
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=0.95\textwidth]{./figures/ch-4/ppd_z_a.pdf}
   \caption{The posterior predictive distribution of the filtered degradation path compared to the true degradation path when (a) the model is fitted using the `large' and (b) `small' data set. If the distribution of $\pi_\text{E}$ is much wider that that of $\pi_{\Delta\text{E}}$, then sampling is inefficient.}
@@ -181,7 +181,7 @@ Figure~\ref{fig:ppd-z} shows the posterior predictive distribution of the underl
 \paragraph*{Pairs plots}
 Clearly, some issues are occurring in the posterior distribution of the model conditioned on the smaller subset of the data. These issues were indicated to by the divergent trajectories that occurred during sampling (Sec.~\ref{fig:pairs}). In the case of fitting the model to simulated data, where we can be sure that the model is properly specified and implemented, poorly behaved sampling is often a sign of a deeper issue with the model. As discussed in Sec.~\ref{sec:Bayesian-methods}, the divergent transitions can point to the problematic areas in the posterior. Figure~\ref{fig:pairs} shows a pairs plot of the parameters $\mu$, $\nu$, and $\sigma$ and the first degradation jump, $\Delta z_1$. The divergent trajectories are shown in red. In the bivariate scatter plots, there are strong funnel shapes between $\mu$ and $\log(\nu)$ and between $\log(\nu)$ and the first degradation jump. The divergent trajectories are concentrated at the entrance to these funnels, suggesting that they are the cause of the sampling issues. The funnel shapes occur because as $\nu$ shrinks towards zero $\mu$ and $\Delta z_1$ approach specific values $\mu = 10$ and $\Delta z_1 = 10 \times \Delta t_1$.
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=0.95\textwidth]{./figures/ch-4/Small-data-pairs.png}
   \caption{Pairs plot showing the MCMC draws from the posterior distribution of the parameters $\sigma$, $\mu$, $\log\nu$, and the filtered value $\Delta z_1$ when the BHM of the noisy gamma process is fitted to the `small' dataset. The red points indicate divergences, which congregate at the end of the funnel in the pairwise plots of $\log\nu$/$\Delta z_1$ and $\log\nu$/$\mu$.}
@@ -191,14 +191,14 @@ Clearly, some issues are occurring in the posterior distribution of the model co
 \paragraph*{Parallel coordinate plot}
 The divergent trajectories can be used to further explore how the degenerate behaviour manifests in the multidimensional posterior. Figure~\ref{fig:par-coord-single} shows a parallel coordinate plot of the posterior draws for all of the parameters in the model. The divergent trajectories are highlighted in red. The divergences draw a clear structure through parameter space. They all pass through the values $\mu = 10$, $\nu = 0$, and $\Delta z_i = 10 \times \Delta t_i$ and an inflated value of $\sigma$ that is much larger than the true value $\sigma = 4$. This structure equates to a linear degradation trace with large measurement uncertainty. To emphasise this point, in Fig.~\ref{fig:z-ppd-divergent}, I plot the posterior predictive distribution of the underlying degradation path conditioned on the `small' data set and overlay the divergent paths. From this, it is clear that the areas of tight curvature in the posterior occur around the models where the degradation trace is effectively linear.
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=0.8\columnwidth]{./figures/ch-4/parcoord.png}
   \caption{The parallel coordinate plot of the draws from the posterior conditioned on the `small' dataset with the divergent traces plotted in red.}
   \label{fig:par-coord-single}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=0.8\columnwidth]{./figures/ch-4/zppd-divergencies.pdf}
   \caption{The divergent traces overlaid (in red) on the posterior predictive distribution of the degradation path for the `small' data set.}
@@ -208,7 +208,7 @@ The divergent trajectories can be used to further explore how the degenerate beh
 \paragraph*{Comparison of the two posteriors}
 By comparison, this degenerate behaviour in the posterior is almost completely washed out by extra information in the `large' dataset. Figure~\ref{fig:z-jump-comparison} shows the joint distributions of the intermediate quantities $\Delta z_{15}$ ((a) and (c) in Fig.~\ref{fig:z-jump-comparison}) from the model conditioned on the `large' dataset and $\Delta z_{9}$ ((b) and (d) in Fig.~\ref{fig:z-jump-comparison}) for the `small' with $\log(\nu)$ and $\sigma$. In the two datasets, $\Delta z_{15}$ and $\Delta z_{9}$ are the same jump in degradation. In the joint posterior of $\Delta z_{9}$ and $\log(\nu)$ (Fig.~\ref{fig:z-jump-comparison}~(b)), there is the deep funnel shape around $\Delta z_{9} = 9$ and $\log(\nu) = -\infty$, and there is a second mode in the joint distribution of $\Delta z_{9}$ and $\sigma$ (Fig.~\ref{fig:z-jump-comparison}~(d)). However, in the joint distribution of $\Delta z_{15}$ and $\log(\nu)$ (Fig.~\ref{fig:z-jump-comparison}~(a)) there is very little mass around $\Delta z_{15} = 9$ and no second mode in the joint distribution of $\Delta z_{15}$ and $\sigma$ (Fig.~\ref{fig:z-jump-comparison}~(c)). This behaviour suggests the nonidentifiability exists when there are few observations.
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=0.95\columnwidth]{./figures/ch-4/joint-sig-jump.pdf}
   \caption{The contours of the posterior joint distribution of $\Delta z_{15}$ and $\log(\nu)$ (a) and $\Delta z_{15}$ and $\sigma$ (c) from the posterior when fit to all twenty observations and $\Delta z_{9}$ and $\log(\nu)$ (a) and $\Delta z_{9}$ and $\sigma$ (c) from the posterior when fit to only ten observations. The divergent transitions are overlaid in red and show the areas in the posterior that are dificult to sample from.}
@@ -227,7 +227,7 @@ In Sec.~\ref{sec:noisy-GP-results}, I have used a non-informative prior for the 
 \end{equation*}
 This prior is centred around the true value of $\sigma$ and places $95\%$ of the mass between $\sigma = 2$ and $\sigma = 6$. Sampling from the posterior of the noisy gamma process model with the stronger prior, conditioning on the `small' dataset, is much quicker, and no divergent transitions occur. Figure~\ref{fig:energies-strong-prior} shows the chain energies of the sampler when this stronger prior is used on $\sigma$. The marginal energy distribution and the first differenced distribution now match closely, showing that the chains have efficiently explored the posterior.
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=0.8\columnwidth]{./figures/ch-4/strong-prior-nuts-energy.pdf}
   \caption{The chain energy diagnostics when the model is fitted with a $\hbox{N}(4, 1)$ prior on $\sigma$.}
@@ -236,7 +236,7 @@ This prior is centred around the true value of $\sigma$ and places $95\%$ of the
 
 A pairs plot of the MCMC samples is shown in Fig.~\ref{fig:pairs-strong-prior}. In the plots, the geometry looks much smoother than in Fig.~\ref{fig:pairs}, and there are few remnants of the deep funnel-shaped degeneracies between $\log{\nu}$ and $\mu$ and $\Delta z_1$. In Fig.~\ref{fig:marginal-post-extra-info}, I compare the marginal distribution for $\sigma$, $\mu$, and $\nu$ from this posterior with the true values and the model fits of Sec.~\ref{sec:noisy-GP-results}. The marginal distributions of the model with the stronger prior are much smoother, and there is now no mass around zero in the posterior of $\nu$.
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=0.8\columnwidth]{./figures/ch-4/strong-prior-pairs.png}
   \caption{The pairs plot of the MCMC draws when using a $\hbox{N}(4, 1)$ prior on $\sigma$.}
@@ -256,7 +256,7 @@ Supplementary observations such as these could be obtained by taking multiple me
 \end{align*}
 Similar to when the more informative prior is used, the sampler is much more efficient, no divergences occur during sampling, and the geometry of the posterior distribution looks much smoother (not shown). The resulting marginal posterior distributions of $\sigma$, $\mu$, and $\nu$ from the model fitted with both the `small' dataset and the supplementary data are also compared in Fig.~\ref{fig:marginal-post-extra-info}. The marginal distributions of the parameters are very much the same as when a stronger prior is used, and the model successfully recovers the true parameter values.
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=0.8\columnwidth]{./figures/ch-4/marginal-post-extra-info.pdf}
   \caption{The marginal posterior distributions of the parameters $\sigma$, $\mu$, and $\nu$ when information is added into the analysis either through a stronger prior or supplementary data compared to the original two posteriors.}

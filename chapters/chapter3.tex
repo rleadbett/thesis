@@ -12,7 +12,7 @@ From the replacement records, the lifetimes of the idler frames can be calculate
 
 \input{./tables/ch-3/data_summary.tex}
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=1\textwidth]{./figures/ch-3/idler-frame-data.pdf}
   \caption{The idler frame lifetimes plotted along the length of the conveyor. On the horizontal axis is the frame number that the lifetimes belong to, and on the vertical axis is the lifetime in days on the log scale. The fully observed lifetimes are orange points, while the partially observed (censored) lifetimes are blue. The censored lifetimes that are left-truncated by the start of the observation period are shown as triangular points.}
@@ -34,7 +34,7 @@ Based on engineering knowledge and information provided by the manufacturer, I c
 \end{align*}
 I assign relatively large standard deviations since the expected lifetime of a frame of idlers is actually the expected smallest value of the three idlers in the frame. The resulting informative joint prior is shown in Fig.~\ref{fig:idler-frames-prior}. Plot~(a) shows 3000 joint draws of the shape $\beta$ and scale $\eta$ from the informative prior, and plot~(b) shows the resulting prior uncertainty in the CDF. The joint prior distribution in Fig.~\ref{fig:idler-frames-prior}~(a) has a long tail to $\beta = 0$ and $\eta = 0$, which is an unrealistic region of the parameter space. However, the lifetime data will be capable of informing this area of parameter space since it corresponds to early failures, which are not masked by censoring.
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=1\textwidth]{./figures/ch-3/idler-frame-prior.pdf}
   \caption{The joint informative prior from eliciting information at $t_1 = 1825$ and $t_2 = 2920$. (a) shows 3000 draws from the informative joint prior, and (b) shows the resulting uncertainty surrounding the CDF.}
@@ -47,7 +47,7 @@ To perform inference, I draw $6000$ samples from the posterior using $4$ chains,
 
 \input{./tables/ch-3/stan-summary.tex}
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=1\textwidth]{./figures/ch-3/idler-frame-post.pdf}
   \caption{The joint draws of the Weibull parameters $\beta$ and $\eta$ from the posterior distribution. (a) shows the plain draws, and (b) compares the draws with the contours of the informative joint prior.}
@@ -56,7 +56,7 @@ To perform inference, I draw $6000$ samples from the posterior using $4$ chains,
 
 Figure~\ref{fig:idler-frames-post}~(b) compares the draws from the posterior with the informative joint prior. The posterior draws sit at the lower left-hand corner of the joint prior but are still contained in the prior. The likelihood is informative enough that inference about the shape and scale are invariant to changes in the prior. Although I do not show such sensitivity checks here, the code provided on the GitHub repository can be easily modified to explore different values of the hyperparameters. Figure~\ref{fig:idler-frames-post-cdf} shows the updated belief of the CDF that results from the posterior. The uncertainty surrounding the CDF of the lifetime distribution in the figures is much narrower than the prior (Fig.~\ref{fig:idler-frames-prior}~(b)). The posterior mean of the CDF at $t_1$ and $t_2$ are $0.75$ and $0.90$, respectively. These updated estimates sit in the tails of the distributions I specified to construct the prior in Sec.~\ref{sec:idler-frame-joint-prior}. The discrepancy between the prior and the posterior indicates a slight prior-likelihood conflict; however, the likelihood is informative enough, in this case, to not be influenced by the prior, and the prior has mass around the fitted model.
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=0.7\textwidth]{./figures/ch-3/idler-frame-post-CDF.pdf}
   \caption{The resulting posterior uncertainty surrounding the Weibull CDF of the idler frame lifetime distribution.}
@@ -77,7 +77,7 @@ Using the posterior draws of the imputed lifetimes, I calculate draws of the pre
 \end{equation}
 where $s$ indicates a particular draw from the posterior. The remaining useful life distributions for each of the $143$ frames are shown in Fig.~\ref{fig:idler-FTs}. These distributions can not only be used to obtain point estimates and uncertainty bounds for the RUL, but also to order the frames in terms of the highest risk of failure in a particular number of days or, as I show in the next section, to determine the expected number of failures within the next short time interval.
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=1\textwidth]{./figures/ch-3/posterior-FTs.pdf}
   \caption{The remaining useful life distributions for the current lifetimes (the lifetimes right-censored by the end of observation). The left plot shows frames $1$ to $72$, and the right shows frames $73$ through $143$.}
@@ -90,14 +90,14 @@ With each draw from the posterior, I obtain a set of imputed values for the life
 
 Using the resulting distribution of $g_K(t|\text{RUL})$, predictive distributions for the number of failures at any time $t$ in the future can be obtained. Figure~\ref{fig:E-Nfailrues-densities} shows the predictive densities for the number of failures within the next one (Fig.~\ref{fig:E-Nfailrues-densities}~(a)), three (Fig.~\ref{fig:E-Nfailrues-densities}~(b)), and six (Fig.~\ref{fig:E-Nfailrues-densities}~(c)) months. From the draws that make up the distributions shown in the figure, it is straightforward to obtain the posterior estimates and uncertainty intervals. Such distributions are useful for managing risk in the short term and planning, for example, managing the inventory of replacement idlers kept on site.
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=1\textwidth]{./figures/ch-3/E-n-failures-draws.pdf}
   \caption{Ten draws of the cumulative failures of idler frames following the end of the observation period. The horizontal axis is the days since the end of the observation period, and the vertical axis is the cumulative number of failures.}
   \label{fig:E-Nfailrues-draws}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=0.7\textwidth]{./figures/ch-3/E-n-failures-densities.pdf}
   \caption{The predictive distributions for the number of failures of idler frames in the one (a), three (b), and six (c) month period after the end of the observation period.}
@@ -216,7 +216,7 @@ In each run, at the end of the forty-four shutdowns, I calculate the cumulative 
 
 Figure~\ref{fig:preventative-repl-decision} shows the predictive distribution of $C_p$ for the different choices of fixed time replacement intervals going up to five years along with the median and $50\%$ and $90\%$ intervals of the distributions. Importantly, the distributions provide the range from the `best case scenario' to the `worst case scenario' of the average cost for a chosen fixed time replacement interval based on the posterior uncertainty. In the figure, when the fixed time interval is greater than $150$ weeks, bulk replacements stop impacting $C_p$, which makes sense considering that the posterior expectation of an idler frame lifetime is around $3.5$ years ($185$ weeks). The biggest potential cost savings are for the fixed time replacement intervals shorter than $60$ weeks.
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=0.8\textwidth]{./figures/ch-3/cost-funciton.pdf}
   \caption{The cost per unit time of preventative maintenance policies for idlers. On the horizontal axis is the cost per unit time, and on the vertical is the fixed time replacement interval. The point and intervals show the median and $0.5$ and $0.9$ intervals. The grey densities show the full distributions.}
