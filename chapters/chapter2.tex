@@ -76,9 +76,9 @@ and hazard function
 \end{equation}
 The shape parameter $\beta$ dictates whether the hazard increases $(\beta > 1)$, decreases $(\beta < 1)$, or stays constant $(\beta = 1)$. The effect of the shape parameter on the hazard function is demonstrated in Fig.~\ref{fig:hazard_function_demo}. Practically speaking, if the hazard function increases with exposure, this corresponds to a wear-out failure mechanism, whereas if it decreases, it corresponds to infant mortality. This distinction is important from a maintenance perspective because if the component does not wear out, a preventative replacement policy is not suitable \citep{jardine2013}. In other words, we want to be sure that $\beta > 1$ before implementing a preventative policy.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
     \centering
-    \includegraphics[width=1\textwidth]{./figures/ch-2/hazard_func_demo.pdf}
+    \includegraphics[width=0.95\textwidth]{./figures/ch-2/hazard_func_demo.pdf}
     \caption{The Weibull hazard function when $\beta = 0.9$, $\beta = 1$, or $\beta = 1.1$ and $\eta = 1$.}
     \label{fig:hazard_function_demo}
 \end{figure}
@@ -89,7 +89,7 @@ It is very common for lifetime data to be censored \citep{tian2024}. Censoring o
 
 \begin{figure}
     \centering
-    \includegraphics[width=1\textwidth]{./figures/ch-2/censoring_example.pdf}
+    \includegraphics[width=0.95\textwidth]{./figures/ch-2/censoring_example.pdf}
     \caption{An example of the different types of censoring. Three units are installed at $t = 0$, indicated by a black dot, and their failure times are shown as black crosses. The units are inspected at times $t_1 = 0.5$ and $t_2 = 1$. The portion of the lifetimes that is observed is shown as a solid black line, and the unobserved (incomplete) portion is shown as a dashed grey line.}
     \label{fig:cense_examp}
 \end{figure}
@@ -122,7 +122,7 @@ Truncation arises when a sample comes from an incomplete population, in other wo
 
 \begin{figure}
     \centering
-    \includegraphics[width=1\textwidth]{./figures/ch-2/left_truncation_example.pdf}
+    \includegraphics[width=0.95\textwidth]{./figures/ch-2/left_truncation_example.pdf}
     \caption{An example of the difference between (a) left-censoring in a dataset and (b) left-truncation. In (a), the lifetimes that fail before $t = 0.5$ are left-censored since their existence is known but not their exact failure time. In (b), any lifetimes that failed before the red line at $t = 0.5$ are absent from the dataset completely and therefore the likelihood of the observed data needs to be adjusted to reflect this.}
     \label{fig:left_trunc_example}
 \end{figure}
@@ -140,7 +140,7 @@ Observational reliability datasets commonly contain both left-truncated and righ
 
 \begin{figure}
     \centering
-    \includegraphics[width=1\textwidth]{./figures/ch-2/left_truncation_w_right_censoring_example.pdf}
+    \includegraphics[width=0.95\textwidth]{./figures/ch-2/left_truncation_w_right_censoring_example.pdf}
     \caption{An example of how left-truncation and right-censoring arise from the repeated replacement of three units. Three units are shown on the vertical axis, and time on the horizontal. The failure times of the units are shown as black crosses, and every time a unit fails, it is instantaneously replaced. If we start observing these failures at $t_{start}$ and stop at $t_{end}$, then any lifetime that began before $t_{start}$ and failed after is left-truncated, and any lifetimes that began before $t_{end}$ and failed after are right-censored.}
     \label{fig:left_trunc_and_right_cens_example}
 \end{figure}
@@ -235,9 +235,9 @@ where $g(\hat{F}) = \log(-\log(1 - \hat{F}))$ and the superscript and subscripts
 
 Depending on the choice of $t_1$ and $t_2$, the analyst encodes different information into the joint prior, which is reflected in how the two parameters covary with one another. For demonstration, plots (a), (b), and (c) in Fig.~\ref{fig:kaminskiy-join-priors} show the draws from three different joint priors constructed using this elicitation method. To construct the prior, I specify some `true' values of the parameters $(\beta = 1.1; \eta = 1)$ and then specify the priors to reflect the true value of the CDF at different quantiles $t_i = q_r$, where $r$ specifies the probability, so that all of the priors contain the `true' parameter values. Figure~\ref{fig:kaminskiy-join-priors}~(a) shows a prior where information is encoded at early exposure times ($t_1 = q_{0.05}$ and $t_2 = q_{0.20}$), (b) shows one where information is encoded around the median age ($t_1 = q_{0.40}$ and $t_2 = q_{0.60}$), and (c) shows one where the elicitation times are in the upper tail of the lifetime distribution($t_1 = q_{0.90}$ and $t_2 = q_{0.99}$). Plots (d), (e), and (f) in Fig.~\ref{fig:kaminskiy-join-priors} show the corresponding uncertainty around the Weibull CDF that results from the different priors in (a), (b), and (c), respectively. We see that the joint prior allows us to express our prior belief in one area of the PDF while allowing the prior to be vague in others. This characteristic has useful application in the context of heavy censoring since censoring masks longer lifetimes and hence increases uncertainty in the upper tail of the distribution but still contains useful information in the lower tail.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
     \centering
-    \includegraphics[width=1\textwidth]{./figures/ch-2/joint-priors.pdf}
+    \includegraphics[width=0.95\textwidth]{./figures/ch-2/joint-priors.pdf}
     \caption{Three different informative joint priors constructed using the adaptation of the method of \citet{kaminskiy2005}. The joint draws of the parameters are shown in the top row---(a), (b), and (c)---and the corresponding uncertainty in the CDF is shown in the bottom---(d), (e), and (f). (a) and (d) show a prior where information is elicited around $t_1 = 0.07$ and $t_2 = 0.26$ (the 0.05 and 0.20 quantiles of the true distribution $\hbox{Weibull}(1.1, 1)$), (b) and (e) show a prior where information is elicited around $t_1 = 0.46$ and $t_2 = 1.04$ (the 0.35 and 0.65 quantiles), and (c) and (f) show a prior elicited at $t_1 = 1.54$ and $t_2 = 2.71$ (the 0.80 and 0.95 quantiles).}
     \label{fig:kaminskiy-join-priors}
 \end{figure}
@@ -293,9 +293,9 @@ To simulate data that emulates the idler-frame lifetime data set, I
 \end{enumerate}
 Table~\ref{tab:sim-cmms-data} presents a dataset simulated using the method in steps 1--5 above. The simulated observations are also plotted in Fig.~\ref{fig:sim_censored_units}, where the start and end of observation are shown as red vertical lines, and the observed portions of the simulated data are shown in black and the unobserved `incomplete' part is shown in grey. Note that if we were to throw away the left-truncated samples, then we would be discarding more than 50\% of the sample.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
     \centering
-    \includegraphics[width=1\textwidth]{./figures/ch-2/sim-data.pdf}
+    \includegraphics[width=0.95\textwidth]{./figures/ch-2/sim-data.pdf}
     \caption{The set of simulated lifetimes data. The exposure is shown on the horizontal axis, and the beginning and end of the observation period are shown as red vertical lines. The observed portions of the lifetimes are shown as solid black lines, while the unobserved portions are shown as dashed grey lines.}
     \label{fig:sim_censored_units}
 \end{figure}
@@ -306,9 +306,9 @@ Table~\ref{tab:sim-cmms-data} presents a dataset simulated using the method in s
 
 I now fit the imputation model to the simulated data in Table~\ref{tab:sim-cmms-data} and compare the resulting posterior with the case where the installation times of the left-truncated samples are known and also with the alternative treatment of the unknown exposure histories, which is to discard all of the left-truncated samples. I fit these models with the weakly informative, independent Gaussian priors for $\beta$ and $\eta$ described in the right column of Table~\ref{tab:model-prior-comb} and previously mentioned in Sec.~\ref{sec:weibull-joint-prior}. The three Stan models are available on the GitHub repository. To sample from the posteriors, I use 4 chains, each 1000 iterations long with a burn-in of 500. Figure~\ref{fig:joint-post-weibull} shows the three posteriors. Plots (a), (b), and (c) in the figure show the joint draws of the two Weibull parameters for the fully observed, discarded, and imputed treatment of the left-truncated samples, respectively. The corresponding CDFs with uncertainty are shown in (d), (e), and (f). The true values of the parameters and the true CDF are plotted in red in the plots. The resulting inference from imputing the installation times of the left-truncated samples is almost the same as if we had fully observed the left-truncated samples. Discarding the left-truncated samples results in a much more diffuse posterior and, consequently, more uncertainty around the CDF, particularly for larger exposure times. Next, I refit the models using the version of the informative joint prior shown in Fig.~\ref{fig:kaminskiy-join-priors}~(c) and~(f), which informs the upper tail of the distribution.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
     \centering
-    \includegraphics[width=1\textwidth]{./figures/ch-2/joint-posts.pdf}
+    \includegraphics[width=0.95\textwidth]{./figures/ch-2/joint-posts.pdf}
     \caption{The draws from the joint posteriors conditioned on the simulated dataset when the left-truncated lifetimes are (a) fully observed, (b) discarded, or (c) imputed and a weakly informative prior is used. (d), (e), and (f) show the corresponding uncertainty around the CDF (in the form of the 0.5 and 0.8 uncertain intervals) that result from (a), (b), and (c), respectively. The true parameter values and CDF are shown in red.}
     \label{fig:joint-post-weibull}
 \end{figure}
@@ -322,18 +322,18 @@ The prior in Fig.~\ref{fig:kaminskiy-join-priors}~(c) and~(f), which elicits inf
 \end{align*}
 Using the informative prior, I refit the three models from Sec.~\ref{subsec:weibull-model-fits}. Once again, I use 4 chains, each 1000 iterations long, with a burn-in of 500 to sample from the three posteriors. The resulting draws are plotted in (a), (b), and (c) of Fig.~\ref{fig:joint-post-weibull-inf} for the fully observed, discarded, and imputed treatment of the left-truncated samples, respectively. Comparing the posterior of the imputation method (plots~(c)) with the case where the left-truncated samples are fully observed (plots~(a)), the resulting inference is again very similar. However, using the informative prior, the posterior of the case where I have discarded the left-truncated samples, plot~(b), is much closer to the other two posteriors than when a vague prior is used. The corresponding posterior CDFs are shown in (d), (e), and (f) of Fig.~\ref{fig:joint-post-weibull-inf}. The uncertainty in all cases has been reduced, but most drastically in the upper right part of the CDF. In Fig.~\ref{fig:joint-post-weibull-inf}~(e), the effect of combining a likelihood that informs the CDF at lower exposure times with a prior that informs the CDF at higher exposure times has resulted in a more precise estimate of the CDF. 
 
-\begin{figure}[t]
+\begin{figure}[tbp]
     \centering
-    \includegraphics[width=1\textwidth]{./figures/ch-2/joint-posts-inf.pdf}
+    \includegraphics[width=0.95\textwidth]{./figures/ch-2/joint-posts-inf.pdf}
     \caption{The joint posteriors conditioned on the simulated dataset when the left-truncated lifetimes are (a) fully observed, (b) discarded, or (c) imputed and an informative joint prior is used that encodes information into the upper tail of the lifetime distribution. (d), (e), and (f) show the corresponding uncertainty around the CDF (in the form of the 0.5 and 0.8 uncertain intervals) that result from (a), (b), and (c), respectively. The true parameter values and CDF are shown in red.}
     \label{fig:joint-post-weibull-inf}
 \end{figure}
 
 In the implementation of the joint prior that I have used, the prior is properly updated through the MCMC routine, i.e, the observed data have updated our belief about the value of the CDF at both $t_1$ \emph{and} $t_2$. Figure~\ref{fig:weibull-prior-post-comp} compares the distribution of the posterior draws of $\hat{F}(t_i)$ (grey densities) with the prior (red curves). In the three plots in Fig.~\ref{fig:weibull-prior-post-comp}, the posterior distributions are clearly narrower than the prior, more so at $t_1$. Fitting the Weibull models to the data in Table~\ref{tab:sim-cmms-data} has shown that, for small sample sizes, in cases where we do not know the exposure history of the left-truncated samples the imputation method provides almost equivalent inference to the case where we had fully observed the left-truncated samples. Furthermore, discarding the left-truncated observations results in a large loss of information; however, this loss can be compensated for if there is prior information about longer lifetimes and this information is properly encoded into a joint prior. Here, I have shown one case for a small sample. Next, I devise a small simulation experiment to more rigorously evaluate the imputation method for the left-truncated samples with unknown exposure history.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{./figures/ch-2/prior-post-comp.pdf}
+    \includegraphics[width=0.95\textwidth]{./figures/ch-2/prior-post-comp.pdf}
     \caption{Comparison of the marginal prior and posterior for $F_{t_1}$ (top) and $F_{t_2}$ (bottom) when left-truncated lifetimes are (a) fully observed, (b) discarded, or (c) imputed to show how both the elicited distributions have been updated in the posterior.}
     \label{fig:weibull-prior-post-comp}
 \end{figure}
@@ -341,6 +341,8 @@ In the implementation of the joint prior that I have used, the prior is properly
 \section{Simulation experiments} \label{sec:weibull-sim-study}
 
 To explore the behaviour of the imputation method for left-truncated lifetimes with unknown exposure history, I repeat the simulation and model fitting process of Sec.~\ref{sec:weibull-sim-example} for several combinations of the simulation parameters: number of units, start of observation time, and length of observation time. Again I compare the imputation method (under both a vague and informative prior) with the alternative method of discarding the left-truncated observations as well as with the case where the left-truncated samples are fully observed (as ground truth). All of these comparisons are carried out using the same vague and informative priors used in Secs.~\ref{subsec:weibull-model-fits} and~\ref{subsec:weibull-model-fits-informative}. Section~\ref{subsec:factor-lvls} defines the factor levels of each simulation parameter that make up the factor combinations in the simulation experiments; Sec.~\ref{subsec:accuracy-measures} describes the measures of model accuracy that I use to compare the three models; and Sec.~\ref{subsec:sim-experiment-results} presents the results of the simulation experiments.
+
+Throughout this section, I use the term \textit{bias}. Typically, the term is reserved for the expected difference between the true parameter value and a frequentist estimator \citep[Sec.~6.3.1]{wasserman2004} and is not used in a Bayesian context. Here, since I am using simulated data where the true value of the parameters is known, I use it in a Bayesian context. I use the term \textit{bias} to refer to the average difference between the true values of the parameters used to simulate the data and the mean of the posterior as the posterior converges to a point mass as sample size increases.
 
 \subsection{Factor levels} \label{subsec:factor-lvls}
 
@@ -366,7 +368,7 @@ In total, there are 27 factor combinations of the simulation parameters. Increas
 
 \subsection{Accuracy measures} \label{subsec:accuracy-measures}
 
-To compare how well the Bayesian models recover the true data generating mechanism, I calculate the Bayesian $p$-values of the true parameter values, $\beta = 1.1$ and $\eta = 1$, from the fitted posteriors and the elppd of a dataset of 100 fully observed lifetimes generated from the true Weibull distribution. The Bayesian $p$-value for $\beta$ is easily calculated using the posterior draws as \citep[Sec.~6.4]{BDA2020}
+To compare how well the Bayesian models recover the true data generating mechanism, I calculate the Bayesian $p$-values of the true parameter values, $\beta = 1.1$ and $\eta = 1$, from the fitted posteriors and the elppd of a dataset of 100 fully observed lifetimes generated from the true Weibull distribution. \citet[p.~146]{BDA2020} describes how Bayesian $p$-value can be constructed using some test statistic, the observed data, and the posterior predictive distribution to evaluate a Bayesian model. In the case of simulated data, where the true model and parameters are known, rather than using some test statistic we can use the posterior draws of the parameter directly, rather than the posterior predictive distribution of the data. The Bayesian $p$-value for $\beta$ is easily calculated using the posterior draws as
 \begin{equation*}
     \text{Pr}\left[\beta \ge \beta_{true}|y\right] = p_{\beta} = \frac{\sum^{S}_{s = 1}{\beta_{true} \le \beta_s}}{S},
 \end{equation*}
@@ -384,9 +386,9 @@ Figures~\ref{fig:sim-study-pvalue} and~\ref{fig:sim-study-elppd} show the result
 
 Figure~\ref{fig:sim-study-pvalue} summarises the $p$-values of the 100 simulation runs under each factor combination by their means. The different treatments of the left-truncated lifetimes---fully observed, imputed, or discarded---are shown as different colours and the type of prior---informative or vague---is shown as different point types. For example, fully observed left-truncated lifetimes and a strongly informative prior is shown as a blue dot. If the model's posterior is unbiased, then the point should sit in the centre of each plot, i.e., an average $p$-value of $0.5$ for both parameters. If the average of the p-vales is at one or zero, then there is typically very little posterior mass around the true parameter value, and hence, we can conclude that the inference is biased. When $N = 10$, the bias in parameter estimates is negligible compared to the uncertainty in the posterior, so all of the different treatment-prior combinations perform similarly. However, as the number of units increases and the sample size gets larger, the posteriors become more precise, and the bias becomes more obvious.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{./figures/ch-2/sim-results-pvalues.pdf}
+    \includegraphics[width=0.85\textwidth]{./figures/ch-2/sim-results-pvalues.pdf}
     \caption{The simulation results are summarised by the mean of the 100 repetitions for each factor combination. The columns show the three levels of $t_{end} - t_{start}$, and the rows show the levels of $t_{start}$ and $N$. The Bayesian $p$-values of $\beta$ and $\eta$ are reported on the horizontal and vertical axis, respectively, and the colours of the points show the treatment of the left-truncated samples, and the shape shows the prior. The size of the points correspond the the average $\text{elppd}_{100}$ calculated according to eq.~\eqref{eq:elppd-100}}.
     \label{fig:sim-study-pvalue}
 \end{figure}
@@ -397,9 +399,9 @@ In Fig.~\ref{fig:sim-study-pvalue}, when $t_{end} - t_{start} > 1$ (the two righ
 
 Despite both sources of bias, the elppd of 100 new observations generated from the true Weibull model is very close for all treatment-prior combinations. In Fig.~\ref{fig:sim-study-pvalue}, the size of the points indicates the average values of $\text{elppd}_{100}$ calculated according to eq.~\eqref{ep:computed_elppd}. From this we can see that the only noticeable difference between the three treatments of the left-truncated data is that when there is a short period of observation ($t_{end} - t_{start} = 0.95$) and there are few units ($N = 10$) discarding the left-truncated observations has a large impact on the elppd if the analysis is not supplemented by an informative joint prior. This has already been shown in Fig.~\ref{fig:joint-post-weibull}~(b) and~(e). Figure~\ref{fig:sim-study-elppd} compares the average $\text{elppd}_{100}$ scores under the different factor combinations more closely. In the figure, columns show the different levels of $t_{end} - t_{start}$ and rows show the different levels of $t_{start}$; the levels of $N$ are plotted on the horizontal axis, and the treatment of the left-truncated samples and the type of prior are shown by the colour and shape of the point respectively. The plotted elppd values show that when there are few units or a short period of observation, the method of imputing the partially observed values of the left-truncated samples results in an $\text{elppd}_{100}$ score that is closer to the fully observed treatment than if we were to discard the partially observed left-truncated lifetimes, except when $t_{start} = 1$ mean lifetime. The fact that it is hard to distinguish between the approaches based on the $\text{elppd}_{100}$ score, despite the bias, shows that the scale of the bias is typically inconsequential.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{./figures/ch-2/sim-results-elppd.pdf}
+    \includegraphics[width=0.95\textwidth]{./figures/ch-2/sim-results-elppd.pdf}
     \caption{The $\text{elppd}_{100}$ simulation results summarised by the mean of the 100 repetitions for each factor combination. The columns show the different levels of $t_{end} - t_{start}$ and rows the different levels of $t_{start}$. The number of units $N$ is shown on the horizontal axis, and the average $\text{elppd}_{100}$ score is shown on the vertical axis. The colours of the points show the treatment of the left-truncated samples and the shape shows the prior.}
     \label{fig:sim-study-elppd}
 \end{figure}

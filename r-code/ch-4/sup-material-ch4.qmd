@@ -57,6 +57,7 @@ rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 
 theme_set(theme_minimal())
+theme_update(axis.title = element_text(size = 16))
 
 data_path <- file.path(
   "..",

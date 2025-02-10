@@ -45,6 +45,8 @@ library(kableExtra)
 library(lubridate)
 library(tidyverse)
 
+theme_update(axis.title = element_text(size = 16))
+
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 

@@ -4,18 +4,18 @@ In Chaps.~\ref{chap:chapter4} and~\ref{chap:chapter5}, I extended the gamma stoc
 
 Conveyors are critical to the productivity of iron ore mines and other mining operations. As such, their unplanned failure can cause a significant loss of production and, subsequently, a substantial loss of profits. On the conveyor, one of the main components that can fail is the belt, whose major failure mode is wear \citep{bortnowski_2022}. To manage the risk of failure due to wear, reliability engineers monitor the thickness of the belt's protective topcoat using ultrasonic thickness (UT) measurements. An example of this data is shown in Fig.~\ref{fig:ut-example}. Engineers then use this condition monitoring data to estimate the failure time of the belt and plan when to replace it. However, at each observation time, the UT data only provide a description of the wear profile across the belt's width at one random location along its length. Furthermore, the observation times are sparse. These factors result in considerable uncertainty in the underlying degradation of the belt. Therefore, using the UT measurement data to estimate the failure time of the belt and inform maintenance decisions requires statistical modelling and the principled quantification of uncertainty. In this chapter, I show how the Bayesian hierarchical approach can be used to combine functional data analysis (FDA) of the wear profiles in Fig.~\ref{fig:ut-example} with different degradation models in order to forecast the belt's wear and predict the remaining useful life. In particular I compare a gamma stochastic process and a linear general path model for the underlying degradation process of the belt.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
   \centering
-  \includegraphics[width=\textwidth]{figures/ch-6/main_belt.pdf}
+  \includegraphics[width=0.95\textwidth]{figures/ch-6/main_belt.pdf}
   \caption{The growing wear profile of a conveyor's belt over time. Ultrasonic thickness measurements are taken at $N = 20$ measurement locations across the width of the belt at repeated times. The vertical axis is wear in mm, calculated by subtracting the measured thickness from the original thickness of the belt. The horizontal dashed line at $25$mm of wear indicates the soft failure threshold: the maximum allowable wear before the belt needs to be replaced. The colour gradient indicates the time the belt has been in operation. Measurements taken at the beginning of the belt's life are shown in light yellow, and the most recent set of measurements are plotted in dark red}
   \label{fig:ut-example}
 \end{figure}
 
 Although there are papers that address the condition monitoring of conveyor belts, for example, identifying puncture damage or modelling cord damage \citep{bortnowski_2022}, very few academic works focus on abrasive wear. This is surprising considering that wear is a major failure mode of the belt \citep{bortnowski_2022}, especially for shorter, highly-utilised belts like stackers and reclaimers, which are also highly critical and difficult to maintain. \citet{webb_2020} demonstrate one typical method that an engineer would use to estimate when the failure of the belt will occur due to wear. For each measurement location along the belt's width, the engineer fits a linear relationship to the UT measurement at that location using cumulative tonnes as the predictor variable. Next, at the location with the most aggressive wear rate—--the steepest gradient—--the engineer extrapolates the line up to some predetermined soft failure threshold, indicated by a dashed line at $25mm$ of wear in Fig.~\ref{fig:ut-example}. The time at which the extrapolated line intersects the soft failure threshold is the predicted failure time. An alternative but similar approach is to take the maximum wear measurement from each profile and fit a linear relationship to these maximum wear measurements. This second approach is used by some conveyor condition monitoring software. Figure~\ref{fig:linear-trend-demo} demonstrates these two methods using the data in Fig.~\ref{fig:ut-example}. Note that the cumulative tonnes values (the horizontal axis in Fig~\ref{fig:linear-trend-demo}~(b) and~(c)) have been standardised to anonymise the industry dataset. Unfortunately, these methods neglect the many sources of uncertainty in the data-generating and observation processes. Firstly, trend fitting of the raw UT measurements is sensitive to noise in the data, especially early in the belt's life when there are few observations. Secondly, there is no formal structure for managing the different sources of uncertainty, for example, uncertainty in the UT measurements due to measurement error; uncertainty in the wear profile because of spatial variation along the length of the belt; uncertainty in the wear rate due to variations in operating conditions; uncertainty in the parameters of the degradation process. Finally, the prediction is based solely on the forecast from only a few measurements on the particular belt. Using these methods, engineers cannot quickly assess the future wear of the \emph{entire} belt surface, nor can they interpret risk using the prediction, both of which limits their ability to justify and defend their maintenance decisions.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
   \centering
-  \includegraphics[width=0.7\textwidth]{figures/ch-6/current_approach.pdf}
+  \includegraphics[width=0.95\textwidth]{figures/ch-6/current_approach.pdf}
   \caption{A demonstration of some typical approaches used to trend belt wear. (a) and (b) demonstrate the method of \citet{webb_2020}, where the measurements at the fastest wearing location which are circled in (a) are trended into the future in (b). (c) and (d) demonstrate an alternative but similar approach used by some reliability software, where the maximum wear measurement in each profile is trended instead.}
   \label{fig:linear-trend-demo}
 \end{figure}
@@ -46,9 +46,9 @@ B-splines are piecewise continuous functions \citep[p.~33-38]{ramsay_2009} that 
 \end{equation}
 where $y_{i, m}$ is the weight of the $m^{th}$ basis function, $b_m(.)$, for the $i^{th}$ observation. The number of basis functions and their shapes and locations are defined by a set of knots and the order of the basis functions. To describe the wear profiles, I use eight evenly spaced knots and third-order basis functions. However, I also drop the outer two sets of basis functions to constrain how flexible the spline can be towards the edges of the belt and to ensure that the wear profile is fixed at zero at the boundaries. These choices were made by measuring the goodness of fit for many different conveyor wear profiles from the industry partner's condition monitoring system and balancing simplicity and flexibility. Figure~\ref{fig:basis-functions}~(c) shows the set of un-weighted basis functions on which I condition the model. The spline is fitted to the UT data by estimating the weights of each basis function. For example, Fig.~\ref{fig:basis-functions}~(a) shows the fitted spline for the fifth observation and Fig.~\ref{fig:basis-functions}~(b) shows the weighted set of basis functions that make up the fitted wear profile. Fitting a B-spline to each set of UT measurements using the set of basis functions in Fig.~\ref{fig:basis-functions}~(c) yields the set of spline coefficients $\{y_{i, m}\}^M_{m = 1}$ that fully describes the wear profile at time $t_i$. The next level of the BHM, the process model, models how these spline coefficients evolve through time.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
   \centering
-  \includegraphics[width=0.9\textwidth]{figures/ch-6/b-spline-fitting.pdf}
+  \includegraphics[width=0.95\textwidth]{figures/ch-6/b-spline-fitting.pdf}
   \caption{(a) shows a fitted wear profile for the fifth observation; (b) shows the weighted set of basis functions that make up the profile in (a); and (c) shows the unweighted set of basis functions}
   \label{fig:basis-functions}
 \end{figure}
@@ -98,7 +98,7 @@ defined in the same way as the unit-to-unit variability model in Sec.~\ref{subse
 
 The full gamma process belt wear model is laid out in Fig.~\ref{fig:bhm-gp-belt-wear} and the general path belt wear model is Fig.~\ref{fig:bhm-lm-belt-wear} for the readers reference. Notice that the only difference in the two models is lines (d) and (h)--(j).
 
-\begin{figure}[t]
+\begin{figure}[tbp]
   \begin{subequations}
     \label{eq:full-gp-bw-model}
     \begin{align}
@@ -121,7 +121,7 @@ The full gamma process belt wear model is laid out in Fig.~\ref{fig:bhm-gp-belt-
   \label{fig:bhm-gp-belt-wear}
 \end{figure}
   
-\begin{figure}[t]
+\begin{figure}[tbp]
   \begin{subequations}
     \label{eq:full-lm-bw-model}
     \begin{align}
@@ -144,29 +144,29 @@ The full gamma process belt wear model is laid out in Fig.~\ref{fig:bhm-gp-belt-
 
 \paragraph*{Choosing informative hyperparameters for $\mu$} In addition to the data shown in Fig.~\ref{fig:ut-example}, historical data are also available form the same conveyor. Two of these are shown in Fig.~\ref{fig:previouse-belts}. According to the industry partner who supplied the data, the future wear behaviour of the belt is expected to be different from the historic wear datasets because of variations in ore composition, belt manufacturer, and operational strategies. However, the historic wear behaviour of the belt is nevertheless indicative of future behaviour. Although the historical data cannot be directly used in the analysis, in the Bayesian framework, it can be used to formulate an informative prior to supplement the analysis.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
   \centering
-  \includegraphics[width=\textwidth]{figures/ch-6/historic_belts.pdf}
+  \includegraphics[width=0.95\textwidth]{figures/ch-6/historic_belts.pdf}
   \caption{Two historic belt wear data sets from the same conveyor}
   \label{fig:previouse-belts}
 \end{figure}
 
 I encode the prior information in the model through the parameter $\mu$. To do so, I fit B-splines to each of the historic wear profiles using the same set of basis functions in Fig.~\ref{fig:basis-functions}~(c) to obtain spline coefficients, then estimate the average wear of each coefficient. Figure~\ref{fig:inf-prior-mu} shows the linear regressions for each spline coefficient. I use the same transformation of cumulative tonnes that I do for the main dataset. Based on the estimates, I set $\hat{a}_m$ in the prior for $\mu_m$ to be the estimated slope of the coefficient based on the historical data and $\hat{b}_m$ as five times the standard error of the estimate.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
   \centering
-  \includegraphics[width=\textwidth]{figures/ch-6/informative-prior-mu.pdf}
+  \includegraphics[width=0.95\textwidth]{figures/ch-6/informative-prior-mu.pdf}
   \caption{The estimated average wear rate for each spline coefficients calculated from the datasets in Fig.~\ref{fig:previouse-belts}. The colour of each fit corresponds to the basis functions in Fig.~\ref{fig:basis-functions}~(c). The horizontal scale of each plots is in tonnes and the vertical scale is the value of the spline coefficient.}
   \label{fig:inf-prior-mu}
 \end{figure}
 
 \paragraph*{Prior predictive checking} 
 
-To check the plausibility of the proposed priors in the context of both process models, I perform prior predictive checking. Figure~\ref{fig:prior-pc-beltwear} shows sixteen prior predictive simulations from the gamma process (solid lines) and linear model (dashed lines). Because I have used very vague priors for the parameters $\sigma$ and $\phi$, simulating the noisy wear profiles and UT measurements will not make sense until after conditioning on the observed data. Therefore, the simulations shown in Fig.~\ref{fig:prior-pc-beltwear} are for the belt's non-noisy (average) wear profile. That is I simulate from (d)--(j) in eq.~\eqref{eq:full-gp-bw-model} in Fig.~\ref{fig:bhm-gp-belt-wear} for the gamma process and from (d)--(g) in eq.~\eqref{eq:full-lm-bw-model} in Fig.~\ref{fig:bhm-lm-belt-wear} for the general path.
+To check the plausibility of the proposed priors in the context of both process models, I perform prior predictive checking. Figure~\ref{fig:prior-pc-beltwear} shows sixteen prior predictive simulations from the gamma process (solid lines) and linear model (dashed lines). Because I have used very vague priors for the parameters $\sigma$ and $\phi$, simulating the noisy wear profiles and UT measurements will not make sense until after conditioning on the observed data. Therefore, the simulations shown in Fig.~\ref{fig:prior-pc-beltwear} are for the belt's non-noisy (average) wear profile. That is I simulate from (d)--(j) in eq.~\eqref{eq:full-gp-bw-model} in Fig.~\ref{fig:bhm-gp-belt-wear} for the gamma process and from (d)--(g) in eq.~\eqref{eq:full-lm-bw-model} in Fig.~\ref{fig:bhm-lm-belt-wear} for the general path.s
 
-\begin{figure}[t]
+\begin{figure}[tbp]
   \centering
-  \includegraphics[width=\textwidth]{figures/ch-6/prior-pc.pdf}
+  \includegraphics[width=0.95\textwidth]{figures/ch-6/prior-pc.pdf}
   \caption{Sixteen prior predictive simulations of the average wear profile generated from the linear path (dashed line) and gamma process (solid line) process models with the priors defined in Sec.~\ref{sec:belt_wear_priors}. The values of the hyper parameters for $\nu$ in the gamma process that were used to generate each simulation are displayed on each plot.}
   \label{fig:prior-pc-beltwear}
 \end{figure}
@@ -182,9 +182,9 @@ Conditioning on the first eight functional observations, I generate samples from
 \paragraph{Marginal posteriors of parameters} 
 The marginal posteriors of the parameters show our updated belief after conditioning on the data. Additionally, the posterior draws of the parameters are important because we rely on them when forecasting the underlying process into the future in Section~\ref{sec:belt-wear-forecast}. Figure~\ref{fig:marginal-dist-gp-beltwear} and~\ref{fig:marginal-dist-lm-beltwear} show the marginal posterior distributions of the parameters in the gamma process and linear general path model, respectively.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
   \centering
-  \includegraphics[width=0.8\textwidth]{figures/ch-6/marginal_post_gp.pdf}
+  \includegraphics[width=0.95\textwidth]{figures/ch-6/marginal_post_gp.pdf}
   \caption{Marginal posterior distributions of the gamma process model parameters. (a) shows the coefficient specific $\mu_m$, (b) shows the coefficient specific $\nu_m$, and (c) shows the hyperparameters and noise parameters.}
   \label{fig:marginal-dist-gp-beltwear}
 \end{figure}
@@ -193,9 +193,9 @@ In the marginal distributions of the noisy gamma process parameters, shown in Fi
 
 In addition to these three observations, a fourth thing of note is that in Fig.~\ref{fig:marginal-dist-gp-beltwear}~(c) it looks as though the marginal posteriors of the two variance parameters $\sigma$ and $\phi$ and the two hyperparameters of $\nu$ encode similar levels of uncertainty into the model. However, this is not the case, even though the marginal posteriors have similar scales. The parameter $\sigma$ can be interpreted directly in mm, but the effect of $\phi$ is scaled by the values of the filtered spline coefficient and should rather be interpreted as a proportion of the $y^*_{i,m}$. The influence of the posterior distributions of $\sigma$ and $\phi$ is much more obvious in the posterior predictive distributions. In contrast to the posterior uncertainty of $\sigma$ and $\phi$, the uncertainty in the degradation path that results from the underlying gamma process and the posterior distribution of its parameters and hyperparameters---$\mu_\nu$, $\sigma_\nu$, $\nu_m$, and $\mu_m$---is almost impossible to interpret from the marginal distributions in Fig.~\ref{fig:marginal-dist-gp-beltwear}. We gain a better intuition of the uncertainty in the underlying gamma degradation process by examining the marginal posterior of the filtered spline coefficients $y^*_{i, m}$. Before doing so, I compare the marginal posteriors from the fitted general path model to the marginal distributions from the gamma process.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
   \centering
-  \includegraphics[width=0.8\textwidth]{figures/ch-6/marginal_post_lm.pdf}
+  \includegraphics[width=0.95\textwidth]{figures/ch-6/marginal_post_lm.pdf}
   \caption{Marginal posterior distributions of the linear general path model parameters. (a) shows the coefficient specific $\mu_m$ and (b) shows the noise related parameters.}
   \label{fig:marginal-dist-lm-beltwear}
 \end{figure}
@@ -207,9 +207,9 @@ The $y^*_{i, m}$ are the filtered degradation paths of each spline coefficient, 
 
 The draws of the spline coefficient from the gamma process mode in Fig.~\ref{fig:y-post-beltwear}~(a) are noticeably `jumpy' while the mean paths of the filtered spline coefficients appear to be linear. For the general path model in Fig.~\ref{fig:y-post-beltwear}~(b), by contrast, all of the posterior draws are straight lines. Despite this difference, the spread of the draws of the pathways in each equivalent subplot in Fig.~\ref{fig:y-post-beltwear}~(a) and~(b) are very similar. The fact that most of the draws from the gamma process appear as jumpy processes---even though I specified a prior which favours straight processes--- seems to suggest that the wear rate varies through time, and as such, we should allow the model to do so too. The general path model has accounted for this added variability in the data by inflating the value of $\phi$, as I previously noted. This difference is why some argue that the gamma process is a more realistic and physically motivated model \citep{ye2015}. Nevertheless, despite their simplicity, linear models are remarkably successful. To understand if the simpler linear model is flexible enough to sufficiently describe the data and if the data contain enough information and a clear enough signal to identify the more compicated gamma process with its extra parameters, I look at the posterior predictive distributions for the two different models and compare them with the observed data.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
   \centering
-  \includegraphics[width=1\textwidth]{figures/ch-6/post_y_belt_wear.pdf}
+  \includegraphics[width=0.95\textwidth]{figures/ch-6/post_y_belt_wear.pdf}
   \caption{The posterior draws of the filtered spline coefficients from (a) the gamma process model and (b) the linear general path model.}
   \label{fig:y-post-beltwear}
 \end{figure}
@@ -232,9 +232,9 @@ and then calculate the values of the spline functions using eq.~\eqref{eq:spline
 
 As the posterior predictive distribution of $\tilde{f}_i(.)$ shows, the average wear profiles of the belt at each time are now clearly monotonic increasing and the uncertainty around the average wear profile also grows with time. In both Fig.~\ref{fig:post-pred-dists-beltwear}~(b) and~(d), the observed noisy UT measurements sit inside the uncertainty intervals, showing that the observed data are also plausible under both Bayesian hierarchical models at the process model level, but comparing Fig.~\ref{fig:post-pred-dists-beltwear}~(b) and~(d), the linear model appears to predict a greater wear rate and larger uncertainty than the gamma process model.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
   \centering
-  \includegraphics[width=\textwidth]{figures/ch-6/post_pred_belt_wear.pdf}
+  \includegraphics[width=0.95\textwidth]{figures/ch-6/post_pred_belt_wear.pdf}
   \caption{Four posterior predictive distributions, two from each model. (a) and (c) shows the predicted smooth functional observation of the wear profiles underlying the sets of UT measurements from the gamma process and general path model, respectively. The UT measurements are also plotted as points as a reference. (b) and (d) shows the posterior predictive distribution of a new observation of the wear profile along the length of the belt at each observation time for the gamma process and general path model, respectively. In (b) and (d), the observed wear profiles are also plotted for comparison.}
   \label{fig:post-pred-dists-beltwear}
 \end{figure}
@@ -243,9 +243,9 @@ As the posterior predictive distribution of $\tilde{f}_i(.)$ shows, the average 
 
 Using the parameter draws from the two posteriors, we can forecast the degradation process of the spline coefficients using the process model and predict the belt's wear profile at time $t_{I+1}$ in the future, conditioned on the belt's current state of degradation. When producing the forecast, we should do so along the entire belt's length since the aim is to predict soft failure, which occurs when \emph{any} part of the belt exceeds the threshold. Consequently, we require the distribution of the noisy spline coefficients at the forecast time $t_{I + 1}$. The forecasted profiles at time $t_9 = 1$ of the ninth, withheld, belt wear observation (approximately $0.18$ \textit{tonnes} or $3.7$ weeks into the future) are shown in Fig.~\ref{fig:beltwear-forecasts} (a) for the gamma process model and (b) for the general path model. In each sub-plot, the median forecast is shown as a solid black curve, and the $0.50$, $0.80$, and $0.95$ uncertainty intervals are shown in various shades of blue. The observed (but withheld) UT measurements at $t_9$ are plotted in each figure for comparison.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
   \centering
-  \includegraphics[width=\textwidth]{figures/ch-6/belt_wear_forecasts.pdf}
+  \includegraphics[width=0.95\textwidth]{figures/ch-6/belt_wear_forecasts.pdf}
   \caption{Forecasts of the ninth, withheld, observation from (a) the gamma process model and (b) the linear general path model. The observed measurements are plotted for reference.}
   \label{fig:beltwear-forecasts}
 \end{figure}
@@ -283,9 +283,9 @@ To generate the predictive distributions for the maximum wear measurement, I fir
 \end{equation}
 where $f_{I+1}(.) = \sum^{M}_{m = 1}b_m(.)y_{m, I + 1}$, using the forecasted joint distribution of the $\{y_{m, I + 1}\}^M_{m = 1}$ and the posterior draws of $\sigma$. I then calculate $max(\{z_{n, I + 1}\}^N_{n = 1})$ for each set of draws. I point out here that I am averaging over the UT measurement error now because I am directly comparing the prediction with the noisy observations. The predictive distributions are compared with the observed maximum UT measurements and the method of \citet{webb_2020} in Figure~\ref{fig:beltwear-resampling}. Each subplot shows the predictive distribution of the gamma process in blue and the general path model in red as well as the observed maximum wear measurement as a black vertical line and the point estimate of the maximum wear generated according to \citet{webb_2020} as a vertical red line. Note that the method of \citet{webb_2020} only produces a point estimate, compared to the two Bayesian models, which produce entire predictive distributions. The title of each plot contains a vector indicating which functional observations the models were fit to and a number indicating the forecast time. For example, `$[1, 0, 1, 1, 1, 1, 1, 0, 0] \rightarrow 8$' indicates that the models were fit to the observations at $(t_1, t_3, t_4, t_5, t_6, t_7)$ and that the forecasts are generated for $t_8$.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
   \centering
-  \includegraphics[width=\textwidth]{figures/ch-6/test.png}
+  \includegraphics[width=0.95\textwidth]{figures/ch-6/test.png}
   \caption{Comparisons of the forecasted maximum wear according to the two Bayesian models (the blue histogram shows the posterior predictive distribution from the gamma process and the red from the linear general path) and the method of \citet{webb_2020} (red line) with the observed maximum wear (black line). In each plot, the different methods are fitted to a subset of the data and forecast a withheld future observation. For example, the plot title `$[1, 0, 1, 1, 1, 1, 1, 0, 0] \rightarrow 8$' indicates that the model was fitted to the observations at $(t_1, t_3, t_4, t_5, t_6, t_7)$---leaving out $t_2$, $t_8$, and $t_9$---and that the forecast is generated for $t_8$.}
   \label{fig:beltwear-resampling}
 \end{figure}
@@ -325,18 +325,18 @@ The original motivation for forecasting the belt's wear was to inform a practiti
 
 To calculate the failure time numerically from the gamma process model I use the procedure in Alg.~\ref{algo:ftd}. For each of the $12000$ posterior draws, I simulate $1000$ pathways from the most recent observation until soft failure. Each pathway is simulated by incrementing the GP forward by time steps of $\Delta t = 0.001$ and averaging over the variability along the length of the belt until the degradation at some point exceeds the soft failure threshold. Using the times at which each of the $1000$ simulated pathways cross the soft failure threshold, I construct an empirical failure time CDF. The result of Alg.~\ref{algo:ftd} is $12000$ empirical CDFs: one for each of the posterior draws. I construct the failure time distribution from the general path model in the same way, except that when I calculate the filtered values of the spline coefficients, I do so using the deterministic degradation function $y^*_m = \mu_m t$. The distributions of $F_{T|z}(t)$ are shown in Fig.~\ref{fig:beltwear-ft-gp} for the gamma process and Fig.~\ref{fig:beltwear-ft-lm} for the general path model fitted to the first seven observations (Figs.~(a) and~\ref{fig:beltwear-ft-lm}~(a), respectively) and for the first eight observations (Figs.~\ref{fig:beltwear-ft-gp}~(b) and~\ref{fig:beltwear-ft-lm}~(b), respectively). The average CDF is shown as a black line and the $0.5, 0.8$, and $0.95$ uncertainty intervals in different shades of blue. From the distributions of $F_{T|z}(t)$, we can quickly interpret the risk of the soft failure of the belt (i.e., the probability that soft failure has occurred) as we delay the replacement time.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
   \centering
-  \includegraphics[width=\textwidth]{figures/ch-6/belt_wear_failuretime_CDF_gp.pdf}
+  \includegraphics[width=0.95\textwidth]{figures/ch-6/belt_wear_failuretime_CDF_gp.pdf}
   \caption{The failure time CDFs generated from the posterior of the gamma process model conditioned on the first (a) seven and (b) eight observations. The median CDF is indicated by the black line and the uncertainty intervals are shown by the deferent shades of blue ribbons.}
   \label{fig:beltwear-ft-gp}
 \end{figure}
 
 Remembering that maintenance decisions are made in the context of the whole business, not just the specific assets; a reliability engineer may plan to replace belts when there is a 25\% chance that soft failure has occurred, keeping in mind that soft failure means that the belt is still technically operational. At the time of the seventh observation, the predicted time from the gamma process (general path) model that there is a 25\% chance of soft failure is at $0.82$ ($0.81$) tonnes with a lower and upper bound of $0.75$ and $0.95$($0.74$ and $0.90$), respectively. If there are two planned maintenance shutdowns for the conveyor coming up in which the belt can be replaced, a reliability practitioner can use this distribution to inform which shutdown the belt should be replaced in. The uncertainty intervals could also be used to prioritise one conveyor over another. Furthermore, since the failure time prediction is with respect to throughput (tonnes), the reliability practitioner could look at reducing (or even increasing) the planned operation of the belt to manage the probability of soft failure at the calendar time of the maintenance shutdown and use up as much of the useful life of the belt as possible. Once the eighth set of measurements is observed, our belief is then updated and the estimate for the time at which there is a 25\% chance of soft failure becomes $0.95$ ($0.85$) tonnes, and the lower and upper uncertainty bounds become $0.83$ and $1.09$ ($0.83$ and $0.91$), respectively. Using this updated belief, the reliability practitioner could re-evaluate the decision and make last-minute changes to a shutdown plan while still formally managing risk.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
   \centering
-  \includegraphics[width=\textwidth]{figures/ch-6/belt_wear_failuretime_CDF_lm.pdf}
+  \includegraphics[width=0.95\textwidth]{figures/ch-6/belt_wear_failuretime_CDF_lm.pdf}
   \caption{The failure time CDFs generated from the posterior of the linear general path model conditioned on the first (a) seven and (b) eight observations. The median CDF is indicated by the black line and the uncertainty intervals are shown by the deferent shades of blue ribbons.}
   \label{fig:beltwear-ft-lm}
 \end{figure}

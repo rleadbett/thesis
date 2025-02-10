@@ -210,17 +210,15 @@ PlotPriorPredictiveCheck <- function(n, N_units = 10, mu_ppc, nu_ppc) {
 
 This document contains the supplementary material for Section 4 (Fitting a noisy gamma process) of the manuscript Leadbetter, R.L, Gonzalez Caceres, G. J. and Phatak, A. (2024) *Fitting noisy gamma processes using RStan* addapted to produce the figures and tables of Chap. 5: *Noisy gamma process with unit-to-unit variability* in the Thesis.
 
-Here, we demonstrate how the basic noisy gamma process model can be expanded to analyse multiple units and how unit-to-unit variability can be included in the model as a random effect (partial pooling). We fit four models;
- 
-- Complete pooling, which assumes all units arise from the same shared gamma process;
+Here, we demonstrate how the basic noisy gamma process model can be expanded to analyse multiple units and how unit-to-unit variability can be included in the model as a random effect (partial pooling). We fit four models;   - Complete pooling, which assumes all units arise from the same shared gamma process;
 
-- Partial pooling on $\mu$, which assumes that each unit arises from different gamma processes that have the same coefficient of variation(volatility) and different, but similar, mean degradation rates;
+-   Partial pooling on $\mu$, which assumes that each unit arises from different gamma processes that have the same coefficient of variation(volatility) and different, but similar, mean degradation rates;
 
-- Partial pooling on $\nu$, which similarly assumes that each unit arises from different gamma processes, but instead, they all have the same mean degradation rate and individual coefficients of variation;
+-   Partial pooling on $\nu$, which similarly assumes that each unit arises from different gamma processes, but instead, they all have the same mean degradation rate and individual coefficients of variation;
 
-- and Partial pooling on $\mu$ and $\nu$, which assumes that all units arise from different gamma processes whose mean wear rate and coefficient of variation are similar but not the same.
+-   and Partial pooling on $\mu$ and $\nu$, which assumes that all units arise from different gamma processes whose mean wear rate and coefficient of variation are similar but not the same.
 
-To showcase these four different models, we use the crack growth data published in Rodriguez-Picon et al. [2018], which contains the degradation pathways, each from different units and each consisting of ten degradation observations (crack length) taken at evenly spaced time intervals (expressed in hundreds of thousands of loading cycles); @fig-crack-growth-data (a). In the example, a unit is considered to have failed once its crack length has exceeded $0.4$. We add Gaussian noise to the degradation measurements in the crack growth dataset to simulate measurement error. @fig-crack-growth-data (b) shows the noisy observations as dashed lines and the true underlying degradation pathways as solid lines.
+To showcase these four different models, we use the crack growth data published in Rodriguez-Picon et al. \[2018\], which contains the degradation pathways, each from different units and each consisting of ten degradation observations (crack length) taken at evenly spaced time intervals (expressed in hundreds of thousands of loading cycles); @fig-crack-growth-data (a). In the example, a unit is considered to have failed once its crack length has exceeded $0.4$. We add Gaussian noise to the degradation measurements in the crack growth dataset to simulate measurement error. @fig-crack-growth-data (b) shows the noisy observations as dashed lines and the true underlying degradation pathways as solid lines.
 
 ```{r}
 #| label: read-data
@@ -2473,8 +2471,7 @@ To evaluate the model's predictive performance for future degradation of the uni
 
 The step ahead predictions require a slight re-working of the `Stan` code since there is no longer an even number of observations for each unit. Bellow, I redefine the `Stan` models so that they can handle one unit with $I-1$ observations and also produce the posterior predictive draws of the non-noisy degradation for the withheld observation.
 
-::: {.panel-tabset}
-
+::: panel-tabset
 #### complete pooling
 
 ```{stan}
@@ -2906,7 +2903,6 @@ generated quantities{
   z_j_I_ppd = z_j[I_j-1] + z_diff_j_I_ppd;
 }
 ```
-
 :::
 
 ### Calculate $\hbox{elppd}_\hbox{\tiny{SA-CV}}$
@@ -3009,7 +3005,6 @@ data.frame(
     bootstrap_options = c("striped", "hover", "condensed")
   )
 ```
-
 
 ```{r}
 #| label: save-elppd

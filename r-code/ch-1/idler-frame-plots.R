@@ -2,6 +2,8 @@ library(dplyr)
 library(ggplot2)
 library(cowplot)
 
+theme_update(axis.title = element_text(size = 16))
+
 idler_lifetime_data <- readRDS(
   file.path("..", "..", "data", "idler_frame_life_example.RDS")
 )

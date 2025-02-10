@@ -46,6 +46,8 @@ library(tidybayes)
 library(bayesplot)
 library(kableExtra)
 
+theme_update(axis.title = element_text(size = 16))
+
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 
@@ -472,8 +474,7 @@ stan_data_unkown_lt <- list(
 
 ## Stan models (weakly informative)
 
-Here I fit three models to the data. The first is a model where the left-truncated lifetimes (see thesis chapter for details) are fully observed---the best case scenario. The second is model simply discareds the left-truncated lifetimes---this is the best option in the literature if the exposure history of the left-truncated samples is unknown. The third and last model is my proposed method to impute the partialy observed left-truncated samples with unkown exposure history. I fit all three models with the vaigue prior
-$$
+Here I fit three models to the data. The first is a model where the left-truncated lifetimes (see thesis chapter for details) are fully observed---the best case scenario. The second is model simply discareds the left-truncated lifetimes---this is the best option in the literature if the exposure history of the left-truncated samples is unknown. The third and last model is my proposed method to impute the partialy observed left-truncated samples with unkown exposure history. I fit all three models with the vaigue prior $$
 \begin{align*}
 \beta & \sim N^{+}(1.1, 1) \\
 \eta & \sim N^{+}(1, 1). \\
@@ -532,6 +533,7 @@ beta ~ normal(1.1, 1);
 ```
 
 ### No truncated samples
+
 ```{r}
 #| label: discarded-trunc-stan-model
 stan_model_no_lt <- stan_model(
@@ -563,6 +565,7 @@ beta ~ normal(1.1, 1);
 ```
 
 ### Impute truncation times
+
 ```{r}
 #| label: imputed-trunc-stan-model
 stan_model_unknown_lt_rc <- stan_model(
@@ -644,6 +647,7 @@ I draw $2000$ sample from the posteriors of each model, using $4$ chains with a 
 
 ::: panel-tabset
 #### Known truncation times
+
 ```{r}
 #| label: fit-lt-known-model
 stan_fit_lt_r_imputed <- sampling(
@@ -656,6 +660,7 @@ stan_fit_lt_r_imputed <- sampling(
 ```
 
 #### No truncated samples
+
 ```{r}
 #| label: fit-lt-discarded-model
 stan_fit_no_lt <- sampling(
@@ -668,6 +673,7 @@ stan_fit_no_lt <- sampling(
 ```
 
 #### Impute truncation times
+
 ```{r}
 #| label: fit-lt-imputed-model
 stan_fit_unknown_lt_rc <- sampling(
@@ -743,8 +749,7 @@ dev.off()
 
 ## Stan models (informative)
 
-Now I fit the same three models but with an informative joint prior, eliciting information at $t_1 = p_{0.80} = 1.54$ and $t_2 = p_{0.95} = 2.71$. The prior is 
-$$
+Now I fit the same three models but with an informative joint prior, eliciting information at $t_1 = p_{0.80} = 1.54$ and $t_2 = p_{0.95} = 2.71$. The prior is $$
 \begin{align*}
     \hat{F}_{t_1} \sim & \hbox{N}^{1}_{0}\left(0.8, 0.1\right)    \\
     \hat{F}_{t_2} \sim & \hbox{N}^{1}_{\hat{F}_{t_1}}\left(0.95, 0.05\right).
@@ -825,6 +830,7 @@ t2CDF ~ normal(t2_mean, t2_var);
 ```
 
 ### No truncated samples
+
 ```{r}
 #| label: discarded-trunc-stan-model-inf
 stan_model_no_lt_inf <- stan_model(
@@ -878,6 +884,7 @@ t2CDF ~ normal(t2_mean, t2_var);
 ```
 
 ### Impute truncation times
+
 ```{r}
 #| label: imputed-trunc-stan-model-inf
 stan_model_unknown_lt_rc_inf <- stan_model(
@@ -979,6 +986,7 @@ I once agian draw $2000$ sample from the posteriors, using four chains with a bu
 
 ::: panel-tabset
 #### Known truncation times
+
 ```{r}
 #| label: fit-lt-known-model-inf
 stan_fit_lt_r_imputed_inf <- sampling(
@@ -1000,6 +1008,7 @@ stan_fit_lt_r_imputed_inf <- sampling(
 ```
 
 #### No truncated samples
+
 ```{r}
 #| label: fit-lt-discarded-model-inf
 stan_fit_no_lt_inf <- sampling(
@@ -1021,6 +1030,7 @@ stan_fit_no_lt_inf <- sampling(
 ```
 
 #### Impute truncation times
+
 ```{r}
 #| label: fit-lt-imputed-model-inf
 stan_fit_unknown_lt_rc_inf <- sampling(
@@ -1213,6 +1223,7 @@ The simulation study was run on a vertual machine on the [Nimbus](https://pawsey
 
 ::: panel-tabset
 #### $\beta = 1.1$
+
 ```{r}
 #| label: load-sim-results
 experiment_results_df <- readRDS("LT_experiment_results_df_1.1.rds")
@@ -1791,13 +1802,11 @@ p_sim_res_elppd_2.0 <- experiment_results_df_2.0 %>%
 
 p_sim_res_elppd_2.0
 ```
-
 :::
 
 # Appendix - A {#sec-app-A}
 
-In this appendix I demonstrate how the joint posterior of $\beta$ and $\eta$ derived using the method originaly proposed in @kaminskiy2005 depends on the analysts choise of $t_1$ or $t_2$ when regenerating the posterior draws after updataing the distribution of the CDF at time $t_3$.
-@fig-kamiskiy-original-demo (a) shows the joint posterior when the distributions at $t_3$ and $t_2$ are used to generate the posterior draws and (b) shows the joint posterior when the distributions at $t_3$ and $t_1$ are used. The two joint distributions in @fig-kamiskiy-original-demo are very clearly diferent.
+In this appendix I demonstrate how the joint posterior of $\beta$ and $\eta$ derived using the method originaly proposed in @kaminskiy2005 depends on the analysts choise of $t_1$ or $t_2$ when regenerating the posterior draws after updataing the distribution of the CDF at time $t_3$. @fig-kamiskiy-original-demo (a) shows the joint posterior when the distributions at $t_3$ and $t_2$ are used to generate the posterior draws and (b) shows the joint posterior when the distributions at $t_3$ and $t_1$ are used. The two joint distributions in @fig-kamiskiy-original-demo are very clearly diferent.
 
 ```{r}
 #| label: fig-kamiskiy-original-demo

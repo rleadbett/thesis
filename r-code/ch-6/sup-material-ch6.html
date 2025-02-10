@@ -2,12 +2,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.450">
+<meta name="generator" content="quarto-1.6.33">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Ryan Leadbetter">
-<meta name="dcterms.date" content="2024-08-23">
+<meta name="dcterms.date" content="2025-02-10">
 
 <title>Main analysis of chapter six</title>
 <style>
@@ -24,7 +24,7 @@ ul.task-list li input[type="checkbox"] {
 }
 /* CSS for syntax highlighting */
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -35,7 +35,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -60,6 +60,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 div.csl-bib-body { }
 div.csl-entry {
   clear: both;
+  margin-bottom: 0em;
 }
 .hanging-indent div.csl-entry {
   margin-left:2em;
@@ -84,10 +85,10 @@ div.csl-indent {
 <script src="sup-material-ch6_files/libs/quarto-html/tippy.umd.min.js"></script>
 <script src="sup-material-ch6_files/libs/quarto-html/anchor.min.js"></script>
 <link href="sup-material-ch6_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="sup-material-ch6_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="sup-material-ch6_files/libs/quarto-html/quarto-syntax-highlighting-07ba0ad10f5680c660e360ac31d2f3b6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="sup-material-ch6_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="sup-material-ch6_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="sup-material-ch6_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="sup-material-ch6_files/libs/bootstrap/bootstrap-15dc1d1377a37cf150f55a9bb1055385.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <style>
 
       .quarto-title-block .quarto-title-banner h1,
@@ -105,12 +106,38 @@ div.csl-indent {
 background: #FFFFFF;
       }
 </style>
-
 <link href="sup-material-ch6_files/libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet">
 <script src="sup-material-ch6_files/libs/pagedtable-1.1/js/pagedtable.js"></script>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="../styles.css">
 </head>
@@ -131,12 +158,12 @@ background: #FFFFFF;
       <div class="quarto-title-meta-contents">
       <p class="author">Ryan Leadbetter </p>
     </div>
-      <div class="quarto-title-meta-contents">
+    <div class="quarto-title-meta-contents">
           <p class="affiliation">
               Centre for Transforming Maintenance through Data Science, Curtin University
             </p>
         </div>
-      </div>
+    </div>
 
   <div class="quarto-title-meta">
 
@@ -144,7 +171,7 @@ background: #FFFFFF;
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">August 23, 2024</p>
+        <p class="date">February 10, 2025</p>
       </div>
     </div>
     
@@ -188,9 +215,10 @@ background: #FFFFFF;
 
 
 
+
 <p>This Quarto document contains an adapted version of the sumplementary material for the manuscript <em>Functional degradation modelling of the wearing surface of conveyor belting using Bayesian hierarchical modelling and Gamma processes.</em> to produce the code in Chap. 6: <em>Conveyor belt wear forecasting</em>. This document acts as suplimentary material to the main text for readers who are interested in reproducing the analysis or just want to take a closer look at the the more technical aspects of the data, model fitting, diagnostics, and model evaluation.</p>
 <div class="cell">
-<details>
+<details class="code-fold">
 <summary>Show setup chunk</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
@@ -217,21 +245,26 @@ background: #FFFFFF;
 <span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(</span>
 <span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span>
 <span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>figure_path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="st">".."</span>, <span class="st">".."</span>, <span class="st">"figures"</span>, <span class="st">"ch-6"</span>)</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>table_path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="st">".."</span>, <span class="st">".."</span>, <span class="st">"tables"</span>, <span class="st">"ch-6"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_update</span>(<span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">16</span>))</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>figure_path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="st">".."</span>, <span class="st">".."</span>, <span class="st">"figures"</span>, <span class="st">"ch-6"</span>)</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>table_path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="st">".."</span>, <span class="st">".."</span>, <span class="st">"tables"</span>, <span class="st">"ch-6"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <section id="belt-wear-data" class="level2" data-number="1">
 <h2 data-number="1" class="anchored" data-anchor-id="belt-wear-data"><span class="header-section-number">1</span> Belt wear data</h2>
-<p>The data we use are ultrasonic thickness (UT) measurements used to monitor the wear of the top coat on an overland conveyor belt. We use data from three belts all installed on the same overland conveyor at different points in time at one of our industry partners mine sites. <a href="#fig-scematic">Figure&nbsp;1</a> below shows a typical overland conveyorbelt on the left and a scematic of the belts on the right. The structural component on of the belt is the carcas, which is protected by a tob and bottom coat of rubber. Typicaly the top-coat wears much faster than the bottom-coat because it is constantly being loaded with ore. To monitor the thickness of the topcoat, and therefore ensure the protection of the carcas, the thickness of the topcoat is monitored through UT testing. To demonstrate what the raw data looks like, on the cross section of the belt shown in the figure below, we have overlayed three sets of UT thickness measurements on the topcoat. Light blue is the earliest measurement and dark blue is the most recent. From the three wear profiles we can see the fairly typical “dishing out” of the topcoat as it is worn away by the ore over time.</p>
-<div id="fig-scematic" class="quarto-figure quarto-figure-center anchored">
-<figure class="figure">
-<p><img src="belt-cm-example.PNG" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;1: Example of conveyor belt condition monitoring</figcaption>
+<p>The data we use are ultrasonic thickness (UT) measurements used to monitor the wear of the top coat on an overland conveyor belt. We use data from three belts all installed on the same overland conveyor at different points in time at one of our industry partners mine sites. <a href="#fig-scematic" class="quarto-xref">Figure&nbsp;1</a> below shows a typical overland conveyorbelt on the left and a scematic of the belts on the right. The structural component on of the belt is the carcas, which is protected by a tob and bottom coat of rubber. Typicaly the top-coat wears much faster than the bottom-coat because it is constantly being loaded with ore. To monitor the thickness of the topcoat, and therefore ensure the protection of the carcas, the thickness of the topcoat is monitored through UT testing. To demonstrate what the raw data looks like, on the cross section of the belt shown in the figure below, we have overlayed three sets of UT thickness measurements on the topcoat. Light blue is the earliest measurement and dark blue is the most recent. From the three wear profiles we can see the fairly typical “dishing out” of the topcoat as it is worn away by the ore over time.</p>
+<div id="fig-scematic" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-scematic-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="belt-cm-example.PNG" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-scematic-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Example of conveyor belt condition monitoring
+</figcaption>
 </figure>
 </div>
-<p>The main belt that we will analise is <code>Belt_A</code>, the most recent belt. However, we use the data from historic belts <code>Belt_B</code> and <code>Belt_C</code> to construct an informative prior for some of the parameters in our model. Below we plot the raw data and show the UT data in a table below. Note that these data data are recorded in <em>mm</em> of wear, rather than remaining thickness like in the cross section of the belt shown in <a href="#fig-scematic">Figure&nbsp;1</a>.</p>
+<p>The main belt that we will analise is <code>Belt_A</code>, the most recent belt. However, we use the data from historic belts <code>Belt_B</code> and <code>Belt_C</code> to construct an informative prior for some of the parameters in our model. Below we plot the raw data and show the UT data in a table below. Note that these data data are recorded in <em>mm</em> of wear, rather than remaining thickness like in the cross section of the belt shown in <a href="#fig-scematic" class="quarto-xref">Figure&nbsp;1</a>.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">load</span>(</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">file =</span> <span class="fu">file.path</span>(</span>
@@ -250,19 +283,18 @@ background: #FFFFFF;
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">Belt_A</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">Belt_B</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false" href="">Belt_C</a></li></ul>
 <div class="tab-content">
 <div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
-<div class="cell" data-fig.hight="5">
+<div class="cell" data-fig-hight="5">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="sup-material-ch6_files/figure-html/belt-a-raw-prof-fig-1.png" class="img-fluid figure-img" width="768"></p>
-<figcaption class="figure-caption">Wear profile of belt A.</figcaption>
+<figcaption>Wear profile of belt A.</figcaption>
 </figure>
 </div>
 </div>
 </div>
 <div class="cell">
 <div class="cell-output-display">
-
 <div data-pagedtable="false"> <div class="table-caption"><p>Wear data for belt A.</p></div>
   <script data-pagedtable-source="" type="application/json">
 {"columns":[{"label":["operation_time"],"name":[1],"type":["drtn"],"align":["right"]},{"label":["measurement_pos"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["wear"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["tonnes"],"name":[4],"type":["dbl"],"align":["right"]}],"data":[{"1":"0 days","2":"0.375","3":"0.14","4":"0.0000000"},{"1":"0 days","2":"1.125","3":"0.04","4":"0.0000000"},{"1":"0 days","2":"1.875","3":"-0.16","4":"0.0000000"},{"1":"0 days","2":"2.625","3":"-0.16","4":"0.0000000"},{"1":"0 days","2":"3.375","3":"-0.06","4":"0.0000000"},{"1":"0 days","2":"4.125","3":"-0.06","4":"0.0000000"},{"1":"0 days","2":"4.875","3":"0.04","4":"0.0000000"},{"1":"0 days","2":"5.625","3":"0.14","4":"0.0000000"},{"1":"0 days","2":"6.375","3":"-0.16","4":"0.0000000"},{"1":"0 days","2":"7.125","3":"0.14","4":"0.0000000"},{"1":"0 days","2":"7.875","3":"-0.06","4":"0.0000000"},{"1":"0 days","2":"8.625","3":"-0.06","4":"0.0000000"},{"1":"0 days","2":"9.375","3":"-0.06","4":"0.0000000"},{"1":"0 days","2":"10.125","3":"0.04","4":"0.0000000"},{"1":"0 days","2":"10.875","3":"-0.16","4":"0.0000000"},{"1":"0 days","2":"11.625","3":"0.24","4":"0.0000000"},{"1":"0 days","2":"12.375","3":"-0.06","4":"0.0000000"},{"1":"0 days","2":"13.125","3":"0.04","4":"0.0000000"},{"1":"0 days","2":"13.875","3":"0.04","4":"0.0000000"},{"1":"0 days","2":"14.625","3":"0.14","4":"0.0000000"},{"1":"22 days","2":"0.375","3":"0.14","4":"0.1280347"},{"1":"22 days","2":"1.125","3":"0.44","4":"0.1280347"},{"1":"22 days","2":"1.875","3":"0.84","4":"0.1280347"},{"1":"22 days","2":"2.625","3":"0.64","4":"0.1280347"},{"1":"22 days","2":"3.375","3":"0.84","4":"0.1280347"},{"1":"22 days","2":"4.125","3":"0.64","4":"0.1280347"},{"1":"22 days","2":"4.875","3":"0.94","4":"0.1280347"},{"1":"22 days","2":"5.625","3":"1.14","4":"0.1280347"},{"1":"22 days","2":"6.375","3":"1.84","4":"0.1280347"},{"1":"22 days","2":"7.125","3":"2.04","4":"0.1280347"},{"1":"22 days","2":"7.875","3":"2.04","4":"0.1280347"},{"1":"22 days","2":"8.625","3":"1.74","4":"0.1280347"},{"1":"22 days","2":"9.375","3":"1.94","4":"0.1280347"},{"1":"22 days","2":"10.125","3":"1.44","4":"0.1280347"},{"1":"22 days","2":"10.875","3":"1.84","4":"0.1280347"},{"1":"22 days","2":"11.625","3":"1.34","4":"0.1280347"},{"1":"22 days","2":"12.375","3":"1.34","4":"0.1280347"},{"1":"22 days","2":"13.125","3":"0.94","4":"0.1280347"},{"1":"22 days","2":"13.875","3":"0.94","4":"0.1280347"},{"1":"22 days","2":"14.625","3":"0.04","4":"0.1280347"},{"1":"34 days","2":"0.375","3":"-0.16","4":"0.2193020"},{"1":"34 days","2":"1.125","3":"0.84","4":"0.2193020"},{"1":"34 days","2":"1.875","3":"1.24","4":"0.2193020"},{"1":"34 days","2":"2.625","3":"1.64","4":"0.2193020"},{"1":"34 days","2":"3.375","3":"1.84","4":"0.2193020"},{"1":"34 days","2":"4.125","3":"2.04","4":"0.2193020"},{"1":"34 days","2":"4.875","3":"2.44","4":"0.2193020"},{"1":"34 days","2":"5.625","3":"2.54","4":"0.2193020"},{"1":"34 days","2":"6.375","3":"3.34","4":"0.2193020"},{"1":"34 days","2":"7.125","3":"3.34","4":"0.2193020"},{"1":"34 days","2":"7.875","3":"3.64","4":"0.2193020"},{"1":"34 days","2":"8.625","3":"3.94","4":"0.2193020"},{"1":"34 days","2":"9.375","3":"3.94","4":"0.2193020"},{"1":"34 days","2":"10.125","3":"3.64","4":"0.2193020"},{"1":"34 days","2":"10.875","3":"3.04","4":"0.2193020"},{"1":"34 days","2":"11.625","3":"2.94","4":"0.2193020"},{"1":"34 days","2":"12.375","3":"2.64","4":"0.2193020"},{"1":"34 days","2":"13.125","3":"1.84","4":"0.2193020"},{"1":"34 days","2":"13.875","3":"1.24","4":"0.2193020"},{"1":"34 days","2":"14.625","3":"0.24","4":"0.2193020"},{"1":"39 days","2":"0.375","3":"0.54","4":"0.2562716"},{"1":"39 days","2":"1.125","3":"1.34","4":"0.2562716"},{"1":"39 days","2":"1.875","3":"1.64","4":"0.2562716"},{"1":"39 days","2":"2.625","3":"2.34","4":"0.2562716"},{"1":"39 days","2":"3.375","3":"2.64","4":"0.2562716"},{"1":"39 days","2":"4.125","3":"3.34","4":"0.2562716"},{"1":"39 days","2":"4.875","3":"4.24","4":"0.2562716"},{"1":"39 days","2":"5.625","3":"4.34","4":"0.2562716"},{"1":"39 days","2":"6.375","3":"5.64","4":"0.2562716"},{"1":"39 days","2":"7.125","3":"5.34","4":"0.2562716"},{"1":"39 days","2":"7.875","3":"5.44","4":"0.2562716"},{"1":"39 days","2":"8.625","3":"5.24","4":"0.2562716"},{"1":"39 days","2":"9.375","3":"5.04","4":"0.2562716"},{"1":"39 days","2":"10.125","3":"5.04","4":"0.2562716"},{"1":"39 days","2":"10.875","3":"4.44","4":"0.2562716"},{"1":"39 days","2":"11.625","3":"3.74","4":"0.2562716"},{"1":"39 days","2":"12.375","3":"2.84","4":"0.2562716"},{"1":"39 days","2":"13.125","3":"1.84","4":"0.2562716"},{"1":"39 days","2":"13.875","3":"1.54","4":"0.2562716"},{"1":"39 days","2":"14.625","3":"0.24","4":"0.2562716"},{"1":"48 days","2":"0.375","3":"0.34","4":"0.3146593"},{"1":"48 days","2":"1.125","3":"1.74","4":"0.3146593"},{"1":"48 days","2":"1.875","3":"1.84","4":"0.3146593"},{"1":"48 days","2":"2.625","3":"2.54","4":"0.3146593"},{"1":"48 days","2":"3.375","3":"2.74","4":"0.3146593"},{"1":"48 days","2":"4.125","3":"2.94","4":"0.3146593"},{"1":"48 days","2":"4.875","3":"3.04","4":"0.3146593"},{"1":"48 days","2":"5.625","3":"4.24","4":"0.3146593"},{"1":"48 days","2":"6.375","3":"4.84","4":"0.3146593"},{"1":"48 days","2":"7.125","3":"5.54","4":"0.3146593"},{"1":"48 days","2":"7.875","3":"5.54","4":"0.3146593"},{"1":"48 days","2":"8.625","3":"5.44","4":"0.3146593"},{"1":"48 days","2":"9.375","3":"5.44","4":"0.3146593"},{"1":"48 days","2":"10.125","3":"4.84","4":"0.3146593"},{"1":"48 days","2":"10.875","3":"4.74","4":"0.3146593"},{"1":"48 days","2":"11.625","3":"3.74","4":"0.3146593"},{"1":"48 days","2":"12.375","3":"3.14","4":"0.3146593"},{"1":"48 days","2":"13.125","3":"2.14","4":"0.3146593"},{"1":"48 days","2":"13.875","3":"2.14","4":"0.3146593"},{"1":"48 days","2":"14.625","3":"1.44","4":"0.3146593"},{"1":"73 days","2":"0.375","3":"0.04","4":"0.5019453"},{"1":"73 days","2":"1.125","3":"2.04","4":"0.5019453"},{"1":"73 days","2":"1.875","3":"1.94","4":"0.5019453"},{"1":"73 days","2":"2.625","3":"2.44","4":"0.5019453"},{"1":"73 days","2":"3.375","3":"2.84","4":"0.5019453"},{"1":"73 days","2":"4.125","3":"3.44","4":"0.5019453"},{"1":"73 days","2":"4.875","3":"3.84","4":"0.5019453"},{"1":"73 days","2":"5.625","3":"5.14","4":"0.5019453"},{"1":"73 days","2":"6.375","3":"6.24","4":"0.5019453"},{"1":"73 days","2":"7.125","3":"7.34","4":"0.5019453"},{"1":"73 days","2":"7.875","3":"7.44","4":"0.5019453"},{"1":"73 days","2":"8.625","3":"6.64","4":"0.5019453"},{"1":"73 days","2":"9.375","3":"6.14","4":"0.5019453"},{"1":"73 days","2":"10.125","3":"5.64","4":"0.5019453"},{"1":"73 days","2":"10.875","3":"5.44","4":"0.5019453"},{"1":"73 days","2":"11.625","3":"3.84","4":"0.5019453"},{"1":"73 days","2":"12.375","3":"2.44","4":"0.5019453"},{"1":"73 days","2":"13.125","3":"2.04","4":"0.5019453"},{"1":"73 days","2":"13.875","3":"1.14","4":"0.5019453"},{"1":"73 days","2":"14.625","3":"1.04","4":"0.5019453"},{"1":"89 days","2":"0.375","3":"1.74","4":"0.6348471"},{"1":"89 days","2":"1.125","3":"3.44","4":"0.6348471"},{"1":"89 days","2":"1.875","3":"3.54","4":"0.6348471"},{"1":"89 days","2":"2.625","3":"4.34","4":"0.6348471"},{"1":"89 days","2":"3.375","3":"4.94","4":"0.6348471"},{"1":"89 days","2":"4.125","3":"5.34","4":"0.6348471"},{"1":"89 days","2":"4.875","3":"6.14","4":"0.6348471"},{"1":"89 days","2":"5.625","3":"5.64","4":"0.6348471"},{"1":"89 days","2":"6.375","3":"9.24","4":"0.6348471"},{"1":"89 days","2":"7.125","3":"10.64","4":"0.6348471"},{"1":"89 days","2":"7.875","3":"10.54","4":"0.6348471"},{"1":"89 days","2":"8.625","3":"10.34","4":"0.6348471"},{"1":"89 days","2":"9.375","3":"8.14","4":"0.6348471"},{"1":"89 days","2":"10.125","3":"7.04","4":"0.6348471"},{"1":"89 days","2":"10.875","3":"5.84","4":"0.6348471"},{"1":"89 days","2":"11.625","3":"6.54","4":"0.6348471"},{"1":"89 days","2":"12.375","3":"5.24","4":"0.6348471"},{"1":"89 days","2":"13.125","3":"3.24","4":"0.6348471"},{"1":"89 days","2":"13.875","3":"2.84","4":"0.6348471"},{"1":"89 days","2":"14.625","3":"1.74","4":"0.6348471"},{"1":"129 days","2":"0.375","3":"0.74","4":"0.8193773"},{"1":"129 days","2":"1.125","3":"3.34","4":"0.8193773"},{"1":"129 days","2":"1.875","3":"3.74","4":"0.8193773"},{"1":"129 days","2":"2.625","3":"3.94","4":"0.8193773"},{"1":"129 days","2":"3.375","3":"4.54","4":"0.8193773"},{"1":"129 days","2":"4.125","3":"5.04","4":"0.8193773"},{"1":"129 days","2":"4.875","3":"6.14","4":"0.8193773"},{"1":"129 days","2":"5.625","3":"7.14","4":"0.8193773"},{"1":"129 days","2":"6.375","3":"7.74","4":"0.8193773"},{"1":"129 days","2":"7.125","3":"9.24","4":"0.8193773"},{"1":"129 days","2":"7.875","3":"9.94","4":"0.8193773"},{"1":"129 days","2":"8.625","3":"9.44","4":"0.8193773"},{"1":"129 days","2":"9.375","3":"8.34","4":"0.8193773"},{"1":"129 days","2":"10.125","3":"9.54","4":"0.8193773"},{"1":"129 days","2":"10.875","3":"6.64","4":"0.8193773"},{"1":"129 days","2":"11.625","3":"6.24","4":"0.8193773"},{"1":"129 days","2":"12.375","3":"3.94","4":"0.8193773"},{"1":"129 days","2":"13.125","3":"3.04","4":"0.8193773"},{"1":"129 days","2":"13.875","3":"3.04","4":"0.8193773"},{"1":"129 days","2":"14.625","3":"0.94","4":"0.8193773"},{"1":"155 days","2":"0.375","3":"2.64","4":"1.0000000"},{"1":"155 days","2":"1.125","3":"4.84","4":"1.0000000"},{"1":"155 days","2":"1.875","3":"5.34","4":"1.0000000"},{"1":"155 days","2":"2.625","3":"6.74","4":"1.0000000"},{"1":"155 days","2":"3.375","3":"7.14","4":"1.0000000"},{"1":"155 days","2":"4.125","3":"7.64","4":"1.0000000"},{"1":"155 days","2":"4.875","3":"8.34","4":"1.0000000"},{"1":"155 days","2":"5.625","3":"10.24","4":"1.0000000"},{"1":"155 days","2":"6.375","3":"12.94","4":"1.0000000"},{"1":"155 days","2":"7.125","3":"15.34","4":"1.0000000"},{"1":"155 days","2":"7.875","3":"15.74","4":"1.0000000"},{"1":"155 days","2":"8.625","3":"15.14","4":"1.0000000"},{"1":"155 days","2":"9.375","3":"13.94","4":"1.0000000"},{"1":"155 days","2":"10.125","3":"13.04","4":"1.0000000"},{"1":"155 days","2":"10.875","3":"11.54","4":"1.0000000"},{"1":"155 days","2":"11.625","3":"8.94","4":"1.0000000"},{"1":"155 days","2":"12.375","3":"5.94","4":"1.0000000"},{"1":"155 days","2":"13.125","3":"3.04","4":"1.0000000"},{"1":"155 days","2":"13.875","3":"3.94","4":"1.0000000"},{"1":"155 days","2":"14.625","3":"0.94","4":"1.0000000"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
@@ -272,19 +304,18 @@ background: #FFFFFF;
 </div>
 </div>
 <div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
-<div class="cell" data-fig.hight="5">
+<div class="cell" data-fig-hight="5">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="sup-material-ch6_files/figure-html/belt-b-raw-prof-fig-1.png" class="img-fluid figure-img" width="768"></p>
-<figcaption class="figure-caption">Wear profile of belt b.</figcaption>
+<figcaption>Wear profile of belt b.</figcaption>
 </figure>
 </div>
 </div>
 </div>
 <div class="cell">
 <div class="cell-output-display">
-
 <div data-pagedtable="false"> <div class="table-caption"><p>Wear data for belt B.</p></div>
   <script data-pagedtable-source="" type="application/json">
 {"columns":[{"label":["operation_time"],"name":[1],"type":["drtn"],"align":["right"]},{"label":["measurement_pos"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["wear"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["tonnes"],"name":[4],"type":["dbl"],"align":["right"]}],"data":[{"1":"0 days","2":"0.375","3":"0.0","4":"0.0000000"},{"1":"0 days","2":"1.125","3":"0.3","4":"0.0000000"},{"1":"0 days","2":"1.875","3":"0.3","4":"0.0000000"},{"1":"0 days","2":"2.625","3":"0.2","4":"0.0000000"},{"1":"0 days","2":"3.375","3":"0.3","4":"0.0000000"},{"1":"0 days","2":"4.125","3":"0.3","4":"0.0000000"},{"1":"0 days","2":"4.875","3":"0.4","4":"0.0000000"},{"1":"0 days","2":"5.625","3":"0.3","4":"0.0000000"},{"1":"0 days","2":"6.375","3":"0.1","4":"0.0000000"},{"1":"0 days","2":"7.125","3":"0.3","4":"0.0000000"},{"1":"0 days","2":"7.875","3":"0.3","4":"0.0000000"},{"1":"0 days","2":"8.625","3":"0.3","4":"0.0000000"},{"1":"0 days","2":"9.375","3":"0.3","4":"0.0000000"},{"1":"0 days","2":"10.125","3":"0.1","4":"0.0000000"},{"1":"0 days","2":"10.875","3":"0.1","4":"0.0000000"},{"1":"0 days","2":"11.625","3":"0.4","4":"0.0000000"},{"1":"0 days","2":"12.375","3":"0.0","4":"0.0000000"},{"1":"0 days","2":"13.125","3":"0.1","4":"0.0000000"},{"1":"0 days","2":"13.875","3":"0.2","4":"0.0000000"},{"1":"0 days","2":"14.625","3":"0.0","4":"0.0000000"},{"1":"51 days","2":"0.375","3":"1.0","4":"0.2916171"},{"1":"51 days","2":"1.125","3":"1.9","4":"0.2916171"},{"1":"51 days","2":"1.875","3":"2.4","4":"0.2916171"},{"1":"51 days","2":"2.625","3":"4.2","4":"0.2916171"},{"1":"51 days","2":"3.375","3":"4.2","4":"0.2916171"},{"1":"51 days","2":"4.125","3":"3.8","4":"0.2916171"},{"1":"51 days","2":"4.875","3":"3.5","4":"0.2916171"},{"1":"51 days","2":"5.625","3":"4.7","4":"0.2916171"},{"1":"51 days","2":"6.375","3":"4.8","4":"0.2916171"},{"1":"51 days","2":"7.125","3":"5.9","4":"0.2916171"},{"1":"51 days","2":"7.875","3":"5.1","4":"0.2916171"},{"1":"51 days","2":"8.625","3":"5.0","4":"0.2916171"},{"1":"51 days","2":"9.375","3":"4.8","4":"0.2916171"},{"1":"51 days","2":"10.125","3":"5.1","4":"0.2916171"},{"1":"51 days","2":"10.875","3":"3.9","4":"0.2916171"},{"1":"51 days","2":"11.625","3":"3.9","4":"0.2916171"},{"1":"51 days","2":"12.375","3":"3.7","4":"0.2916171"},{"1":"51 days","2":"13.125","3":"2.7","4":"0.2916171"},{"1":"51 days","2":"13.875","3":"2.6","4":"0.2916171"},{"1":"51 days","2":"14.625","3":"0.5","4":"0.2916171"},{"1":"96 days","2":"0.375","3":"0.5","4":"0.6023049"},{"1":"96 days","2":"1.125","3":"3.2","4":"0.6023049"},{"1":"96 days","2":"1.875","3":"1.4","4":"0.6023049"},{"1":"96 days","2":"2.625","3":"5.9","4":"0.6023049"},{"1":"96 days","2":"3.375","3":"6.8","4":"0.6023049"},{"1":"96 days","2":"4.125","3":"6.6","4":"0.6023049"},{"1":"96 days","2":"4.875","3":"6.8","4":"0.6023049"},{"1":"96 days","2":"5.625","3":"7.6","4":"0.6023049"},{"1":"96 days","2":"6.375","3":"8.8","4":"0.6023049"},{"1":"96 days","2":"7.125","3":"8.8","4":"0.6023049"},{"1":"96 days","2":"7.875","3":"8.5","4":"0.6023049"},{"1":"96 days","2":"8.625","3":"8.0","4":"0.6023049"},{"1":"96 days","2":"9.375","3":"8.6","4":"0.6023049"},{"1":"96 days","2":"10.125","3":"7.6","4":"0.6023049"},{"1":"96 days","2":"10.875","3":"4.2","4":"0.6023049"},{"1":"96 days","2":"11.625","3":"5.4","4":"0.6023049"},{"1":"96 days","2":"12.375","3":"4.5","4":"0.6023049"},{"1":"96 days","2":"13.125","3":"2.3","4":"0.6023049"},{"1":"96 days","2":"13.875","3":"1.7","4":"0.6023049"},{"1":"96 days","2":"14.625","3":"0.0","4":"0.6023049"},{"1":"104 days","2":"0.375","3":"1.8","4":"0.6434174"},{"1":"104 days","2":"1.125","3":"3.8","4":"0.6434174"},{"1":"104 days","2":"1.875","3":"4.8","4":"0.6434174"},{"1":"104 days","2":"2.625","3":"10.3","4":"0.6434174"},{"1":"104 days","2":"3.375","3":"8.1","4":"0.6434174"},{"1":"104 days","2":"4.125","3":"7.9","4":"0.6434174"},{"1":"104 days","2":"4.875","3":"8.7","4":"0.6434174"},{"1":"104 days","2":"5.625","3":"9.5","4":"0.6434174"},{"1":"104 days","2":"6.375","3":"10.9","4":"0.6434174"},{"1":"104 days","2":"7.125","3":"11.0","4":"0.6434174"},{"1":"104 days","2":"7.875","3":"10.7","4":"0.6434174"},{"1":"104 days","2":"8.625","3":"10.6","4":"0.6434174"},{"1":"104 days","2":"9.375","3":"9.8","4":"0.6434174"},{"1":"104 days","2":"10.125","3":"8.8","4":"0.6434174"},{"1":"104 days","2":"10.875","3":"7.6","4":"0.6434174"},{"1":"104 days","2":"11.625","3":"7.1","4":"0.6434174"},{"1":"104 days","2":"12.375","3":"6.6","4":"0.6434174"},{"1":"104 days","2":"13.125","3":"4.4","4":"0.6434174"},{"1":"104 days","2":"13.875","3":"3.9","4":"0.6434174"},{"1":"104 days","2":"14.625","3":"1.6","4":"0.6434174"},{"1":"107 days","2":"0.375","3":"1.7","4":"0.6654670"},{"1":"107 days","2":"1.125","3":"3.9","4":"0.6654670"},{"1":"107 days","2":"1.875","3":"4.9","4":"0.6654670"},{"1":"107 days","2":"2.625","3":"10.3","4":"0.6654670"},{"1":"107 days","2":"3.375","3":"8.0","4":"0.6654670"},{"1":"107 days","2":"4.125","3":"8.0","4":"0.6654670"},{"1":"107 days","2":"4.875","3":"9.4","4":"0.6654670"},{"1":"107 days","2":"5.625","3":"9.6","4":"0.6654670"},{"1":"107 days","2":"6.375","3":"11.0","4":"0.6654670"},{"1":"107 days","2":"7.125","3":"11.0","4":"0.6654670"},{"1":"107 days","2":"7.875","3":"10.6","4":"0.6654670"},{"1":"107 days","2":"8.625","3":"10.6","4":"0.6654670"},{"1":"107 days","2":"9.375","3":"9.9","4":"0.6654670"},{"1":"107 days","2":"10.125","3":"9.0","4":"0.6654670"},{"1":"107 days","2":"10.875","3":"7.8","4":"0.6654670"},{"1":"107 days","2":"11.625","3":"7.1","4":"0.6654670"},{"1":"107 days","2":"12.375","3":"6.7","4":"0.6654670"},{"1":"107 days","2":"13.125","3":"4.5","4":"0.6654670"},{"1":"107 days","2":"13.875","3":"3.9","4":"0.6654670"},{"1":"107 days","2":"14.625","3":"1.8","4":"0.6654670"},{"1":"121 days","2":"0.375","3":"0.2","4":"0.7549257"},{"1":"121 days","2":"1.125","3":"3.4","4":"0.7549257"},{"1":"121 days","2":"1.875","3":"2.8","4":"0.7549257"},{"1":"121 days","2":"2.625","3":"11.6","4":"0.7549257"},{"1":"121 days","2":"3.375","3":"8.8","4":"0.7549257"},{"1":"121 days","2":"4.125","3":"7.6","4":"0.7549257"},{"1":"121 days","2":"4.875","3":"8.1","4":"0.7549257"},{"1":"121 days","2":"5.625","3":"8.9","4":"0.7549257"},{"1":"121 days","2":"6.375","3":"10.7","4":"0.7549257"},{"1":"121 days","2":"7.125","3":"11.6","4":"0.7549257"},{"1":"121 days","2":"7.875","3":"11.1","4":"0.7549257"},{"1":"121 days","2":"8.625","3":"8.6","4":"0.7549257"},{"1":"121 days","2":"9.375","3":"9.9","4":"0.7549257"},{"1":"121 days","2":"10.125","3":"8.2","4":"0.7549257"},{"1":"121 days","2":"10.875","3":"8.0","4":"0.7549257"},{"1":"121 days","2":"11.625","3":"6.8","4":"0.7549257"},{"1":"121 days","2":"12.375","3":"4.5","4":"0.7549257"},{"1":"121 days","2":"13.125","3":"3.6","4":"0.7549257"},{"1":"121 days","2":"13.875","3":"3.2","4":"0.7549257"},{"1":"121 days","2":"14.625","3":"0.2","4":"0.7549257"},{"1":"138 days","2":"0.375","3":"0.6","4":"0.8742325"},{"1":"138 days","2":"1.125","3":"4.1","4":"0.8742325"},{"1":"138 days","2":"1.875","3":"5.5","4":"0.8742325"},{"1":"138 days","2":"2.625","3":"12.3","4":"0.8742325"},{"1":"138 days","2":"3.375","3":"9.3","4":"0.8742325"},{"1":"138 days","2":"4.125","3":"8.5","4":"0.8742325"},{"1":"138 days","2":"4.875","3":"9.4","4":"0.8742325"},{"1":"138 days","2":"5.625","3":"9.7","4":"0.8742325"},{"1":"138 days","2":"6.375","3":"10.3","4":"0.8742325"},{"1":"138 days","2":"7.125","3":"12.4","4":"0.8742325"},{"1":"138 days","2":"7.875","3":"10.9","4":"0.8742325"},{"1":"138 days","2":"8.625","3":"11.7","4":"0.8742325"},{"1":"138 days","2":"9.375","3":"11.8","4":"0.8742325"},{"1":"138 days","2":"10.125","3":"8.2","4":"0.8742325"},{"1":"138 days","2":"10.875","3":"9.7","4":"0.8742325"},{"1":"138 days","2":"11.625","3":"8.7","4":"0.8742325"},{"1":"138 days","2":"12.375","3":"4.8","4":"0.8742325"},{"1":"138 days","2":"13.125","3":"2.6","4":"0.8742325"},{"1":"138 days","2":"13.875","3":"4.2","4":"0.8742325"},{"1":"138 days","2":"14.625","3":"0.9","4":"0.8742325"},{"1":"158 days","2":"0.375","3":"2.8","4":"1.0137852"},{"1":"158 days","2":"1.125","3":"7.3","4":"1.0137852"},{"1":"158 days","2":"1.875","3":"8.9","4":"1.0137852"},{"1":"158 days","2":"2.625","3":"16.1","4":"1.0137852"},{"1":"158 days","2":"3.375","3":"13.7","4":"1.0137852"},{"1":"158 days","2":"4.125","3":"11.6","4":"1.0137852"},{"1":"158 days","2":"4.875","3":"13.8","4":"1.0137852"},{"1":"158 days","2":"5.625","3":"13.2","4":"1.0137852"},{"1":"158 days","2":"6.375","3":"17.0","4":"1.0137852"},{"1":"158 days","2":"7.125","3":"17.8","4":"1.0137852"},{"1":"158 days","2":"7.875","3":"16.3","4":"1.0137852"},{"1":"158 days","2":"8.625","3":"16.5","4":"1.0137852"},{"1":"158 days","2":"9.375","3":"14.9","4":"1.0137852"},{"1":"158 days","2":"10.125","3":"14.5","4":"1.0137852"},{"1":"158 days","2":"10.875","3":"12.1","4":"1.0137852"},{"1":"158 days","2":"11.625","3":"12.6","4":"1.0137852"},{"1":"158 days","2":"12.375","3":"10.7","4":"1.0137852"},{"1":"158 days","2":"13.125","3":"14.1","4":"1.0137852"},{"1":"158 days","2":"13.875","3":"8.2","4":"1.0137852"},{"1":"158 days","2":"14.625","3":"6.6","4":"1.0137852"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
@@ -294,19 +325,18 @@ background: #FFFFFF;
 </div>
 </div>
 <div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
-<div class="cell" data-fig.hight="5">
+<div class="cell" data-fig-hight="5">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="sup-material-ch6_files/figure-html/belt-c-raw-prof-fig-1.png" class="img-fluid figure-img" width="768"></p>
-<figcaption class="figure-caption">Wear profile of belt C.</figcaption>
+<figcaption>Wear profile of belt C.</figcaption>
 </figure>
 </div>
 </div>
 </div>
 <div class="cell">
 <div class="cell-output-display">
-
 <div data-pagedtable="false"> <div class="table-caption"><p>Wear data for belt C.</p></div>
   <script data-pagedtable-source="" type="application/json">
 {"columns":[{"label":["operation_time"],"name":[1],"type":["drtn"],"align":["right"]},{"label":["measurement_pos"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["wear"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["tonnes"],"name":[4],"type":["dbl"],"align":["right"]}],"data":[{"1":"0 days","2":"0.375","3":"0.0","4":"0.0000000"},{"1":"0 days","2":"1.125","3":"0.2","4":"0.0000000"},{"1":"0 days","2":"1.875","3":"0.0","4":"0.0000000"},{"1":"0 days","2":"2.625","3":"0.3","4":"0.0000000"},{"1":"0 days","2":"3.375","3":"0.4","4":"0.0000000"},{"1":"0 days","2":"4.125","3":"0.3","4":"0.0000000"},{"1":"0 days","2":"4.875","3":"0.5","4":"0.0000000"},{"1":"0 days","2":"5.625","3":"0.7","4":"0.0000000"},{"1":"0 days","2":"6.375","3":"0.4","4":"0.0000000"},{"1":"0 days","2":"7.125","3":"0.6","4":"0.0000000"},{"1":"0 days","2":"7.875","3":"0.5","4":"0.0000000"},{"1":"0 days","2":"8.625","3":"0.6","4":"0.0000000"},{"1":"0 days","2":"9.375","3":"0.3","4":"0.0000000"},{"1":"0 days","2":"10.125","3":"0.5","4":"0.0000000"},{"1":"0 days","2":"10.875","3":"0.5","4":"0.0000000"},{"1":"0 days","2":"11.625","3":"0.3","4":"0.0000000"},{"1":"0 days","2":"12.375","3":"0.4","4":"0.0000000"},{"1":"0 days","2":"13.125","3":"0.2","4":"0.0000000"},{"1":"0 days","2":"13.875","3":"0.4","4":"0.0000000"},{"1":"0 days","2":"14.625","3":"0.1","4":"0.0000000"},{"1":"43 days","2":"0.375","3":"0.0","4":"0.1726939"},{"1":"43 days","2":"1.125","3":"0.7","4":"0.1726939"},{"1":"43 days","2":"1.875","3":"1.7","4":"0.1726939"},{"1":"43 days","2":"2.625","3":"0.7","4":"0.1726939"},{"1":"43 days","2":"3.375","3":"0.2","4":"0.1726939"},{"1":"43 days","2":"4.125","3":"0.8","4":"0.1726939"},{"1":"43 days","2":"4.875","3":"0.7","4":"0.1726939"},{"1":"43 days","2":"5.625","3":"2.0","4":"0.1726939"},{"1":"43 days","2":"6.375","3":"1.9","4":"0.1726939"},{"1":"43 days","2":"7.125","3":"1.7","4":"0.1726939"},{"1":"43 days","2":"7.875","3":"1.8","4":"0.1726939"},{"1":"43 days","2":"8.625","3":"0.8","4":"0.1726939"},{"1":"43 days","2":"9.375","3":"1.7","4":"0.1726939"},{"1":"43 days","2":"10.125","3":"1.4","4":"0.1726939"},{"1":"43 days","2":"10.875","3":"1.6","4":"0.1726939"},{"1":"43 days","2":"11.625","3":"1.7","4":"0.1726939"},{"1":"43 days","2":"12.375","3":"0.5","4":"0.1726939"},{"1":"43 days","2":"13.125","3":"1.6","4":"0.1726939"},{"1":"43 days","2":"13.875","3":"2.9","4":"0.1726939"},{"1":"43 days","2":"14.625","3":"1.4","4":"0.1726939"},{"1":"63 days","2":"0.375","3":"1.8","4":"0.2953100"},{"1":"63 days","2":"1.125","3":"3.1","4":"0.2953100"},{"1":"63 days","2":"1.875","3":"3.3","4":"0.2953100"},{"1":"63 days","2":"2.625","3":"4.8","4":"0.2953100"},{"1":"63 days","2":"3.375","3":"5.2","4":"0.2953100"},{"1":"63 days","2":"4.125","3":"5.6","4":"0.2953100"},{"1":"63 days","2":"4.875","3":"6.7","4":"0.2953100"},{"1":"63 days","2":"5.625","3":"7.6","4":"0.2953100"},{"1":"63 days","2":"6.375","3":"7.8","4":"0.2953100"},{"1":"63 days","2":"7.125","3":"7.6","4":"0.2953100"},{"1":"63 days","2":"7.875","3":"7.5","4":"0.2953100"},{"1":"63 days","2":"8.625","3":"7.2","4":"0.2953100"},{"1":"63 days","2":"9.375","3":"7.1","4":"0.2953100"},{"1":"63 days","2":"10.125","3":"6.8","4":"0.2953100"},{"1":"63 days","2":"10.875","3":"5.8","4":"0.2953100"},{"1":"63 days","2":"11.625","3":"5.4","4":"0.2953100"},{"1":"63 days","2":"12.375","3":"4.2","4":"0.2953100"},{"1":"63 days","2":"13.125","3":"4.0","4":"0.2953100"},{"1":"63 days","2":"13.875","3":"6.9","4":"0.2953100"},{"1":"63 days","2":"14.625","3":"5.5","4":"0.2953100"},{"1":"91 days","2":"0.375","3":"0.0","4":"0.4766580"},{"1":"91 days","2":"1.125","3":"1.7","4":"0.4766580"},{"1":"91 days","2":"1.875","3":"2.4","4":"0.4766580"},{"1":"91 days","2":"2.625","3":"2.9","4":"0.4766580"},{"1":"91 days","2":"3.375","3":"4.0","4":"0.4766580"},{"1":"91 days","2":"4.125","3":"4.0","4":"0.4766580"},{"1":"91 days","2":"4.875","3":"3.8","4":"0.4766580"},{"1":"91 days","2":"5.625","3":"5.2","4":"0.4766580"},{"1":"91 days","2":"6.375","3":"5.7","4":"0.4766580"},{"1":"91 days","2":"7.125","3":"7.2","4":"0.4766580"},{"1":"91 days","2":"7.875","3":"7.7","4":"0.4766580"},{"1":"91 days","2":"8.625","3":"7.1","4":"0.4766580"},{"1":"91 days","2":"9.375","3":"5.8","4":"0.4766580"},{"1":"91 days","2":"10.125","3":"6.1","4":"0.4766580"},{"1":"91 days","2":"10.875","3":"6.1","4":"0.4766580"},{"1":"91 days","2":"11.625","3":"4.3","4":"0.4766580"},{"1":"91 days","2":"12.375","3":"3.2","4":"0.4766580"},{"1":"91 days","2":"13.125","3":"2.1","4":"0.4766580"},{"1":"91 days","2":"13.875","3":"3.8","4":"0.4766580"},{"1":"91 days","2":"14.625","3":"4.7","4":"0.4766580"},{"1":"146 days","2":"0.375","3":"0.4","4":"0.8810857"},{"1":"146 days","2":"1.125","3":"4.6","4":"0.8810857"},{"1":"146 days","2":"1.875","3":"5.5","4":"0.8810857"},{"1":"146 days","2":"2.625","3":"8.0","4":"0.8810857"},{"1":"146 days","2":"3.375","3":"8.4","4":"0.8810857"},{"1":"146 days","2":"4.125","3":"8.9","4":"0.8810857"},{"1":"146 days","2":"4.875","3":"8.0","4":"0.8810857"},{"1":"146 days","2":"5.625","3":"11.5","4":"0.8810857"},{"1":"146 days","2":"6.375","3":"12.6","4":"0.8810857"},{"1":"146 days","2":"7.125","3":"14.7","4":"0.8810857"},{"1":"146 days","2":"7.875","3":"15.3","4":"0.8810857"},{"1":"146 days","2":"8.625","3":"13.4","4":"0.8810857"},{"1":"146 days","2":"9.375","3":"13.4","4":"0.8810857"},{"1":"146 days","2":"10.125","3":"12.1","4":"0.8810857"},{"1":"146 days","2":"10.875","3":"10.9","4":"0.8810857"},{"1":"146 days","2":"11.625","3":"9.8","4":"0.8810857"},{"1":"146 days","2":"12.375","3":"5.7","4":"0.8810857"},{"1":"146 days","2":"13.125","3":"5.5","4":"0.8810857"},{"1":"146 days","2":"13.875","3":"11.0","4":"0.8810857"},{"1":"146 days","2":"14.625","3":"6.7","4":"0.8810857"},{"1":"179 days","2":"0.375","3":"4.0","4":"1.1312397"},{"1":"179 days","2":"1.125","3":"5.7","4":"1.1312397"},{"1":"179 days","2":"1.875","3":"8.3","4":"1.1312397"},{"1":"179 days","2":"2.625","3":"8.7","4":"1.1312397"},{"1":"179 days","2":"3.375","3":"9.5","4":"1.1312397"},{"1":"179 days","2":"4.125","3":"9.7","4":"1.1312397"},{"1":"179 days","2":"4.875","3":"11.7","4":"1.1312397"},{"1":"179 days","2":"5.625","3":"14.2","4":"1.1312397"},{"1":"179 days","2":"6.375","3":"17.5","4":"1.1312397"},{"1":"179 days","2":"7.125","3":"17.8","4":"1.1312397"},{"1":"179 days","2":"7.875","3":"17.0","4":"1.1312397"},{"1":"179 days","2":"8.625","3":"16.0","4":"1.1312397"},{"1":"179 days","2":"9.375","3":"15.2","4":"1.1312397"},{"1":"179 days","2":"10.125","3":"14.9","4":"1.1312397"},{"1":"179 days","2":"10.875","3":"13.0","4":"1.1312397"},{"1":"179 days","2":"11.625","3":"8.8","4":"1.1312397"},{"1":"179 days","2":"12.375","3":"6.8","4":"1.1312397"},{"1":"179 days","2":"13.125","3":"7.1","4":"1.1312397"},{"1":"179 days","2":"13.875","3":"12.3","4":"1.1312397"},{"1":"179 days","2":"14.625","3":"10.1","4":"1.1312397"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
@@ -328,14 +358,22 @@ background: #FFFFFF;
 <div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
 <div class="cell">
 <div class="cell-output-display">
-<p><img src="sup-material-ch6_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="960"></p>
+<div>
+<figure class="figure">
+<p><img src="sup-material-ch6_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
 </div>
 </div>
 </div>
 <div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
 <div class="cell">
 <div class="cell-output-display">
-<p><img src="sup-material-ch6_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid" width="960"></p>
+<div>
+<figure class="figure">
+<p><img src="sup-material-ch6_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
 </div>
 </div>
 </div>
@@ -390,40 +428,56 @@ y^*_{i, m} = &amp; \mu_m t_i
 <p>Information about the notation as well as the intricasies regarding Bayesian heirarchical modeling, functional data alaysis (FDA), the noisy gamma process (GP), and choise of prior distributions are contained in chapter 6 of the main thesis.</p>
 <section id="b-spline-design-matrix" class="level3" data-number="3.1">
 <h3 data-number="3.1" class="anchored" data-anchor-id="b-spline-design-matrix"><span class="header-section-number">3.1</span> B-spline design matrix</h3>
-<p>In the first level of the hierarchical models (in <a href="#eq-data-model-gp">Equation&nbsp;1</a> and <a href="#eq-data-model-lm">Equation&nbsp;4</a>), we takes a functional interpretation of the UT measurements across the surface of the belt. That is, we asssume that the measurements are noisy observations of a smooth underlying function. We describe this smooth function using a B-spline. <a href="#fig-B-spline-demo-1">Figure&nbsp;2 (a)</a> shows the functional interpretation for the fith observation of <code>Belt_A</code>. The B-spline is composed of the weighted sum of a set of B-spline basis functions, we can see the weighted basis functions is <a href="#fig-B-spline-demo-2">Figure&nbsp;2 (b)</a> and the unweighted basis functions in <a href="#fig-B-spline-demo-3">Figure&nbsp;2 (c)</a>.</p>
-<div id="fig-B-spline-demo" class="cell quarto-layout-panel">
-<figure class="figure">
-<div class="quarto-layout-row quarto-layout-valign-top">
-<div class="cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 100.0%;justify-content: center;">
-<div id="fig-B-spline-demo-1" class="quarto-figure quarto-figure-center anchored">
-<figure class="figure">
-<p><img src="sup-material-ch6_files/figure-html/fig-B-spline-demo-1.png" class="img-fluid figure-img" data-ref-parent="fig-B-spline-demo" width="768"></p>
-<figcaption class="figure-caption">(a) Fitted B-spline</figcaption>
+<p>In the first level of the hierarchical models (in <a href="#eq-data-model-gp" class="quarto-xref">Equation&nbsp;1</a> and <a href="#eq-data-model-lm" class="quarto-xref">Equation&nbsp;4</a>), we takes a functional interpretation of the UT measurements across the surface of the belt. That is, we asssume that the measurements are noisy observations of a smooth underlying function. We describe this smooth function using a B-spline. <a href="#fig-B-spline-demo-1" class="quarto-xref">Figure&nbsp;2 (a)</a> shows the functional interpretation for the fith observation of <code>Belt_A</code>. The B-spline is composed of the weighted sum of a set of B-spline basis functions, we can see the weighted basis functions is <a href="#fig-B-spline-demo-2" class="quarto-xref">Figure&nbsp;2 (b)</a> and the unweighted basis functions in <a href="#fig-B-spline-demo-3" class="quarto-xref">Figure&nbsp;2 (c)</a>.</p>
+<div id="fig-B-spline-demo" class="quarto-layout-panel">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-B-spline-demo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="quarto-layout-row">
+<div class="cell-output-display quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-B-spline-demo" style="flex-basis: 100.0%;justify-content: flex-start;">
+<div id="fig-B-spline-demo-1" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-B-spline-demo-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="sup-material-ch6_files/figure-html/fig-B-spline-demo-1.png" class="img-fluid figure-img" data-ref-parent="fig-B-spline-demo" width="768">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-B-spline-demo-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(a) Fitted B-spline
+</figcaption>
 </figure>
 </div>
 </div>
 </div>
-<div class="quarto-layout-row quarto-layout-valign-top">
-<div class="cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 100.0%;justify-content: center;">
-<div id="fig-B-spline-demo-2" class="quarto-figure quarto-figure-center anchored">
-<figure class="figure">
-<p><img src="sup-material-ch6_files/figure-html/fig-B-spline-demo-2.png" class="img-fluid figure-img" data-ref-parent="fig-B-spline-demo" width="768"></p>
-<figcaption class="figure-caption">(b) Weighted basis functions</figcaption>
+<div class="quarto-layout-row">
+<div class="cell-output-display quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-B-spline-demo" style="flex-basis: 100.0%;justify-content: flex-start;">
+<div id="fig-B-spline-demo-2" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-B-spline-demo-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="sup-material-ch6_files/figure-html/fig-B-spline-demo-2.png" class="img-fluid figure-img" data-ref-parent="fig-B-spline-demo" width="768">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-B-spline-demo-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(b) Weighted basis functions
+</figcaption>
 </figure>
 </div>
 </div>
 </div>
-<div class="quarto-layout-row quarto-layout-valign-top">
-<div class="cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 100.0%;justify-content: center;">
-<div id="fig-B-spline-demo-3" class="quarto-figure quarto-figure-center anchored">
-<figure class="figure">
-<p><img src="sup-material-ch6_files/figure-html/fig-B-spline-demo-3.png" class="img-fluid figure-img" data-ref-parent="fig-B-spline-demo" width="768"></p>
-<figcaption class="figure-caption">(c) Unweighted basis functions</figcaption>
+<div class="quarto-layout-row">
+<div class="cell-output-display quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-B-spline-demo" style="flex-basis: 100.0%;justify-content: flex-start;">
+<div id="fig-B-spline-demo-3" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-B-spline-demo-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="sup-material-ch6_files/figure-html/fig-B-spline-demo-3.png" class="img-fluid figure-img" data-ref-parent="fig-B-spline-demo" width="768">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-B-spline-demo-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(c) Unweighted basis functions
+</figcaption>
 </figure>
 </div>
 </div>
 </div>
-<p></p><figcaption class="figure-caption">Figure&nbsp;2: Fitted B-spline and basis funcitons for the fith observation of Belt_A.</figcaption><p></p>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-B-spline-demo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Fitted B-spline and basis funcitons for the fith observation of Belt_A.
+</figcaption>
 </figure>
 </div>
 <p>However, we cant fit estimate the spline coeficients-the weights of the basis functions-using the continuous forms of the basis functions. To estimate the spline coeficients we the design matrix, a matrix containing the values of the basis functions at each discrete measurement location. We use the <code>splines2</code> package to do this.</p>
@@ -453,13 +507,17 @@ Dropped basis functions
 </section>
 <section id="sec-informative-priors" class="level3" data-number="3.2">
 <h3 data-number="3.2" class="anchored" data-anchor-id="sec-informative-priors"><span class="header-section-number">3.2</span> Informative prior</h3>
-<p>The two process models in <a href="#eq-process-model-gp">Equation&nbsp;2</a> and <a href="#eq-process-model-lm">Equation&nbsp;5</a> are set up so that we can encode information about the mean wear rate of spline coefficients by placing informative priors on the <span class="math inline">\(\mu_m\)</span>. This means that we can supliment the analysis with past data or domain expert knowledge. We have two previouse belt lives–<code>Belt_B</code> and <code>Belt_C</code>– which we can use to construct an informative prior for the <span class="math inline">\(\mu_m\)</span>. We can crudely estemate the mean degradation of the coeficients by fitting splines to each of the observations from the two historic belts and then fitting linear models to the relationship between the ceofficients values and tonnes. <a href="#fig-estimated-coefs">Figure&nbsp;3</a> below shows the estimated linear fits.</p>
+<p>The two process models in <a href="#eq-process-model-gp" class="quarto-xref">Equation&nbsp;2</a> and <a href="#eq-process-model-lm" class="quarto-xref">Equation&nbsp;5</a> are set up so that we can encode information about the mean wear rate of spline coefficients by placing informative priors on the <span class="math inline">\(\mu_m\)</span>. This means that we can supliment the analysis with past data or domain expert knowledge. We have two previouse belt lives–<code>Belt_B</code> and <code>Belt_C</code>– which we can use to construct an informative prior for the <span class="math inline">\(\mu_m\)</span>. We can crudely estemate the mean degradation of the coeficients by fitting splines to each of the observations from the two historic belts and then fitting linear models to the relationship between the ceofficients values and tonnes. <a href="#fig-estimated-coefs" class="quarto-xref">Figure&nbsp;3</a> below shows the estimated linear fits.</p>
 <div class="cell">
 <div class="cell-output-display">
-<div id="fig-estimated-coefs" class="quarto-figure quarto-figure-center anchored">
-<figure class="figure">
-<p><img src="sup-material-ch6_files/figure-html/fig-estimated-coefs-1.png" class="img-fluid figure-img" width="960"></p>
-<figcaption class="figure-caption">Figure&nbsp;3: Estimating mean wear rate of the spline paramters from historic belt data to construct an informative prior for <span class="math inline">\(\mu_m\)</span>.</figcaption>
+<div id="fig-estimated-coefs" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-estimated-coefs-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="sup-material-ch6_files/figure-html/fig-estimated-coefs-1.png" class="img-fluid figure-img" width="960">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-estimated-coefs-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: Estimating mean wear rate of the spline paramters from historic belt data to construct an informative prior for <span class="math inline">\(\mu_m\)</span>.
+</figcaption>
 </figure>
 </div>
 </div>
@@ -468,19 +526,23 @@ Dropped basis functions
 </section>
 <section id="prior-predictive-checks" class="level3" data-number="3.3">
 <h3 data-number="3.3" class="anchored" data-anchor-id="prior-predictive-checks"><span class="header-section-number">3.3</span> Prior predictive checks</h3>
-<p>Now that we have specified the full prior model in the form of a group of marginal distributions, each of the marginal priors make sense on their own, but it is important to make sure that the prior we have specified encodes what we intended in the space of the data. To check this we can use prior predictive checking <span class="citation" data-cites="gabry_vis_2019">Gabry et al. (<a href="#ref-gabry_vis_2019" role="doc-biblioref">2019</a>)</span>. Using the informative prior developed for <span class="math inline">\(\mu_m\)</span> in the previous section and the specified priors for the other parameters in <a href="#eq-param-model-gp">Equation&nbsp;3</a> and <a href="#eq-param-model-lm">Equation&nbsp;6</a>, we can simulate data from our Bayesian model and then visualise this data to check that our specified priors encode what we originaly intended.</p>
-<p>The priors that we have specified for the varinace parameters are extreemly vaigue, and so we only perform prior predictive checks for the “non-noisy” wear profiles. In <a href="#fig-ppc">Figure&nbsp;4</a> below, we simulate sixteen fictitious belt wear data sets from the prior.</p>
+<p>Now that we have specified the full prior model in the form of a group of marginal distributions, each of the marginal priors make sense on their own, but it is important to make sure that the prior we have specified encodes what we intended in the space of the data. To check this we can use prior predictive checking <span class="citation" data-cites="gabry_vis_2019">Gabry et al. (<a href="#ref-gabry_vis_2019" role="doc-biblioref">2019</a>)</span>. Using the informative prior developed for <span class="math inline">\(\mu_m\)</span> in the previous section and the specified priors for the other parameters in <a href="#eq-param-model-gp" class="quarto-xref">Equation&nbsp;3</a> and <a href="#eq-param-model-lm" class="quarto-xref">Equation&nbsp;6</a>, we can simulate data from our Bayesian model and then visualise this data to check that our specified priors encode what we originaly intended.</p>
+<p>The priors that we have specified for the varinace parameters are extreemly vaigue, and so we only perform prior predictive checks for the “non-noisy” wear profiles. In <a href="#fig-ppc" class="quarto-xref">Figure&nbsp;4</a> below, we simulate sixteen fictitious belt wear data sets from the prior.</p>
 <div class="cell">
 <div class="cell-output-display">
-<div id="fig-ppc" class="quarto-figure quarto-figure-center anchored">
-<figure class="figure">
-<p><img src="sup-material-ch6_files/figure-html/fig-ppc-1.png" class="img-fluid figure-img" width="960"></p>
-<figcaption class="figure-caption">Figure&nbsp;4: Sixteen synthetic non-noisy belt wear data sets generated using the prior, otherwise known as prior predictive checks.</figcaption>
+<div id="fig-ppc" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ppc-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="sup-material-ch6_files/figure-html/fig-ppc-1.png" class="img-fluid figure-img" width="960">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ppc-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Sixteen synthetic non-noisy belt wear data sets generated using the prior, otherwise known as prior predictive checks.
+</figcaption>
 </figure>
 </div>
 </div>
 </div>
-<p>Out of the sixteen prior predictive realisations in <a href="#fig-ppc">Figure&nbsp;4</a>, roughly twelve of them look like feasible beltwear data sets. Of the few that do not look feisible, two profiles have unreasonable scales (more than a 100mm jump in wear) and the remainder don’t look feisable because of a lack of larege scale spacial corelation. This last point regarding the lack of spatial corelation is a charecteristic of the models structue, not the prior. We have not included any spacial dependance in the model for the spline coeficients, but this will be explored in future work. Considering that only two of the simulated data sets look completely unreasonable based on our understanding of the data generateing mechanism, we consider this prior to be a sufficient weekly informative prior for the analysis.</p>
+<p>Out of the sixteen prior predictive realisations in <a href="#fig-ppc" class="quarto-xref">Figure&nbsp;4</a>, roughly twelve of them look like feasible beltwear data sets. Of the few that do not look feisible, two profiles have unreasonable scales (more than a 100mm jump in wear) and the remainder don’t look feisable because of a lack of larege scale spacial corelation. This last point regarding the lack of spatial corelation is a charecteristic of the models structue, not the prior. We have not included any spacial dependance in the model for the spline coeficients, but this will be explored in future work. Considering that only two of the simulated data sets look completely unreasonable based on our understanding of the data generateing mechanism, we consider this prior to be a sufficient weekly informative prior for the analysis.</p>
 </section>
 </section>
 <section id="stan-models" class="level2" data-number="4">
@@ -552,7 +614,7 @@ Dropped basis functions
 </section>
 <section id="gp" class="level3" data-number="4.2">
 <h3 data-number="4.2" class="anchored" data-anchor-id="gp"><span class="header-section-number">4.2</span> GP</h3>
-<p>Below the BHM in <a href="#eq-data-model-gp">Equation&nbsp;1</a>, <a href="#eq-param-model-gp">Equation&nbsp;3</a>, and <a href="#eq-process-model-gp">Equation&nbsp;2</a> is specified in Stan.</p>
+<p>Below the BHM in <a href="#eq-data-model-gp" class="quarto-xref">Equation&nbsp;1</a>, <a href="#eq-param-model-gp" class="quarto-xref">Equation&nbsp;3</a>, and <a href="#eq-process-model-gp" class="quarto-xref">Equation&nbsp;2</a> is specified in Stan.</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -727,10 +789,9 @@ Parameterisation of <span class="math inline">\(\nu\)</span>
 <div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
 <div class="cell">
 <div class="cell-output-display">
-
 <div data-pagedtable="false">
   <script data-pagedtable-source="" type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["summary.mean"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["summary.se_mean"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["summary.sd"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["summary.n_eff"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["summary.Rhat"],"name":[5],"type":["dbl"],"align":["right"]}],"data":[{"1":"0.37792444","2":"0.0002590112","3":"0.02516277","4":"9437.9968","5":"1.0007245","_rn_":"sigma"},{"1":"0.21836638","2":"0.0013181946","3":"0.04289200","4":"1058.7502","5":"1.0049507","_rn_":"phi"},{"1":"4.62575848","2":"0.0136950655","3":"1.12662777","4":"6767.5688","5":"1.0000210","_rn_":"mu[1]"},{"1":"8.17023666","2":"0.0464813254","3":"2.46957767","4":"2822.8537","5":"1.0016027","_rn_":"mu[2]"},{"1":"7.62697921","2":"0.0187332906","3":"1.75666188","4":"8793.2256","5":"0.9999594","_rn_":"mu[3]"},{"1":"16.41693580","2":"0.0233581678","3":"2.37683725","4":"10354.3143","5":"1.0000750","_rn_":"mu[4]"},{"1":"15.00762881","2":"0.0226832240","3":"2.09480483","4":"8528.5966","5":"1.0000378","_rn_":"mu[5]"},{"1":"13.31974051","2":"0.0269138318","3":"2.55240523","4":"8993.9027","5":"1.0005253","_rn_":"mu[6]"},{"1":"7.82691025","2":"0.0250530577","3":"2.04124663","4":"6638.4927","5":"1.0014486","_rn_":"mu[7]"},{"1":"4.84723052","2":"0.0311617533","3":"1.83970250","4":"3485.3904","5":"1.0004346","_rn_":"mu[8]"},{"1":"0.16286340","2":"0.0041951522","3":"0.09720796","4":"536.9183","5":"1.0075827","_rn_":"nu[1]"},{"1":"0.17195310","2":"0.0048519084","3":"0.10376354","4":"457.3665","5":"1.0095008","_rn_":"nu[2]"},{"1":"0.19033222","2":"0.0052702801","3":"0.10911145","4":"428.6208","5":"1.0063472","_rn_":"nu[3]"},{"1":"0.15594752","2":"0.0042246100","3":"0.09258840","4":"480.3303","5":"1.0144906","_rn_":"nu[4]"},{"1":"0.14377971","2":"0.0038176716","3":"0.08672155","4":"516.0086","5":"1.0070655","_rn_":"nu[5]"},{"1":"0.18194375","2":"0.0047347386","3":"0.10088888","4":"454.0405","5":"1.0129533","_rn_":"nu[6]"},{"1":"0.18297393","2":"0.0051626371","3":"0.10963651","4":"450.9903","5":"1.0059660","_rn_":"nu[7]"},{"1":"0.18200326","2":"0.0050675040","3":"0.10732562","4":"448.5580","5":"1.0093373","_rn_":"nu[8]"},{"1":"0.17040353","2":"0.0043186073","3":"0.08044417","4":"346.9778","5":"1.0136272","_rn_":"nu_mean"},{"1":"0.07225369","2":"0.0024404394","3":"0.06305168","4":"667.5091","5":"1.0071333","_rn_":"nu_sd"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["summary.mean"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["summary.se_mean"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["summary.sd"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["summary.n_eff"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["summary.Rhat"],"name":[5],"type":["dbl"],"align":["right"]}],"data":[{"1":"0.37759392","2":"0.0003643479","3":"0.02539928","4":"4859.7106","5":"1.000926","_rn_":"sigma"},{"1":"0.21936452","2":"0.0014490897","3":"0.04467007","4":"950.2608","5":"1.000559","_rn_":"phi"},{"1":"4.59698354","2":"0.0172024358","3":"1.14259234","4":"4411.6670","5":"1.002674","_rn_":"mu[1]"},{"1":"8.09721953","2":"0.0484726255","3":"2.38996371","4":"2431.0256","5":"1.001495","_rn_":"mu[2]"},{"1":"7.59256671","2":"0.0161639869","3":"1.67132315","4":"10691.1366","5":"1.000223","_rn_":"mu[3]"},{"1":"16.37464358","2":"0.0788536880","3":"2.38947793","4":"918.2523","5":"1.004791","_rn_":"mu[4]"},{"1":"14.97158756","2":"0.0270186454","3":"2.03355458","4":"5664.7992","5":"1.000511","_rn_":"mu[5]"},{"1":"13.32965081","2":"0.0273601712","3":"2.51729626","4":"8465.0795","5":"1.000044","_rn_":"mu[6]"},{"1":"7.87583801","2":"0.0300609902","3":"2.02254717","4":"4526.7942","5":"1.001614","_rn_":"mu[7]"},{"1":"4.75997699","2":"0.0276888761","3":"1.69138777","4":"3731.4336","5":"1.000645","_rn_":"mu[8]"},{"1":"0.15587679","2":"0.0050554667","3":"0.09433982","4":"348.2311","5":"1.012140","_rn_":"nu[1]"},{"1":"0.16405660","2":"0.0059191425","3":"0.10039429","4":"287.6739","5":"1.014788","_rn_":"nu[2]"},{"1":"0.17741658","2":"0.0061904035","3":"0.10612925","4":"293.9221","5":"1.011793","_rn_":"nu[3]"},{"1":"0.14922086","2":"0.0049900731","3":"0.08997456","4":"325.1065","5":"1.010568","_rn_":"nu[4]"},{"1":"0.14240080","2":"0.0045978073","3":"0.08305632","4":"326.3201","5":"1.013094","_rn_":"nu[5]"},{"1":"0.16850657","2":"0.0054100526","3":"0.09724028","4":"323.0646","5":"1.010958","_rn_":"nu[6]"},{"1":"0.17205535","2":"0.0057232230","3":"0.10552443","4":"339.9576","5":"1.009983","_rn_":"nu[7]"},{"1":"0.16659517","2":"0.0053368871","3":"0.10190824","4":"364.6218","5":"1.012718","_rn_":"nu[8]"},{"1":"0.16163375","2":"0.0053033801","3":"0.08157286","4":"236.5843","5":"1.016844","_rn_":"nu_mean"},{"1":"0.06172996","2":"0.0023109097","3":"0.05605798","4":"588.4491","5":"1.004099","_rn_":"nu_sd"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
 </div>
@@ -739,10 +800,9 @@ Parameterisation of <span class="math inline">\(\nu\)</span>
 <div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
 <div class="cell">
 <div class="cell-output-display">
-
 <div data-pagedtable="false">
   <script data-pagedtable-source="" type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["summary.mean"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["summary.se_mean"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["summary.sd"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["summary.n_eff"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["summary.Rhat"],"name":[5],"type":["dbl"],"align":["right"]}],"data":[{"1":"0.3762779","2":"0.0002350121","3":"0.02476775","4":"11106.897","5":"1.0002007","_rn_":"sigma"},{"1":"0.2629094","2":"0.0005198401","3":"0.03789741","4":"5314.710","5":"1.0007753","_rn_":"phi"},{"1":"4.3352730","2":"0.0081239422","3":"0.69902521","4":"7403.755","5":"1.0000579","_rn_":"mu[1]"},{"1":"7.3916286","2":"0.0123497678","3":"1.06687456","4":"7462.926","5":"1.0000991","_rn_":"mu[2]"},{"1":"7.7937691","2":"0.0114044361","3":"1.05345126","4":"8532.597","5":"0.9999632","_rn_":"mu[3]"},{"1":"16.3258964","2":"0.0125281420","3":"1.60196103","4":"16350.482","5":"0.9997625","_rn_":"mu[4]"},{"1":"15.7269682","2":"0.0123691175","3":"1.43776375","4":"13511.315","5":"0.9999653","_rn_":"mu[5]"},{"1":"14.2541229","2":"0.0143031832","3":"1.56646762","4":"11994.370","5":"1.0000225","_rn_":"mu[6]"},{"1":"8.7307142","2":"0.0147859889","3":"1.26299590","4":"7296.308","5":"0.9998064","_rn_":"mu[7]"},{"1":"4.5820627","2":"0.0108222880","3":"0.86505222","4":"6389.200","5":"1.0002325","_rn_":"mu[8]"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["summary.mean"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["summary.se_mean"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["summary.sd"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["summary.n_eff"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["summary.Rhat"],"name":[5],"type":["dbl"],"align":["right"]}],"data":[{"1":"0.3769641","2":"0.0002725374","3":"0.02518198","4":"8537.441","5":"0.9999990","_rn_":"sigma"},{"1":"0.2630436","2":"0.0005514993","3":"0.03790482","4":"4723.881","5":"1.0006897","_rn_":"phi"},{"1":"4.3387966","2":"0.0083680430","3":"0.68908028","4":"6780.970","5":"0.9998416","_rn_":"mu[1]"},{"1":"7.4058881","2":"0.0132107414","3":"1.07535690","4":"6625.992","5":"1.0005835","_rn_":"mu[2]"},{"1":"7.7752403","2":"0.0115772396","3":"1.05369216","4":"8283.568","5":"1.0009215","_rn_":"mu[3]"},{"1":"16.3418027","2":"0.0152821117","3":"1.61243892","4":"11132.682","5":"1.0002568","_rn_":"mu[4]"},{"1":"15.7145967","2":"0.0134778919","3":"1.40675473","4":"10894.137","5":"1.0002432","_rn_":"mu[5]"},{"1":"14.2512915","2":"0.0158010325","3":"1.56738834","4":"9839.710","5":"0.9998405","_rn_":"mu[6]"},{"1":"8.7448687","2":"0.0172558612","3":"1.27760089","4":"5481.724","5":"1.0001756","_rn_":"mu[7]"},{"1":"4.5700669","2":"0.0127410986","3":"0.87161166","4":"4679.854","5":"1.0005968","_rn_":"mu[8]"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
 </div>
@@ -758,10 +818,14 @@ Parameterisation of <span class="math inline">\(\nu\)</span>
 <div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
 <div class="cell">
 <div class="cell-output-display">
-<div id="fig-parcoord-diag-plot-gp" class="quarto-figure quarto-figure-center anchored">
-<figure class="figure">
-<p><img src="sup-material-ch6_files/figure-html/fig-parcoord-diag-plot-gp-1.png" class="img-fluid figure-img" width="960"></p>
-<figcaption class="figure-caption">Figure&nbsp;5: Prallel coordinate plot for the main parameters.</figcaption>
+<div id="fig-parcoord-diag-plot-gp" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-parcoord-diag-plot-gp-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="sup-material-ch6_files/figure-html/fig-parcoord-diag-plot-gp-1.png" class="img-fluid figure-img" width="960">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-parcoord-diag-plot-gp-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: Prallel coordinate plot for the main parameters.
+</figcaption>
 </figure>
 </div>
 </div>
@@ -770,10 +834,14 @@ Parameterisation of <span class="math inline">\(\nu\)</span>
 <div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
 <div class="cell">
 <div class="cell-output-display">
-<div id="fig-parcoord-diag-plot-lm" class="quarto-figure quarto-figure-center anchored">
-<figure class="figure">
-<p><img src="sup-material-ch6_files/figure-html/fig-parcoord-diag-plot-lm-1.png" class="img-fluid figure-img" width="960"></p>
-<figcaption class="figure-caption">Figure&nbsp;6: Prallel coordinate plot for the main parameters.</figcaption>
+<div id="fig-parcoord-diag-plot-lm" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-parcoord-diag-plot-lm-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="sup-material-ch6_files/figure-html/fig-parcoord-diag-plot-lm-1.png" class="img-fluid figure-img" width="960">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-parcoord-diag-plot-lm-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: Prallel coordinate plot for the main parameters.
+</figcaption>
 </figure>
 </div>
 </div>
@@ -787,17 +855,21 @@ Parameterisation of <span class="math inline">\(\nu\)</span>
 <p>The stan posterior object <code>stan_fit_full</code> contains a multidimentional posterior that holds withing it what we have learnt from the data. While it is hard to visualise the full posterior, some ways that we can visualise the posterior is by looking at the seperate marginal distribution of the parameters, the marginal distribution of intermediate(or unobservable-values), or posterior predictive distributions.</p>
 <section id="marginal" class="level3" data-number="6.1">
 <h3 data-number="6.1" class="anchored" data-anchor-id="marginal"><span class="header-section-number">6.1</span> Marginal</h3>
-<p>The marginal distributions of the parameters show us directly our new belief after the prior distribution for each parameter has been updated by the data. From the marginal posteriors of the <span class="math inline">\(\mu_m\)</span> in <a href="#fig-marginal-posts-gp">Figure&nbsp;7</a> and <a href="#fig-marginal-posts-lm">Figure&nbsp;8</a> A, we can see that the models have identified that the “dishing out” behaviour is part of the driving underlying process. In the gamma process model (<a href="#fig-marginal-posts-gp">Figure&nbsp;7</a>), we can also see that there is not a large variation in the <span class="math inline">\(\nu_m\)</span>; i.e.&nbsp;there is not a lot of variation in how “jumpy” the wear in different parts of the belt is-for other conveyor belts this could be very different. Lastly, the mass of <span class="math inline">\(\nu_{mean}\)</span> is reasonably far from zero, sugesting that the underlying degradation process is indeed not linear like we first suspected.</p>
+<p>The marginal distributions of the parameters show us directly our new belief after the prior distribution for each parameter has been updated by the data. From the marginal posteriors of the <span class="math inline">\(\mu_m\)</span> in <a href="#fig-marginal-posts-gp" class="quarto-xref">Figure&nbsp;7</a> and <a href="#fig-marginal-posts-lm" class="quarto-xref">Figure&nbsp;8</a> A, we can see that the models have identified that the “dishing out” behaviour is part of the driving underlying process. In the gamma process model (<a href="#fig-marginal-posts-gp" class="quarto-xref">Figure&nbsp;7</a>), we can also see that there is not a large variation in the <span class="math inline">\(\nu_m\)</span>; i.e.&nbsp;there is not a lot of variation in how “jumpy” the wear in different parts of the belt is-for other conveyor belts this could be very different. Lastly, the mass of <span class="math inline">\(\nu_{mean}\)</span> is reasonably far from zero, sugesting that the underlying degradation process is indeed not linear like we first suspected.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true" href="">GP</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false" href="">LM</a></li></ul>
 <div class="tab-content">
 <div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
 <div class="cell">
 <div class="cell-output-display">
-<div id="fig-marginal-posts-gp" class="quarto-figure quarto-figure-center anchored">
-<figure class="figure">
-<p><img src="sup-material-ch6_files/figure-html/fig-marginal-posts-gp-1.png" class="img-fluid figure-img" width="960"></p>
-<figcaption class="figure-caption">Figure&nbsp;7: The marginal posterior distributions of the model parameters.</figcaption>
+<div id="fig-marginal-posts-gp" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-marginal-posts-gp-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="sup-material-ch6_files/figure-html/fig-marginal-posts-gp-1.png" class="img-fluid figure-img" width="960">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-marginal-posts-gp-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7: The marginal posterior distributions of the model parameters.
+</figcaption>
 </figure>
 </div>
 </div>
@@ -806,10 +878,14 @@ Parameterisation of <span class="math inline">\(\nu\)</span>
 <div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
 <div class="cell">
 <div class="cell-output-display">
-<div id="fig-marginal-posts-lm" class="quarto-figure quarto-figure-center anchored">
-<figure class="figure">
-<p><img src="sup-material-ch6_files/figure-html/fig-marginal-posts-lm-1.png" class="img-fluid figure-img" width="960"></p>
-<figcaption class="figure-caption">Figure&nbsp;8: The marginal posterior distributions of the model parameters.</figcaption>
+<div id="fig-marginal-posts-lm" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-marginal-posts-lm-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="sup-material-ch6_files/figure-html/fig-marginal-posts-lm-1.png" class="img-fluid figure-img" width="960">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-marginal-posts-lm-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8: The marginal posterior distributions of the model parameters.
+</figcaption>
 </figure>
 </div>
 </div>
@@ -824,10 +900,14 @@ Parameterisation of <span class="math inline">\(\nu\)</span>
 <div id="tabset-7-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-7-1-tab">
 <div class="cell">
 <div class="cell-output-display">
-<div id="fig-post-prior-comp-mu" class="quarto-figure quarto-figure-center anchored">
-<figure class="figure">
-<p><img src="sup-material-ch6_files/figure-html/fig-post-prior-comp-mu-1.png" class="img-fluid figure-img" width="960"></p>
-<figcaption class="figure-caption">Figure&nbsp;9: Comparison of the marginal prior and posterior for <span class="math inline">\(\mu\)</span>.</figcaption>
+<div id="fig-post-prior-comp-mu" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-post-prior-comp-mu-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="sup-material-ch6_files/figure-html/fig-post-prior-comp-mu-1.png" class="img-fluid figure-img" width="960">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-post-prior-comp-mu-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9: Comparison of the marginal prior and posterior for <span class="math inline">\(\mu\)</span>.
+</figcaption>
 </figure>
 </div>
 </div>
@@ -836,10 +916,14 @@ Parameterisation of <span class="math inline">\(\nu\)</span>
 <div id="tabset-7-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-7-2-tab">
 <div class="cell">
 <div class="cell-output-display">
-<div id="fig-post-prior-comp-nu" class="quarto-figure quarto-figure-center anchored">
-<figure class="figure">
-<p><img src="sup-material-ch6_files/figure-html/fig-post-prior-comp-nu-1.png" class="img-fluid figure-img" width="960"></p>
-<figcaption class="figure-caption">Figure&nbsp;10: Comparison of the marginal prior and posterior for the hyper parameters of <span class="math inline">\(\nu\)</span>.</figcaption>
+<div id="fig-post-prior-comp-nu" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-post-prior-comp-nu-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="sup-material-ch6_files/figure-html/fig-post-prior-comp-nu-1.png" class="img-fluid figure-img" width="960">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-post-prior-comp-nu-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10: Comparison of the marginal prior and posterior for the hyper parameters of <span class="math inline">\(\nu\)</span>.
+</figcaption>
 </figure>
 </div>
 </div>
@@ -848,10 +932,14 @@ Parameterisation of <span class="math inline">\(\nu\)</span>
 <div id="tabset-7-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-7-3-tab">
 <div class="cell">
 <div class="cell-output-display">
-<div id="fig-post-prior-comp-var" class="quarto-figure quarto-figure-center anchored">
-<figure class="figure">
-<p><img src="sup-material-ch6_files/figure-html/fig-post-prior-comp-var-1.png" class="img-fluid figure-img" width="960"></p>
-<figcaption class="figure-caption">Figure&nbsp;11: Comparison of the marginal prior and posterior for <span class="math inline">\(\sigma\)</span> and <span class="math inline">\(\phi\)</span>.</figcaption>
+<div id="fig-post-prior-comp-var" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-post-prior-comp-var-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="sup-material-ch6_files/figure-html/fig-post-prior-comp-var-1.png" class="img-fluid figure-img" width="960">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-post-prior-comp-var-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;11: Comparison of the marginal prior and posterior for <span class="math inline">\(\sigma\)</span> and <span class="math inline">\(\phi\)</span>.
+</figcaption>
 </figure>
 </div>
 </div>
@@ -865,43 +953,55 @@ Parameterisation of <span class="math inline">\(\nu\)</span>
 <p>Bayesian computation (MCMC sampling) treets missing or unobservable quantities the same as parameters. Therefore the full posterior also contains posterior samples for the unobservable <span class="math inline">\(y_{i, m}\)</span> and <span class="math inline">\(y^*_{i, m}\)</span>. The marginal posterior of the <span class="math inline">\(y^*_{i, m}\)</span>-the filtered values of the spline coeficients-give us a good insight into the variability of the underlying fitted Gamma processes which are suposedly driving the evolution of the wear profile. We can visualise this distribution in two ways; we can look at the values of the coeficients directly, or we can visualise the smooth mean wear profiles that result from the coeficient values.</p>
 <section id="filtered-spline-coefs" class="level4" data-number="6.2.1">
 <h4 data-number="6.2.1" class="anchored" data-anchor-id="filtered-spline-coefs"><span class="header-section-number">6.2.1</span> Filtered spline coefs</h4>
-<p><a href="#fig-filtered-spline-coef-gp">Figure&nbsp;12</a> and <a href="#fig-filtered-spline-coef-lm">Figure&nbsp;13</a> below show a gif cycling through one hundred draws from the posterior distribution of the <span class="math inline">\(y^*_{i, m}\)</span> from each model. Essentialy it is showing us the different posible filterd coeficient pathways. The gray siloets in the background are the other 99 draws that we are cycling through.</p>
+<p><a href="#fig-filtered-spline-coef-gp" class="quarto-xref">Figure&nbsp;12</a> and <a href="#fig-filtered-spline-coef-lm" class="quarto-xref">Figure&nbsp;13</a> below show a gif cycling through one hundred draws from the posterior distribution of the <span class="math inline">\(y^*_{i, m}\)</span> from each model. Essentialy it is showing us the different posible filterd coeficient pathways. The gray siloets in the background are the other 99 draws that we are cycling through.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-8-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-1" role="tab" aria-controls="tabset-8-1" aria-selected="true" href="">GP</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-8-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-2" role="tab" aria-controls="tabset-8-2" aria-selected="false" href="">LM</a></li></ul>
 <div class="tab-content">
 <div id="tabset-8-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-8-1-tab">
-<div id="fig-filtered-spline-coef-gp" class="quarto-figure quarto-figure-center anchored">
-<figure class="figure">
-<p><img src="animation_gp.gif" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;12: An animation of 100 different samples of the filtered spline coeficient paths from the gamma process model. The colours corespond to the basis functions in <a href="#fig-B-spline-demo">Figure&nbsp;2</a>.</figcaption>
+<div id="fig-filtered-spline-coef-gp" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-filtered-spline-coef-gp-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="animation_gp.gif" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-filtered-spline-coef-gp-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;12: An animation of 100 different samples of the filtered spline coeficient paths from the gamma process model. The colours corespond to the basis functions in <a href="#fig-B-spline-demo" class="quarto-xref">Figure&nbsp;2</a>.
+</figcaption>
 </figure>
 </div>
 </div>
 <div id="tabset-8-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-8-2-tab">
-<div id="fig-filtered-spline-coef-lm" class="quarto-figure quarto-figure-center anchored">
-<figure class="figure">
-<p><img src="animation_lm.gif" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;13: An animation of 100 different samples of the filtered spline coeficient paths from the general path model. The colours corespond to the basis functions in <a href="#fig-B-spline-demo">Figure&nbsp;2</a>.</figcaption>
+<div id="fig-filtered-spline-coef-lm" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-filtered-spline-coef-lm-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="animation_lm.gif" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-filtered-spline-coef-lm-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13: An animation of 100 different samples of the filtered spline coeficient paths from the general path model. The colours corespond to the basis functions in <a href="#fig-B-spline-demo" class="quarto-xref">Figure&nbsp;2</a>.
+</figcaption>
 </figure>
 </div>
 </div>
 </div>
 </div>
-<p><a href="#fig-filtered-spline-coef-gp">Figure&nbsp;12</a> does a good job at demonstrainting that while the posterior mean of each filtered path from the gamma process (like the one included in the paper) may look smooth, there are some fairly jumpy processes in the posterior. Whereas, for the linear general path model in <a href="#fig-filtered-spline-coef-lm">Figure&nbsp;13</a>, all of the draws are perfectly strait (as one would expect).</p>
+<p><a href="#fig-filtered-spline-coef-gp" class="quarto-xref">Figure&nbsp;12</a> does a good job at demonstrainting that while the posterior mean of each filtered path from the gamma process (like the one included in the paper) may look smooth, there are some fairly jumpy processes in the posterior. Whereas, for the linear general path model in <a href="#fig-filtered-spline-coef-lm" class="quarto-xref">Figure&nbsp;13</a>, all of the draws are perfectly strait (as one would expect).</p>
 </section>
 <section id="mean-wear-profiles" class="level4" data-number="6.2.2">
 <h4 data-number="6.2.2" class="anchored" data-anchor-id="mean-wear-profiles"><span class="header-section-number">6.2.2</span> Mean wear profiles</h4>
-<p>Alternatively, we can calculate the set of smooth spline function for each draw of the <span class="math inline">\(\{y^*_{i, m}\}^{I, M}_{i = 1, m = 1}\)</span> by applying the coeficients to the B-spline basis functions and then calculateing the value of the smooth wear profile across the width of the belt. These distributions are shown in <a href="#fig-average-wear-profile-gp">Figure&nbsp;14</a> and <a href="#fig-average-wear-profile-lm">Figure&nbsp;15</a> for the gamma process and general path models, respectively. What we see is a gradual monotonic growth of the profile with a reasonable amount of uncertainty around what is the average profile along the length of the belt at each observation time.</p>
+<p>Alternatively, we can calculate the set of smooth spline function for each draw of the <span class="math inline">\(\{y^*_{i, m}\}^{I, M}_{i = 1, m = 1}\)</span> by applying the coeficients to the B-spline basis functions and then calculateing the value of the smooth wear profile across the width of the belt. These distributions are shown in <a href="#fig-average-wear-profile-gp" class="quarto-xref">Figure&nbsp;14</a> and <a href="#fig-average-wear-profile-lm" class="quarto-xref">Figure&nbsp;15</a> for the gamma process and general path models, respectively. What we see is a gradual monotonic growth of the profile with a reasonable amount of uncertainty around what is the average profile along the length of the belt at each observation time.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-9-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-1" role="tab" aria-controls="tabset-9-1" aria-selected="true" href="">GP</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-9-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-2" role="tab" aria-controls="tabset-9-2" aria-selected="false" href="">LM</a></li></ul>
 <div class="tab-content">
 <div id="tabset-9-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-9-1-tab">
 <div class="cell">
 <div class="cell-output-display">
-<div id="fig-average-wear-profile-gp" class="quarto-figure quarto-figure-center anchored">
-<figure class="figure">
-<p><img src="sup-material-ch6_files/figure-html/fig-average-wear-profile-gp-1.png" class="img-fluid figure-img" width="960"></p>
-<figcaption class="figure-caption">Figure&nbsp;14: The mean wear profile of the belt at each observation time from the fitted gamma process model.</figcaption>
+<div id="fig-average-wear-profile-gp" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-average-wear-profile-gp-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="sup-material-ch6_files/figure-html/fig-average-wear-profile-gp-1.png" class="img-fluid figure-img" width="960">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-average-wear-profile-gp-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;14: The mean wear profile of the belt at each observation time from the fitted gamma process model.
+</figcaption>
 </figure>
 </div>
 </div>
@@ -910,10 +1010,14 @@ Parameterisation of <span class="math inline">\(\nu\)</span>
 <div id="tabset-9-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-9-2-tab">
 <div class="cell">
 <div class="cell-output-display">
-<div id="fig-average-wear-profile-lm" class="quarto-figure quarto-figure-center anchored">
-<figure class="figure">
-<p><img src="sup-material-ch6_files/figure-html/fig-average-wear-profile-lm-1.png" class="img-fluid figure-img" width="960"></p>
-<figcaption class="figure-caption">Figure&nbsp;15: The mean wear profile of the belt at each observation time from the fitted general path model.</figcaption>
+<div id="fig-average-wear-profile-lm" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-average-wear-profile-lm-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="sup-material-ch6_files/figure-html/fig-average-wear-profile-lm-1.png" class="img-fluid figure-img" width="960">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-average-wear-profile-lm-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;15: The mean wear profile of the belt at each observation time from the fitted general path model.
+</figcaption>
 </figure>
 </div>
 </div>
@@ -938,7 +1042,7 @@ Parameterisation of <span class="math inline">\(\nu\)</span>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="sup-material-ch6_files/figure-html/ppd-ut-gp-1.png" class="img-fluid figure-img" width="960"></p>
-<figcaption class="figure-caption">The posterior predictive distribution of new UT measurements taken at the same time and location along the length fo the belt.</figcaption>
+<figcaption>The posterior predictive distribution of new UT measurements taken at the same time and location along the length fo the belt.</figcaption>
 </figure>
 </div>
 </div>
@@ -950,7 +1054,7 @@ Parameterisation of <span class="math inline">\(\nu\)</span>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="sup-material-ch6_files/figure-html/ppd-ut-lm-1.png" class="img-fluid figure-img" width="960"></p>
-<figcaption class="figure-caption">The posterior predictive distribution of new UT measurements taken at the same time and location along the length fo the belt.</figcaption>
+<figcaption>The posterior predictive distribution of new UT measurements taken at the same time and location along the length fo the belt.</figcaption>
 </figure>
 </div>
 </div>
@@ -972,7 +1076,7 @@ Parameterisation of <span class="math inline">\(\nu\)</span>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="sup-material-ch6_files/figure-html/ppd-fda-gp-1.png" class="img-fluid figure-img" width="960"></p>
-<figcaption class="figure-caption">The posterior predictive distributions of new functional observations taken at the same time but at different location along the length fo the belt.</figcaption>
+<figcaption>The posterior predictive distributions of new functional observations taken at the same time but at different location along the length fo the belt.</figcaption>
 </figure>
 </div>
 </div>
@@ -984,7 +1088,7 @@ Parameterisation of <span class="math inline">\(\nu\)</span>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="sup-material-ch6_files/figure-html/ppd-fda-lm-1.png" class="img-fluid figure-img" width="960"></p>
-<figcaption class="figure-caption">The posterior predictive distributions of new functional observations taken at the same time but at different location along the length fo the belt.</figcaption>
+<figcaption>The posterior predictive distributions of new functional observations taken at the same time but at different location along the length fo the belt.</figcaption>
 </figure>
 </div>
 </div>
@@ -1052,7 +1156,7 @@ Parameterisation of <span class="math inline">\(\nu\)</span>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="sup-material-ch6_files/figure-html/single-forecast-gp-1.png" class="img-fluid figure-img" width="960"></p>
-<figcaption class="figure-caption">The forecasted belt wear profile at <span class="math inline">\(t_9\)</span>.</figcaption>
+<figcaption>The forecasted belt wear profile at <span class="math inline">\(t_9\)</span>.</figcaption>
 </figure>
 </div>
 </div>
@@ -1101,7 +1205,7 @@ Parameterisation of <span class="math inline">\(\nu\)</span>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="sup-material-ch6_files/figure-html/single-forecast-lm-1.png" class="img-fluid figure-img" width="960"></p>
-<figcaption class="figure-caption">The forecasted belt wear profile at <span class="math inline">\(t_9\)</span>.</figcaption>
+<figcaption>The forecasted belt wear profile at <span class="math inline">\(t_9\)</span>.</figcaption>
 </figure>
 </div>
 </div>
@@ -1154,10 +1258,14 @@ Parameterisation of <span class="math inline">\(\nu\)</span>
 <span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a>p_ft</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<div id="fig-ft-cdfs-gp" class="quarto-figure quarto-figure-center anchored">
-<figure class="figure">
-<p><img src="sup-material-ch6_files/figure-html/fig-ft-cdfs-gp-1.png" class="img-fluid figure-img" width="960"></p>
-<figcaption class="figure-caption">Figure&nbsp;16: The failure time CDFs for the belt when the gamma process model is fit to observations A) 1 to 8 and B) 1 to 9.</figcaption>
+<div id="fig-ft-cdfs-gp" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ft-cdfs-gp-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="sup-material-ch6_files/figure-html/fig-ft-cdfs-gp-1.png" class="img-fluid figure-img" width="960">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ft-cdfs-gp-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;16: The failure time CDFs for the belt when the gamma process model is fit to observations A) 1 to 8 and B) 1 to 9.
+</figcaption>
 </figure>
 </div>
 </div>
@@ -1204,10 +1312,14 @@ Parameterisation of <span class="math inline">\(\nu\)</span>
 <span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a>p_ft</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<div id="fig-ft-cdfs-lm" class="quarto-figure quarto-figure-center anchored">
-<figure class="figure">
-<p><img src="sup-material-ch6_files/figure-html/fig-ft-cdfs-lm-1.png" class="img-fluid figure-img" width="960"></p>
-<figcaption class="figure-caption">Figure&nbsp;17: The failure time CDFs for the belt when the linear general path model is fit to observations A) 1 to 8 and B) 1 to 9.</figcaption>
+<div id="fig-ft-cdfs-lm" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ft-cdfs-lm-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="sup-material-ch6_files/figure-html/fig-ft-cdfs-lm-1.png" class="img-fluid figure-img" width="960">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ft-cdfs-lm-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;17: The failure time CDFs for the belt when the linear general path model is fit to observations A) 1 to 8 and B) 1 to 9.
+</figcaption>
 </figure>
 </div>
 </div>
@@ -1215,12 +1327,12 @@ Parameterisation of <span class="math inline">\(\nu\)</span>
 
 </section>
 
-<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
 <div id="ref-gabry_vis_2019" class="csl-entry" role="listitem">
 Gabry, Jonah, Daniel Simpson, Aki Vehtari, Michael Betancourt, and Andrew Gelman. 2019. <span>“<span class="nocase">Visualization in Bayesian Workflow</span>.”</span> <em>Journal of the Royal Statistical Society Series A: Statistics in Society</em> 182 (2): 389–402.
 </div>
 <div id="ref-BDA2020" class="csl-entry" role="listitem">
-Gelman, A., J. B. Carlin, H. S. Stern, D. B. Dunson, A. Vehtari, and D. B. Rubin. 2020. <em>Bayesian Data Analysis, Third Edition</em>. Boca Raton, FL: Taylor &amp; Francis.
+Gelman, A., J. B. Carlin, H. S. Stern, D. B. Dunson, A. Vehtari, and D. B. Rubin. 2020. <em><span>B</span>ayesian <span>D</span>ata <span>A</span>nalysis, Third Edition</em>. Boca Raton, FL: Taylor &amp; Francis.
 </div>
 <div id="ref-leadbetter2024" class="csl-entry" role="listitem">
 Leadbetter, Ryan, Gabriel Gonzalez Caceres, and Aloke Phatak. 2024. <span>“Bayesian Hierarchical Modelling of Noisy Gamma Processes: Model Formulation, Identifiability, Model Fitting, and Extensions to Unit-to-Unit Variability.”</span> <a href="https://arxiv.org/abs/2406.11216">https://arxiv.org/abs/2406.11216</a>.
@@ -1268,18 +1380,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -1311,11 +1412,50 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
-  function tippyHover(el, contentFn) {
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
     const config = {
       allowHTML: true,
-      content: contentFn,
       maxWidth: 500,
       delay: 100,
       arrow: false,
@@ -1325,8 +1465,17 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       interactive: true,
       interactiveBorder: 10,
       theme: 'quarto',
-      placement: 'bottom-start'
+      placement: 'bottom-start',
     };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
     window.tippy(el, config); 
   }
   const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
@@ -1338,7 +1487,130 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      return note.innerHTML;
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
     });
   }
       let selectedAnnoteEl;
@@ -1382,6 +1654,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
             }
             div.style.top = top - 2 + "px";
             div.style.height = height + 4 + "px";
+            div.style.left = 0;
             let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
             if (gutterDiv === null) {
               gutterDiv = window.document.createElement("div");
@@ -1407,6 +1680,32 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         });
         selectedAnnoteEl = undefined;
       };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
       // Attach click handler to the DT
       const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
       for (const annoteDlNode of annoteDls) {
@@ -1467,6 +1766,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 });
 </script>
 </div> <!-- /content -->
+
 
 
 

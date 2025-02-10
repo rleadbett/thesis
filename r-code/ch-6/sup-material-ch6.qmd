@@ -64,6 +64,7 @@ options(mc.cores = parallel::detectCores())
 theme_set(
   theme_minimal()
 )
+theme_update(axis.title = element_text(size = 16))
 
 figure_path <- file.path("..", "..", "figures", "ch-6")
 table_path <- file.path("..", "..", "tables", "ch-6")
@@ -108,7 +109,7 @@ p_belt_A_wear_prof <- belt_wear_data[["belt_A"]] %>%
   ggplot(aes(x = measurement_pos, y = wear, col = operation_time)) +
   geom_line() +
   scale_color_brewer(palette = "YlOrRd") +
-  ylim(-1, 30) +
+  ylim(-1, 28) +
   xlab("measurement location") +
   ylab("wear (mm)") +
   labs(col = "days in operation")
@@ -138,7 +139,7 @@ p_belt_B_wear_prof <- belt_wear_data[["belt_B"]] %>%
   ggplot(aes(x = measurement_pos, y = wear, col = operation_time)) +
   geom_line() +
   scale_color_brewer(palette = "YlOrRd") +
-  ylim(0, 30) +
+  ylim(0, 28) +
   xlab("measurement location") +
   ylab("wear (mm)") +
   labs(col = "days in operation")
@@ -167,7 +168,7 @@ p_belt_C_wear_prof <- belt_wear_data[["belt_C"]] %>%
   ggplot(aes(x = measurement_pos, y = wear, col = operation_time)) +
   geom_line() +
   scale_color_brewer(palette = "YlOrRd") +
-  ylim(0, 30) +
+  ylim(0, 28) +
   xlab("measurement location") +
   ylab("wear (mm)") +
   labs(col = "days in operation")
@@ -200,7 +201,7 @@ pdf(
     annotate(geom="text", x=13, y=25,
              label="Soft failure threshold",
              vjust=-1) +
-    ylim(-2, 30)
+    ylim(-2, 28)
     
 dev.off()
 ```

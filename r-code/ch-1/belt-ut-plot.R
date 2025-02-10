@@ -1,6 +1,8 @@
 library(dplyr)
 library(ggplot2)
 
+theme_update(axis.title = element_text(size = 16))
+
 load(
   file.path("..", "..", "data", "Example_beltwear_data.RData")
 )
@@ -28,7 +30,7 @@ p_belt_ut_data <- belt_ut_data %>%
   geom_line() +
   scale_color_brewer(palette = "YlOrRd") +
   theme_minimal() +
-  ylim(-1, 30) +
+  ylim(-1, 20) +
   xlab("measurement location") +
   ylab("wear (mm)") +
   labs(col = "cumulative tonnage")
