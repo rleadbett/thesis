@@ -2,6 +2,8 @@ library(dplyr)
 library(ggplot2)
 library(cowplot)
 
+theme_update(axis.title = element_text(size = 16))
+
 # Hazard example figure
 
 hweibull <- function(x, shape, scale) {
@@ -11,7 +13,7 @@ hweibull <- function(x, shape, scale) {
 
 pdf(
   file.path("..", "..", "figures", "ch-2", "hazard_func_demo.pdf"),
-  height = 3.5, width = 7 
+  height = 3.5, width = 7
 )
 ggplot() +
   xlim(0.1, 5) +
