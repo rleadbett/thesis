@@ -1,144 +1,36 @@
-%%
-%% This is a skeleton file demonstrating the use of the curtinThesis.cls class file
-%% (requires curtinThesis.cls and LaTeX2e format). And can be used as infrastructure
-%% to build your thesis.
-%%
-%% --------------------------------------------------------------------------------
-%%
-%%   This work is licensed under the conditions of the Creative
-%%   Commons Attribution 4.0 International (CC BY 4.0) license:
-%%
-%%		<https://creativecommons.org/licenses/by/4.0/>
-%% 
-%%   This work may be remixed, tweaked, and build upon, even
-%%	 commercially, as long as the original Author is credited
-%%   for the creation of the original work. 
-%% 
-%%   This code is offered as-is without any warranty either expressed
-%%   or implied; User assumes all risk.
-%%
-%% --------------------------------------------------------------------------------
-%% 
-%%  Usage: (this usage block can be removed after reading)
-%%  ------
-%%  Define you thesis title, name, [optional] auxiliary association,
-%%	graduation date, [optional] quote, [optional] linkcolor,
-%%  and [optional] cite color under the ``Define Globals Here''
-%%  section.
-%%
-%%	Adjust, edit, or extend the Chapter files in the chapters folder
-%%	to match your thesis content accordingly. If one decides to alter
-%%	file names, change the names in this template file as well. 
-%%
-%%	One can select APA, Vancouver, Chicago, or Harvard referencing in the class
-%%	options using apa, vancouver, chicago, or harvard respectively. For other class
-%%	options available, please refer to the curtinThesis class or the book class.
-%%
-%%	All functionality in this template is commented, the minimal action
-%%  required is to follow the above steps and to build the document. 
-%%
-%%  Alterations to the template file, other than the global definitions,
-%%	is not required, but can be done to suit your needs and/or requirements.
-%%
-%%  When changing reference styles, please make sure to clean the auxiliary
-%%	files to prevent any package clashes.
-%%
-%% --------------------------------------------------------------------------------
-%%
+\documentclass{mammoth}
 
-\documentclass[apa,colorlinks,emptypage]{curtinThesis}
-\usepackage[all]{unitabbrev} %optional package that includes standard unit abbreviations
-\usepackage{adsshort} %optional package that includes abbreviations endorsed by the ADS
-\usepackage{graphicx}
-\usepackage{subcaption}
-\usepackage{booktabs}
-\usepackage{amsmath,mathtools}
-\usepackage{algorithm}
-\usepackage{algpseudocode}
-\usepackage{marginnote}
-\usepackage{tabularx}
-\usepackage{array} % for defining new column type
-
-\marginparwidth=2.25cm
-\interfootnotelinepenalty=10000
-
-% Define a new column type for paragraphs
-\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
-
-
-
-%\usepackage[ruled,vlined]{algorithm2e}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%  Define Globals Here  %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% define your thesis title, name, [optional: auxiliary association], and graduation date
-\thesistitle{Bayesian Hierarchical Modelling of Equipment Reliability in Mining: A Pragmatic Approach} %your thesis title
-
-\authorname{Ryan K. Leadbetter} % your name e.g. John A. Doe
-
-\auxassoc{Centre for Transforming Maintenance Through Data Science} % remove, comment, or leave empty if no auxiliary association
-
-\graduationdate{August 2024} % your expected graduation/hand-in date
-
-% [optional: define a quote to appear in thesis - \thesisquote{"the quote"}{"the author"}]
-%\thesisquote{The Quote}{AUTHOR} % remove, comment, or leave empty when not used
-
-% define your link and citecolor - standard is cyan
-\linkcolor{red} % remove, comment, or leave empty if not specifying different color
-\citecolor{black} % remove, comment, or leave empty if not specifying different color
-
-% set the metadata of the .pdf file correctly
-\setmetadata % make sure the metadata of your pdf file is according to your work.
+\addbibresource{references.bib}
 
 \begin{document}
 
-\createtitlepage % generate a title page
+\frontmatter
 
-\plagiarismstatement % generate a plagiarism statement
+\input{chapters/titlepage.tex}
+\input{chapters/declaration.tex}
+\include{chapters/abstract.tex}
+\include{chapters/publications.tex}
+\include{chapters/contributors.tex}
+\include{chapters/acknowledgements.tex}
+\include{chapters/acknowledgement-of-country.tex}
+\include{chapters/copyright.tex}
 
-\showthesisquote % if selected, show thesis quote
+\tableofcontents
 
-% include the abstract
-\include{chapters/abstract}
+\mainmatter
 
-% include list of publications
-\include{chapters/publications}
+\include{chapters/chapter1.tex}
 
-% include contribution statement
-\include{chapters/contributors}
-
-% include the acknowledgements
-\include{chapters/acknowledgements}
-
-% include the acknowledgement of country
-\include{chapters/acknowledgement-of-country}
-
-% include the copyright statement
-\include{chapters/copyright}
-
-% include the table of contents
-\includetoc % neatly adds the table of contents
-
-% include the list of figures
-\includelof % neatly adds the list of figures
-
-
-\arabicnumbering{1} % set pagenumbers to arabic and start at 1 - change number in brackets to change start number
-
-% include chapters - adjust the chapter files in chapters folder - remove or extend where necessary
-\include{chapters/chapter1}
-
-\part{Part one: lifetime analysis}\label{part:one}
+\part{Lifetime analysis}\label{part:one}
 
 In this first part of the thesis, I look at the problem of analysing the partially observed lifetime data of repeatedly replaced components. That is, when a component has been repeatedly replaced for many years, but the failure records are only available from a particular date up to the present. In these cases, the first observed failure of each component is the end of a lifetime with an unknown start time, and the most recent replacement marks the beginning of a lifetime, which we have not yet observed the end of. The idler frame data introduced in Sec.~\ref{sec:industry-data} is an example of this type of problem.
 
 The work in this part was motivated by an industry project to inform the fixed time replacement interval in a preventative maintenance policy for the idlers in the frames using data such as that in Sec.~\ref{sec:industry-data}. My initial approach to modelling such data was published as a conference paper \textit{Informative Bayesian Survival Analysis to Handle Heavy Censoring in Lifetime Data} (the full citation is provided at the beginning of the thesis on p.~vii). However, since the initial approach was published, I have taken an alternative approach to the problem, which I present in Chap.~\ref{chap:chapter2}. In Chap.~\ref{chap:chapter3}, I apply the newly proposed approach to the idler-frame data and demonstrate how the analysis can inform preventative maintenance policy. Parts of the original conference paper still make up a portion of the background material in both Chaps.~\ref{chap:chapter2} and~\ref{chap:chapter3}.
 
-\include{chapters/chapter2}
-\include{chapters/chapter3}
+\include{chapters/chapter2.tex}
+\include{chapters/chapter3.tex}
 
-\part{Part two: Degradation modelling}\label{part:two}
+\part{Degradation modelling}\label{part:two}
 
 In this second part of the thesis, I focus on degradation modelling, primarily using the gamma stochastic process. Many of the degradation datasets provided by the Centre's industry partners were contaminated with noise and had few repeated measures for each asset/component in the dataset; the belt wear dataset is an example of this. The gamma process is suitable for modelling these types of degradation datasets. For example, in the belt wear data, degradation occurs in small jumps as ore is loaded onto the belt. However, before the gamma process could be applied to these datasets, I needed to understand to extend it to incorporate noise; understand its properties; implement it in stan; and any computational issues.
 
@@ -146,27 +38,19 @@ In the first chapter of Part~\ref{part:two}, Chap.~\ref{chap:chapter4}, I demons
 
 In Chap.~\ref{chap:chapter6}, I apply the noisy gamma process to the belt wear data introduced in Sec.~\ref{sec:industry-data} by combining it with functional data analysis. The work in Chap.~\ref{chap:chapter6} has been prepared as a manuscript titled \textit{Functional degradation modelling of the wearing surface of conveyor belting using Bayesian hierarchical modelling and Gamma processes}. It is planned for submission to the Annals of Applied Statistics. In addition to the work presented in the manuscript, Chap.~\ref{chap:chapter6} provides a side-by-side comparison of the gamma process-based belt wear model from the manuscript with a linear general path-based model. The full citations for the e-prints of the manuscripts are provided at the beginning of the thesis (p.~vii).
 
-%In this second part of the thesis, I focus on degradation modelling, primarily using the gamma stochastic process. The more foundational work in this second half of the thesis, Chaps.~\ref{chap:chapter4} and~\ref{chap:chapter5}, arose out of necessity in order to apply the gamma process to industry data from the Centre's industry partners. Particularly, the work was motivated by two applied problems: modelling the degradation of many pipe spools in a bauxite processing plant and modelling the wear of an overland iron ore conveyor's belt---the latter was in one of my industry placements. The pipe degradation project, undertaken by Gabriel Gonz\'{a}lez Caceres and Aloke Phatak, looked at the degradation in wall thickness of pipe spools. The gamma process should theoretically be a good model for the erosion of the inside of the spools. However, the degradation signals for each spool are very noisy and consist of only a few measurements; therefore, there was a need to accommodate noise in the gamma process model and to borrow information between similar units in order to estimate the parameters of the model. The belt wear project was an industry placement where I was asked to analyse the belt wear of all conveyors at an industry partner's mine, processing facility, and port and to devise a new method for modelling the wear. To analyse the many wear profiles, I used functional data analysis techniques. This led to taking the same approach when modelling the belts' degradation. The gamma process should also be a good model for the degradation of the belt since the wear occurs in small increments as ore is loaded onto the belt. However, similar to the pipe spool problem, the signals of the spline coefficients in the functional analysis were noisy and sparsely observed.
+\include{chapters/chapter4.tex}
+\include{chapters/chapter5.tex}
+\include{chapters/chapter6.tex}
+\include{chapters/chapter7.tex}
 
-%In the first chapter of Part~\ref{part:two}, Chap.~\ref{chap:chapter4}, I demonstrate how the gamma process can be extended to incorporate noisy degradation measurements through Bayesian hierarchical modelling. Then, in Chap.~\ref{chap:chapter5}, I show how unit-to-unit variability (which facilitates the borrowing of information between units) can be included in the proposed noisy gamma process model. The work in these two chapters has been submitted for publication as the manuscript \textit{Bayesian hierarchical modelling of noisy gamma processes: model formulation, identifiability, model fitting, and extensions to unit-to-unit variability} to Applied Models in Business and Industry. The chapters present an expansion of the manuscript by tying the supplementary material submitted alongside the manuscript into the main analysis and discussion and providing a deeper discussion of the two main topics. There is also a larger focus on the computational details of the analysis.
+{
+    \backmatter
+    \printbibliography
+    \noindent
+    Every reasonable effort has been made to acknowledge the owners of copyright material.
+    I would be pleased to hear from any copyright owner who has been omitted or incorrectly acknowledged.
+} % dont have appendix within a backmatter
 
-%In Chap.~\ref{chap:chapter6}, I present the functional belt wear model and apply it wear data from a single overland conveyor belt. The belt wear model utilises the noisy gamma process and extensions from Chaps.~\ref{chap:chapter4} and~\ref{chap:chapter5}. The work in Chap.~\ref{chap:chapter6} has been prepared as a manuscript titled \textit{Functional degradation modelling of the wearing surface of conveyor belting using Bayesian hierarchical modelling and Gamma processes} and is planned for submission to the Annals of Applied Statistics. In addition to the work presented in the manuscript, Chap.~\ref{chap:chapter6} provides a side-by-side comparison of the gamma process-based belt wear model from the manuscript with a linear general path-based model.
+\include{chapters/appendixA.tex}
 
-\include{chapters/chapter4}
-\include{chapters/chapter5}
-\include{chapters/chapter6}
-
-\include{chapters/chapter7}
-
-% start your appendices
-\begin{customappendix}{} % add \alphanumbering between brackets if you want to have alphabetic numbered appendices
-
-\include{chapters/appendixA}
-
-\end{customappendix}
-
-\backmatter{}
-
-\bibliography{references} % change 'references' to your .bib file
-\ackstatement % statement to acknowledge the effort put into acknowledging the authors
 \end{document}
