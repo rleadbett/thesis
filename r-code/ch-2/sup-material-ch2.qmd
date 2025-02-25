@@ -246,8 +246,8 @@ p_joint_priors
 #| output: false
 pdf(
   file.path(fig_path, "joint-priors.pdf"),
-  height = 6,
-  width = 8
+  width = 7,
+  height = 4
 )
 p_joint_priors
 dev.off()
@@ -415,8 +415,8 @@ p_sim_data
 #| output: false
 pdf(
   file.path(fig_path, "sim-data.pdf"),
-  height = 6,
-  width = 6
+  height = 7,
+  width = 7
 )
 p_sim_data
 dev.off()
@@ -474,7 +474,8 @@ stan_data_unkown_lt <- list(
 
 ## Stan models (weakly informative)
 
-Here I fit three models to the data. The first is a model where the left-truncated lifetimes (see thesis chapter for details) are fully observed---the best case scenario. The second is model simply discareds the left-truncated lifetimes---this is the best option in the literature if the exposure history of the left-truncated samples is unknown. The third and last model is my proposed method to impute the partialy observed left-truncated samples with unkown exposure history. I fit all three models with the vaigue prior $$
+Here I fit three models to the data. The first is a model where the left-truncated lifetimes (see thesis chapter for details) are fully observed---the best case scenario. The second is model simply discareds the left-truncated lifetimes---this is the best option in the literature if the exposure history of the left-truncated samples is unknown. The third and last model is my proposed method to impute the partialy observed left-truncated samples with unkown exposure history. I fit all three models with the vaigue prior 
+$$
 \begin{align*}
 \beta & \sim N^{+}(1.1, 1) \\
 \eta & \sim N^{+}(1, 1). \\
@@ -740,8 +741,8 @@ p_joint_posts
 #| output: false
 pdf(
   file.path(fig_path, "joint-posts.pdf"),
-  height = 5,
-  width = 10
+  width = 7,
+  height = 4
 )
 p_joint_posts
 dev.off()
@@ -749,7 +750,8 @@ dev.off()
 
 ## Stan models (informative)
 
-Now I fit the same three models but with an informative joint prior, eliciting information at $t_1 = p_{0.80} = 1.54$ and $t_2 = p_{0.95} = 2.71$. The prior is $$
+Now I fit the same three models but with an informative joint prior, eliciting information at $t_1 = p_{0.80} = 1.54$ and $t_2 = p_{0.95} = 2.71$. The prior is
+$$
 \begin{align*}
     \hat{F}_{t_1} \sim & \hbox{N}^{1}_{0}\left(0.8, 0.1\right)    \\
     \hat{F}_{t_2} \sim & \hbox{N}^{1}_{\hat{F}_{t_1}}\left(0.95, 0.05\right).
@@ -1106,8 +1108,8 @@ p_joint_posts_inf
 #| output: false
 pdf(
   file.path(fig_path, "joint-posts-inf.pdf"),
-  height = 5,
-  width = 10
+  width = 7,
+  height = 4
 )
 p_joint_posts_inf 
 dev.off()
@@ -1202,8 +1204,8 @@ plot_grid(
 #| output: false
 pdf(
   file.path(fig_path, "prior-post-comp.pdf"),
-  height = 5,
-  width = 10
+  width = 7,
+  height = 4
 )
 plot_grid(
   p1, p2, p3,
@@ -1357,8 +1359,8 @@ p_sim_result_plot
 #| output: false
 pdf(
   file.path(fig_path, "sim-results-pvalues.pdf"),
-  height = 15,
-  width = 10
+  width = 7,
+  height = 7
 )
 p_sim_result_plot
 dev.off()
@@ -1470,8 +1472,8 @@ p_sim_res_elppd
 #| output: false
 pdf(
   file.path(fig_path, "sim-results-elppd.pdf"),
-  height = 8.,
-  width = 8
+  width = 7,
+  height = 7
 )
 p_sim_res_elppd
 dev.off()

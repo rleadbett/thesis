@@ -47,8 +47,8 @@ y_obs <- rweibull(3, 1.1, 1)
 
 pdf(
   file.path("..", "..", "figures", "ch-2", "censoring_example.pdf"),
-  width = 10,
-  height = 6
+  width = 7,
+  height = 4
 )
 
 data.frame(
@@ -93,7 +93,7 @@ annotate(
   x = 0.51, y = 0.5,
   label = "t_1",
   hjust = -0.01,
-  size = 2.5,
+  size = 4,
   colour = "red"
 ) +
 annotate(
@@ -101,7 +101,7 @@ annotate(
   x = 1.01, y = 0.5,
   label = "t_2",
   hjust = -0.01,
-  size = 2.5,
+  size = 4,
   colour = "red"
 )
 
@@ -193,8 +193,8 @@ ylab("")
 
 pdf(
   file.path("..", "..", "figures", "ch-2", "left_truncation_example.pdf"),
-  width = 10,
-  height = 6
+  width = 7,
+  height = 4
 )
 plot_grid(
   p_left_cens,
@@ -233,8 +233,8 @@ filter(install_times < t_end)
 
 pdf(
   file.path("..", "..", "figures", "ch-2", "left_truncation_w_right_censoring_example.pdf"),
-  width = 10,
-  height = 6
+  width = 7,
+  height = 4
 )
 
 ggplot() +
@@ -296,7 +296,7 @@ annotate(
   x = 2.05, y = 0.5,
   label = "t_start",
   hjust = -0.01,
-  size = 2.5,
+  size = 4,
   colour = "red"
 ) +
 annotate(
@@ -304,7 +304,7 @@ annotate(
   x = 4.05, y = 0.5,
   label = "t_end",
   hjust = -0.01,
-  size = 2.5,
+  size = 4,
   colour = "red"
 ) +
 theme_minimal() +

@@ -215,8 +215,8 @@ p_idler_lifetimes
 #| output: false
 pdf(
   file.path(fig_path, "idler-frame-data.pdf"),
-  height = 6,
-  width = 12
+  width = 7,
+  height = 4
 )
 p_idler_lifetimes
 dev.off()
@@ -317,8 +317,8 @@ p_cdf
 #| output: false
 pdf(
   file.path(fig_path, "idler-frame-prior.pdf"),
-  height = 5,
-  width = 10
+  width = 7,
+  height = 4
 )
 plot_grid(
   p_joint,
@@ -654,8 +654,8 @@ p_joint_prior_post_comp
 #| output: false
 pdf(
   file.path(fig_path, "idler-frame-post.pdf"),
-  height = 5,
-  width = 10
+  width = 7,
+  height = 4
 )
 plot_grid(
   p_joint_post,
@@ -691,8 +691,8 @@ p_cdf_post
 #| output: false
 pdf(
   file.path(fig_path, "idler-frame-post-CDF.pdf"),
-  height = 5,
-  width = 8
+  width = 7,
+  height = 4
 )
 p_cdf_post
 dev.off()
@@ -780,8 +780,8 @@ p2
 #| output: false
 pdf(
   file.path(fig_path, "posterior-FTs.pdf"),
-  height = 12,
-  width = 10
+  width = 7,
+  height = 8
 )
 plot_grid(p1, p2, nrow = 1, ncol = 2)
 dev.off()
@@ -855,8 +855,8 @@ p_E_n_failures
 #| output: false
 pdf(
   file.path(fig_path, "E-n-failures-draws.pdf"),
-  height = 5,
-  width = 10
+  width = 7,
+  height = 4
 )
 p_E_n_failures
 dev.off()
@@ -926,8 +926,8 @@ p_E_n_failures_dens
 #| output: false
 pdf(
   file.path(fig_path, "E-n-failures-densities.pdf"),
-  height = 10,
-  width = 10
+  width = 7,
+  height = 7
 )
 p_E_n_failures_dens
 dev.off()
@@ -1050,8 +1050,8 @@ E_N_failures_df %>%
 #| output: false
 pdf(
   file.path(fig_path, "cost-funciton.pdf"),
-  height = 10,
-  width = 8
+  width = 7,
+  height = 8
 )
 E_N_failures_df %>%
   filter(shut <= 44) %>%
