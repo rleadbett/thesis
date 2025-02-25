@@ -1,4 +1,5 @@
 # Bayesian Hierarchical Modelling of Equipment Reliability in Mining: A Pragmatic Approach
+[![DOI](https://zenodo.org/badge/700655466.svg)](https://doi.org/10.5281/zenodo.14920684)
 
 This repository contains all of the R, Stan, and LaTex code to reproduce the PhD Thesis *Bayesian Hierarchical Modelling of Equipment Reliability in Mining: A Pragmatic Approach* by Ryan K. Leadbetter. The PhD was done at the [Center for Transforming Maintenance Through Data Science](https://www.maintenance.org.au/display/PUBLIC) (CTMTDS), Curtin University: a partnership between Curtin University, University of WA, and CSIRO and the mining companies Alcoa, BHP, and Roy Hill. The centre is part funded by the Australian Research Council and part funded by the industry partners. The over arching theme of the thesis is useful (and novel) examples of Bayesian model building for reliability modelling in industrial settings.
 

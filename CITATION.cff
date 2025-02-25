@@ -1,0 +1,22 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: >-
+  Bayesian Hierarchical Modelling of Equipment Reliability
+  in Mining: A Pragmatic Approach
+message: Thesis Code
+type: software
+authors:
+  - given-names: Ryan K.
+    family-names: Leadbetter
+    email: ryan.leadbetter@postgrad.curtin.edu.au
+    affiliation: >-
+      Centre for Transforming Maintenance Through Data
+      Science, Curtin University
+    orcid: 'https://orcid.org/0000-0002-1942-3121'
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.14920684
+repository-code: 'https://github.com/rleadbett/thesis'
+license: MIT
